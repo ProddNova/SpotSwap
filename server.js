@@ -671,39 +671,151 @@ app.put('/api/admin/trade-requests/:id/reject', requireAdmin, async (req, res) =
 });
 
 app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
+    const sessionDb = await mongoose.startSession();
+
     try {
+        sessionDb.startTransaction();
+
         const { selectedSpotId } = req.body;
-        const request = await TradeRequest.findById(req.params.id);
-        
+
+        const request = await TradeRequest.findById(req.params.id).session(sessionDb);
         if (!request) {
+            await sessionDb.abortTransaction();
             return res.status(404).json({ error: 'Richiesta di scambio non trovata' });
         }
-        
+
+        // Solo il destinatario può accettare
         if (request.toUser !== req.session.user.username) {
+            await sessionDb.abortTransaction();
             return res.status(403).json({ error: 'Non autorizzato' });
         }
-        
-        if (!request.adminApproved) {
-            return res.status(403).json({ error: 'Richiesta non ancora approvata dall\'admin' });
+
+        // Deve essere stata approvata dall'admin (solo "sblocco visibilità")
+        if (!request.adminApproved || request.adminRejected) {
+            await sessionDb.abortTransaction();
+            return res.status(403).json({ error: 'Richiesta non approvata dall\'admin' });
         }
-        
+
+        // Deve essere pending
+        if (request.status !== 'pending') {
+            await sessionDb.abortTransaction();
+            return res.status(400).json({ error: 'Richiesta non in stato valido (non è pending)' });
+        }
+
+        if (!selectedSpotId) {
+            await sessionDb.abortTransaction();
+            return res.status(400).json({ error: 'selectedSpotId mancante' });
+        }
+
+        // Sicurezza: lo spot scelto deve essere tra quelli offerti
+        const offeredIds = (request.offeredSpots || []).map(x => x.toString());
+        if (!offeredIds.includes(selectedSpotId.toString())) {
+            await sessionDb.abortTransaction();
+            return res.status(400).json({ error: 'Lo spot selezionato non è tra quelli offerti' });
+        }
+
+        // Carico gli spot
+        const requestedSpot = await Spot.findById(request.spotId).session(sessionDb);
+        if (!requestedSpot) {
+            await sessionDb.abortTransaction();
+            return res.status(404).json({ error: 'Spot richiesto non trovato' });
+        }
+
+        const chosenSpot = await Spot.findById(selectedSpotId).session(sessionDb);
+        if (!chosenSpot) {
+            await sessionDb.abortTransaction();
+            return res.status(404).json({ error: 'Spot selezionato non trovato' });
+        }
+
+        // Salvo autori originali PRIMA di cambiare author
+        const requestedOriginalAuthor = requestedSpot.author;
+        const chosenOriginalAuthor = chosenSpot.author;
+
+        // 1) aggiorno richiesta => accepted subito
         request.selectedSpotId = selectedSpotId;
-        request.status = 'verifying';
-        request.verificationStartedAt = Date.now();
-        await request.save();
-        
-        await Spot.findByIdAndUpdate(request.spotId, { status: 'in_trade' });
-        await Spot.findByIdAndUpdate(selectedSpotId, { 
-            status: 'in_trade',
-            offeredForTrade: false 
-        });
-        
-        res.json({ success: true, request });
+        request.status = 'accepted';
+        request.updatedAt = new Date();
+        await request.save({ session: sessionDb });
+
+        // 2) trasferisco spot richiesto al mittente (fromUser)
+        await Spot.findByIdAndUpdate(
+            request.spotId,
+            {
+                status: 'completed',
+                acquired: true,
+                originalAuthor: requestedSpot.originalAuthor || requestedOriginalAuthor,
+                currentOwner: request.fromUser,
+                acquiredDate: new Date(),
+                author: request.fromUser,
+
+                // pulizia richieste
+                hasPendingTradeRequest: false,
+                requestedBy: [],
+                offeredForTrade: false
+            },
+            { session: sessionDb }
+        );
+
+        // 3) trasferisco spot scelto al destinatario (toUser)
+        await Spot.findByIdAndUpdate(
+            selectedSpotId,
+            {
+                status: 'completed',
+                acquired: true,
+                originalAuthor: chosenSpot.originalAuthor || chosenOriginalAuthor,
+                currentOwner: request.toUser,
+                acquiredDate: new Date(),
+                author: request.toUser,
+                offeredForTrade: false
+            },
+            { session: sessionDb }
+        );
+
+        // 4) rimetto "liberi" gli altri spot offerti ma NON scelti
+        const otherOffered = offeredIds.filter(id => id !== selectedSpotId.toString());
+        if (otherOffered.length > 0) {
+            await Spot.updateMany(
+                { _id: { $in: otherOffered } },
+                {
+                    $set: {
+                        offeredForTrade: false,
+                        status: 'active'
+                    }
+                },
+                { session: sessionDb }
+            );
+        }
+
+        // 5) rifiuto automaticamente le altre richieste pendenti sullo stesso spot richiesto
+        await TradeRequest.updateMany(
+            {
+                _id: { $ne: request._id },
+                spotId: request.spotId,
+                status: { $in: ['pending', 'verifying'] } // anche se esiste legacy
+            },
+            {
+                $set: {
+                    status: 'rejected',
+                    adminRejected: true,
+                    adminSeen: true,
+                    updatedAt: new Date()
+                }
+            },
+            { session: sessionDb }
+        );
+
+        await sessionDb.commitTransaction();
+        return res.json({ success: true });
+
     } catch (error) {
-        console.error('Error accepting trade:', error);
-        res.status(500).json({ error: 'Errore interno del server' });
+        console.error('Error accepting trade (instant complete):', error);
+        try { await sessionDb.abortTransaction(); } catch (e) {}
+        return res.status(500).json({ error: 'Errore interno del server' });
+    } finally {
+        sessionDb.endSession();
     }
 });
+
 
 app.put('/api/trade-requests/:id/complete', requireAdmin, async (req, res) => {
     try {
