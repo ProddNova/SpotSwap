@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -47,6 +48,8 @@ const userSchema = new mongoose.Schema({
         emailConfirm: { type: Boolean, default: true }
     },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    isFan: { type: Boolean, default: false },
+    fanToken: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -74,6 +77,7 @@ const spotSchema = new mongoose.Schema({
     currentOwner: String,
     acquiredDate: Date,
     originalSpotId: mongoose.Schema.Types.ObjectId,
+    isAdminCreated: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -96,9 +100,20 @@ const tradeRequestSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
+const fanInviteSchema = new mongoose.Schema({
+    token: { type: String, required: true, unique: true },
+    createdBy: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date, required: true },
+    used: { type: Boolean, default: false },
+    usedBy: { type: String },
+    usedAt: { type: Date }
+});
+
 const User = mongoose.model('User', userSchema);
 const Spot = mongoose.model('Spot', spotSchema);
 const TradeRequest = mongoose.model('TradeRequest', tradeRequestSchema);
+const FanInvite = mongoose.model('FanInvite', fanInviteSchema);
 
 // Middleware per autenticazione
 const requireAuth = (req, res, next) => {
@@ -200,6 +215,66 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Register via fan token
+app.post('/api/register', async (req, res) => {
+    try {
+        const { token, username, password } = req.body;
+        
+        if (!token || !username || !password) {
+            return res.status(400).json({ error: 'Token, username e password richiesti' });
+        }
+        
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password deve essere di almeno 6 caratteri' });
+        }
+        
+        // Check if token exists and is valid
+        const invite = await FanInvite.findOne({ 
+            token, 
+            used: false,
+            expiresAt: { $gt: new Date() }
+        });
+        
+        if (!invite) {
+            return res.status(400).json({ error: 'Token non valido o scaduto' });
+        }
+        
+        // Check if username already exists
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username già in uso' });
+        }
+        
+        // Create user
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new User({
+            username,
+            password: hashedPassword,
+            bio: 'Nuovo fan di 2Lost2Find',
+            role: 'user',
+            isFan: true,
+            fanToken: token
+        });
+        
+        await user.save();
+        
+        // Mark token as used
+        invite.used = true;
+        invite.usedBy = username;
+        invite.usedAt = new Date();
+        await invite.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Registrazione completata! Ora puoi accedere.'
+        });
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
 // Logout
 app.post('/api/logout', (req, res) => {
     req.session.destroy();
@@ -279,6 +354,59 @@ app.post('/api/spots', requireAuth, async (req, res) => {
         res.json({ success: true, spot });
     } catch (error) {
         console.error('Error creating spot:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+// Admin create spot for any user
+app.post('/api/admin/spots', requireAdmin, async (req, res) => {
+    try {
+        const { give, want, region, coordinates, category, description, author, authorId } = req.body;
+        
+        if (!give || !want || !region || !coordinates || !category || !author) {
+            return res.status(400).json({ error: 'Tutti i campi sono obbligatori' });
+        }
+        
+        // Check if author exists, if not create a dummy user
+        let user = await User.findOne({ username: author });
+        if (!user) {
+            const randomPassword = crypto.randomBytes(8).toString('hex');
+            const hashedPassword = await bcrypt.hash(randomPassword, 10);
+            
+            user = new User({
+                username: author,
+                password: hashedPassword,
+                bio: 'Utente creato da admin',
+                role: 'user',
+                isFan: true
+            });
+            await user.save();
+        }
+        
+        const spot = new Spot({
+            give,
+            want,
+            region,
+            coordinates,
+            category,
+            description: description || 'Spot creato da admin',
+            author: author,
+            authorId: user._id,
+            status: 'active',
+            isAdminCreated: true,
+            createdAt: new Date()
+        });
+        
+        await spot.save();
+        
+        res.json({ 
+            success: true, 
+            spot,
+            message: `Spot creato per l'utente ${author}`
+        });
+        
+    } catch (error) {
+        console.error('Error creating admin spot:', error);
         res.status(500).json({ error: 'Errore interno del server' });
     }
 });
@@ -517,13 +645,17 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
             totalSpots,
             activeSpots,
             totalTrades,
-            pendingTrades
+            pendingTrades,
+            fanUsers,
+            activeInvites
         ] = await Promise.all([
             User.countDocuments(),
             Spot.countDocuments({ status: { $ne: 'deleted' } }),
             Spot.countDocuments({ status: 'active' }),
             TradeRequest.countDocuments(),
-            TradeRequest.countDocuments({ status: 'pending' })
+            TradeRequest.countDocuments({ status: 'pending' }),
+            User.countDocuments({ isFan: true }),
+            FanInvite.countDocuments({ used: false, expiresAt: { $gt: new Date() } })
         ]);
         
         res.json({
@@ -531,7 +663,9 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
             totalSpots,
             activeSpots,
             totalTrades,
-            pendingTrades
+            pendingTrades,
+            fanUsers,
+            activeInvites
         });
     } catch (error) {
         console.error('Error fetching admin stats:', error);
@@ -565,10 +699,113 @@ app.get('/api/admin/trades', requireAdmin, async (req, res) => {
     }
 });
 
+// Fan invite routes
+app.post('/api/admin/invites', requireAdmin, async (req, res) => {
+    try {
+        const { hoursValid } = req.body;
+        const expiresHours = parseInt(hoursValid) || 24;
+        
+        // Generate unique token
+        const token = crypto.randomBytes(20).toString('hex');
+        
+        const invite = new FanInvite({
+            token,
+            createdBy: req.session.user.username,
+            expiresAt: new Date(Date.now() + expiresHours * 60 * 60 * 1000)
+        });
+        
+        await invite.save();
+        
+        // Generate registration URL
+        const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+        const registrationUrl = `${baseUrl}/register.html?token=${token}`;
+        
+        res.json({
+            success: true,
+            invite: {
+                token,
+                createdBy: invite.createdBy,
+                createdAt: invite.createdAt,
+                expiresAt: invite.expiresAt,
+                registrationUrl
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error creating invite:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+app.get('/api/admin/invites', requireAdmin, async (req, res) => {
+    try {
+        const invites = await FanInvite.find()
+            .sort({ createdAt: -1 })
+            .lean();
+        
+        res.json(invites);
+    } catch (error) {
+        console.error('Error fetching invites:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+app.delete('/api/admin/invites/:id', requireAdmin, async (req, res) => {
+    try {
+        await FanInvite.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting invite:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+// Check token validity
+app.get('/api/check-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        
+        const invite = await FanInvite.findOne({ 
+            token, 
+            used: false,
+            expiresAt: { $gt: new Date() }
+        });
+        
+        if (!invite) {
+            return res.json({ valid: false, message: 'Token non valido o scaduto' });
+        }
+        
+        res.json({ 
+            valid: true, 
+            expiresAt: invite.expiresAt,
+            createdBy: invite.createdBy
+        });
+        
+    } catch (error) {
+        console.error('Error checking token:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
 // Serve HTML
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Clean up expired invites every hour
+setInterval(async () => {
+    try {
+        const result = await FanInvite.deleteMany({
+            expiresAt: { $lt: new Date() },
+            used: false
+        });
+        if (result.deletedCount > 0) {
+            console.log(`Puliti ${result.deletedCount} inviti scaduti`);
+        }
+    } catch (error) {
+        console.error('Error cleaning expired invites:', error);
+    }
+}, 60 * 60 * 1000); // Every hour
 
 // Start server
 app.listen(PORT, () => {
