@@ -78,6 +78,8 @@ const spotSchema = new mongoose.Schema({
     acquiredDate: Date,
     originalSpotId: mongoose.Schema.Types.ObjectId,
     isAdminCreated: { type: Boolean, default: false },
+    hasPendingTradeRequest: { type: Boolean, default: false },
+    requestedBy: [{ type: String }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -96,6 +98,10 @@ const tradeRequestSchema = new mongoose.Schema({
         default: 'pending'
     },
     verificationStartedAt: Date,
+    adminApproved: { type: Boolean, default: false },
+    adminRejected: { type: Boolean, default: false },
+    adminSeen: { type: Boolean, default: false },
+    hiddenFromRecipient: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -297,7 +303,7 @@ app.get('/api/session', (req, res) => {
 // Spots routes
 app.get('/api/spots', requireAuth, async (req, res) => {
     try {
-        const { category, search, status, userOnly } = req.query;
+        const { category, search, status, userOnly, excludeRequested } = req.query;
         let query = { status: { $ne: 'deleted' } };
         
         if (category && category !== 'all') {
@@ -326,6 +332,18 @@ app.get('/api/spots', requireAuth, async (req, res) => {
             ];
         } else {
             query.author = { $ne: req.session.user.username };
+            
+            // Se excludeRequested è true, escludi spot per cui l'utente ha già fatto richiesta
+            if (excludeRequested === 'true') {
+                // Trova tutti gli spot per cui l'utente ha richieste pendenti
+                const userTradeRequests = await TradeRequest.find({
+                    fromUser: req.session.user.username,
+                    status: { $in: ['pending', 'verifying'] }
+                });
+                
+                const requestedSpotIds = userTradeRequests.map(req => req.spotId.toString());
+                query._id = { $nin: requestedSpotIds };
+            }
         }
         
         const spots = await Spot.find(query)
@@ -452,7 +470,44 @@ app.delete('/api/spots/:id', requireAuth, async (req, res) => {
         spot.status = 'deleted';
         await spot.save();
         
+        // Cancella anche le richieste di scambio associate
+        await TradeRequest.deleteMany({
+            $or: [
+                { spotId: spot._id },
+                { offeredSpots: spot._id },
+                { selectedSpotId: spot._id }
+            ]
+        });
+        
         res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting spot:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+// Admin delete spot
+app.delete('/api/admin/spots/:id', requireAdmin, async (req, res) => {
+    try {
+        const spot = await Spot.findById(req.params.id);
+        
+        if (!spot) {
+            return res.status(404).json({ error: 'Spot non trovato' });
+        }
+        
+        // Cancella lo spot
+        await Spot.findByIdAndDelete(req.params.id);
+        
+        // Cancella anche le richieste di scambio associate
+        await TradeRequest.deleteMany({
+            $or: [
+                { spotId: spot._id },
+                { offeredSpots: spot._id },
+                { selectedSpotId: spot._id }
+            ]
+        });
+        
+        res.json({ success: true, message: 'Spot eliminato con successo' });
     } catch (error) {
         console.error('Error deleting spot:', error);
         res.status(500).json({ error: 'Errore interno del server' });
@@ -462,12 +517,26 @@ app.delete('/api/spots/:id', requireAuth, async (req, res) => {
 // Trade requests routes
 app.get('/api/trade-requests', requireAuth, async (req, res) => {
     try {
-        const requests = await TradeRequest.find({
+        let query = {
             $or: [
                 { fromUser: req.session.user.username },
                 { toUser: req.session.user.username }
             ]
-        })
+        };
+        
+        // Se non è admin, nasconde le richieste al destinatario finché non sono approvate dall'admin
+        if (req.session.user.role !== 'admin') {
+            query.$or = [
+                { fromUser: req.session.user.username },
+                { 
+                    toUser: req.session.user.username,
+                    hiddenFromRecipient: false,
+                    adminApproved: true
+                }
+            ];
+        }
+        
+        const requests = await TradeRequest.find(query)
         .populate('spotId')
         .populate('offeredSpots')
         .populate('selectedSpotId')
@@ -490,6 +559,17 @@ app.post('/api/trade-requests', requireAuth, async (req, res) => {
             return res.status(404).json({ error: 'Spot non trovato' });
         }
         
+        // Controlla se l'utente ha già fatto una richiesta per questo spot
+        const existingRequest = await TradeRequest.findOne({
+            spotId: spotId,
+            fromUser: req.session.user.username,
+            status: { $in: ['pending', 'verifying'] }
+        });
+        
+        if (existingRequest) {
+            return res.status(400).json({ error: 'Hai già inviato una richiesta per questo spot' });
+        }
+        
         const tradeRequest = new TradeRequest({
             spotId,
             fromUser: req.session.user.username,
@@ -497,10 +577,17 @@ app.post('/api/trade-requests', requireAuth, async (req, res) => {
             toUser: spot.author,
             toUserId: spot.authorId,
             offeredSpots,
-            status: 'pending'
+            status: 'pending',
+            hiddenFromRecipient: true // Nascondi al destinatario finché admin non approva
         });
         
         await tradeRequest.save();
+        
+        // Segna lo spot come richiesto
+        await Spot.findByIdAndUpdate(spotId, {
+            $addToSet: { requestedBy: req.session.user.username },
+            hasPendingTradeRequest: true
+        });
         
         await Spot.updateMany(
             { _id: { $in: offeredSpots } },
@@ -518,6 +605,71 @@ app.post('/api/trade-requests', requireAuth, async (req, res) => {
     }
 });
 
+// Admin approve trade request
+app.put('/api/admin/trade-requests/:id/approve', requireAdmin, async (req, res) => {
+    try {
+        const request = await TradeRequest.findById(req.params.id);
+        
+        if (!request) {
+            return res.status(404).json({ error: 'Richiesta di scambio non trovata' });
+        }
+        
+        request.adminApproved = true;
+        request.hiddenFromRecipient = false; // Ora il destinatario può vederla
+        request.adminSeen = true;
+        await request.save();
+        
+        res.json({ success: true, request });
+    } catch (error) {
+        console.error('Error approving trade:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+// Admin reject trade request
+app.put('/api/admin/trade-requests/:id/reject', requireAdmin, async (req, res) => {
+    try {
+        const request = await TradeRequest.findById(req.params.id);
+        
+        if (!request) {
+            return res.status(404).json({ error: 'Richiesta di scambio non trovata' });
+        }
+        
+        request.status = 'rejected';
+        request.adminRejected = true;
+        request.adminSeen = true;
+        await request.save();
+        
+        // Rimuovi lo spot dalla lista dei richiesti
+        await Spot.findByIdAndUpdate(request.spotId, {
+            $pull: { requestedBy: request.fromUser }
+        });
+        
+        // Controlla se ci sono ancora richieste pendenti per lo spot
+        const pendingRequests = await TradeRequest.countDocuments({
+            spotId: request.spotId,
+            status: { $in: ['pending', 'verifying'] }
+        });
+        
+        if (pendingRequests === 0) {
+            await Spot.findByIdAndUpdate(request.spotId, {
+                hasPendingTradeRequest: false
+            });
+        }
+        
+        // Rendi nuovamente disponibili gli spot offerti
+        await Spot.updateMany(
+            { _id: { $in: request.offeredSpots } },
+            { $set: { offeredForTrade: false } }
+        );
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error rejecting trade:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
 app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
     try {
         const { selectedSpotId } = req.body;
@@ -529,6 +681,10 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
         
         if (request.toUser !== req.session.user.username) {
             return res.status(403).json({ error: 'Non autorizzato' });
+        }
+        
+        if (!request.adminApproved) {
+            return res.status(403).json({ error: 'Richiesta non ancora approvata dall\'admin' });
         }
         
         request.selectedSpotId = selectedSpotId;
@@ -549,7 +705,7 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
     }
 });
 
-app.put('/api/trade-requests/:id/complete', requireAuth, async (req, res) => {
+app.put('/api/trade-requests/:id/complete', requireAdmin, async (req, res) => {
     try {
         const request = await TradeRequest.findById(req.params.id);
         
@@ -557,30 +713,37 @@ app.put('/api/trade-requests/:id/complete', requireAuth, async (req, res) => {
             return res.status(404).json({ error: 'Richiesta di scambio non trovata' });
         }
         
-        if (req.session.user.role !== 'admin') {
-            return res.status(403).json({ error: 'Accesso admin richiesto' });
-        }
-        
         request.status = 'accepted';
         await request.save();
         
+        // Trasferisci lo spot richiesto al mittente
         await Spot.findByIdAndUpdate(request.spotId, {
             status: 'completed',
             acquired: true,
             originalAuthor: (await Spot.findById(request.spotId)).author,
             currentOwner: request.fromUser,
             acquiredDate: Date.now(),
-            author: request.fromUser
+            author: request.fromUser,
+            hasPendingTradeRequest: false,
+            requestedBy: []
         });
         
+        // Trasferisci lo spot selezionato al destinatario
         await Spot.findByIdAndUpdate(request.selectedSpotId, {
             status: 'completed',
             acquired: true,
             originalAuthor: (await Spot.findById(request.selectedSpotId)).author,
             currentOwner: request.toUser,
             acquiredDate: Date.now(),
-            author: request.toUser
+            author: request.toUser,
+            offeredForTrade: false
         });
+        
+        // Aggiorna tutti gli altri spot offerti a non più in offerta
+        await Spot.updateMany(
+            { _id: { $in: request.offeredSpots, $ne: request.selectedSpotId } },
+            { $set: { offeredForTrade: false } }
+        );
         
         res.json({ success: true, request });
     } catch (error) {
@@ -603,6 +766,23 @@ app.put('/api/trade-requests/:id/reject', requireAuth, async (req, res) => {
         
         request.status = 'rejected';
         await request.save();
+        
+        // Rimuovi lo spot dalla lista dei richiesti
+        await Spot.findByIdAndUpdate(request.spotId, {
+            $pull: { requestedBy: request.fromUser }
+        });
+        
+        // Controlla se ci sono ancora richieste pendenti per lo spot
+        const pendingRequests = await TradeRequest.countDocuments({
+            spotId: request.spotId,
+            status: { $in: ['pending', 'verifying'] }
+        });
+        
+        if (pendingRequests === 0) {
+            await Spot.findByIdAndUpdate(request.spotId, {
+                hasPendingTradeRequest: false
+            });
+        }
         
         await Spot.updateMany(
             { _id: { $in: request.offeredSpots } },
@@ -647,7 +827,8 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
             totalTrades,
             pendingTrades,
             fanUsers,
-            activeInvites
+            activeInvites,
+            pendingAdminApprovalTrades
         ] = await Promise.all([
             User.countDocuments(),
             Spot.countDocuments({ status: { $ne: 'deleted' } }),
@@ -655,7 +836,8 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
             TradeRequest.countDocuments(),
             TradeRequest.countDocuments({ status: 'pending' }),
             User.countDocuments({ isFan: true }),
-            FanInvite.countDocuments({ used: false, expiresAt: { $gt: new Date() } })
+            FanInvite.countDocuments({ used: false, expiresAt: { $gt: new Date() } }),
+            TradeRequest.countDocuments({ adminApproved: false, adminRejected: false })
         ]);
         
         res.json({
@@ -665,7 +847,8 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
             totalTrades,
             pendingTrades,
             fanUsers,
-            activeInvites
+            activeInvites,
+            pendingAdminApprovalTrades
         });
     } catch (error) {
         console.error('Error fetching admin stats:', error);
@@ -695,6 +878,36 @@ app.get('/api/admin/trades', requireAdmin, async (req, res) => {
         res.json(trades);
     } catch (error) {
         console.error('Error fetching trades:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+app.get('/api/admin/spots', requireAdmin, async (req, res) => {
+    try {
+        const { status, search } = req.query;
+        let query = { status: { $ne: 'deleted' } };
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        if (search) {
+            query.$or = [
+                { give: { $regex: search, $options: 'i' } },
+                { want: { $regex: search, $options: 'i' } },
+                { region: { $regex: search, $options: 'i' } },
+                { author: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        const spots = await Spot.find(query)
+            .sort({ createdAt: -1 })
+            .lean();
+        
+        res.json(spots);
+    } catch (error) {
+        console.error('Error fetching admin spots:', error);
         res.status(500).json({ error: 'Errore interno del server' });
     }
 });
