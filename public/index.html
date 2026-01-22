@@ -3723,12 +3723,12 @@
       await loadUserSpots();
       updateProfileStats();
       
-      const published = state.spots.filter(s => 
-        s.author === state.user.username && 
-        !s.acquired && 
-        s.status !== 'completed' &&
+      const published = state.spots.filter(s =>
+        s.author === state.user.username &&
+        !s.acquired &&
         !s.offeredForTrade
       );
+
       
       const acquired = state.spots.filter(s => s.acquired && s.currentOwner === state.user.username);
       
