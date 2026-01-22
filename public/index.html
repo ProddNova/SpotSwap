@@ -115,10 +115,17 @@
     nav{
       display:flex;
       gap:6px;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
       justify-content:flex-end;
       flex:1;
-      min-width:0
+      min-width:0;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none
+    }
+    
+    nav::-webkit-scrollbar{
+      display:none
     }
     
     .nav-btn{
@@ -190,14 +197,11 @@
       border-radius:var(--radius);
       padding:16px;
       cursor:pointer;
-      transition:all .3s cubic-bezier(0.4,0,0.2,1);
+      transition:border-color .2s ease, box-shadow .2s ease;
       position:relative;
       overflow:hidden;
       width:100%;
-      transform:translateZ(0);
-      backface-visibility:hidden;
-      -webkit-backface-visibility:hidden;
-      will-change:transform;
+      will-change:transform
     }
     
     .spot-card::before{
@@ -212,15 +216,17 @@
       transition:opacity .3s ease
     }
     
-    .spot-card:hover{
-      border-color:var(--primary);
-      transform:translateY(-4px);
-      box-shadow:var(--shadow-lg);
-      background:var(--card-hover)
-    }
-    
-    .spot-card:hover::before{
-      opacity:1
+    @media (min-width:769px){
+      .spot-card:hover{
+        border-color:var(--primary);
+        transform:translateY(-4px);
+        box-shadow:var(--shadow-lg);
+        background:var(--card-hover)
+      }
+      
+      .spot-card:hover::before{
+        opacity:1
+      }
     }
 
     .spot-header{
@@ -339,7 +345,8 @@
       transition:all .2s cubic-bezier(0.4,0,0.2,1);
       font-size:13px;
       text-align:center;
-      display:inline-block
+      display:inline-block;
+      background:transparent
     }
 
     .btn-primary{
@@ -657,22 +664,20 @@
 
     .spot-selector{
       background:var(--bg-light);
-      border:2px solid transparent;
+      border:1px solid var(--border);
       border-radius:7px;
       padding:12px;
       margin-bottom:10px;
       cursor:pointer;
-      transition:all .2s;
+      transition:border-color .2s ease;
       display:flex;
       align-items:flex-start;
       gap:12px;
-      width:100%;
-      transform:translateZ(0);
+      width:100%
     }
 
     .spot-selector:hover{
-      border-color:var(--border-light);
-      background:var(--card)
+      border-color:var(--border-light)
     }
 
     .spot-selector.selected{
@@ -1107,16 +1112,15 @@
     /* RESPONSIVE */
     @media (max-width:768px){
       .header-content{
-        flex-direction:row;
-        flex-wrap:wrap;
+        flex-direction:column;
+        align-items:flex-start;
         padding:10px 16px;
         gap:10px;
         max-width:100%
       }
       
       .logo-area{
-        flex:1;
-        min-width:0
+        width:100%
       }
       
       .logo{
@@ -1137,15 +1141,12 @@
       }
       
       nav{
-        order:2;
-        flex:1 1 100%;
+        width:100%;
         overflow-x:auto;
         padding-bottom:6px;
         justify-content:flex-start;
-        margin-top:0;
         -webkit-overflow-scrolling:touch;
-        scrollbar-width:none;
-        max-width:100%
+        scrollbar-width:none
       }
       
       nav::-webkit-scrollbar{
@@ -1870,8 +1871,28 @@
           </div>
           <div class="form-group">
             <label class="form-label">Regione</label>
-            <select class="form-select" id="spot-region">
-              <option value="">Seleziona una regione o città</option>
+            <select class="form-select" id="spot-region-admin">
+              <option value="">Seleziona regione...</option>
+              <option value="Abruzzo">Abruzzo</option>
+              <option value="Basilicata">Basilicata</option>
+              <option value="Calabria">Calabria</option>
+              <option value="Campania">Campania</option>
+              <option value="Emilia-Romagna">Emilia-Romagna</option>
+              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+              <option value="Lazio">Lazio</option>
+              <option value="Liguria">Liguria</option>
+              <option value="Lombardia">Lombardia</option>
+              <option value="Marche">Marche</option>
+              <option value="Molise">Molise</option>
+              <option value="Piemonte">Piemonte</option>
+              <option value="Puglia">Puglia</option>
+              <option value="Sardegna">Sardegna</option>
+              <option value="Sicilia">Sicilia</option>
+              <option value="Toscana">Toscana</option>
+              <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+              <option value="Umbria">Umbria</option>
+              <option value="Valle d'Aosta">Valle d'Aosta</option>
+              <option value="Veneto">Veneto</option>
             </select>
           </div>
           <button class="btn btn-success" onclick="createAdminSpot()" style="width: 100%;">
@@ -1978,9 +1999,29 @@
           </div>
           
           <div class="form-group" style="margin:0">
-            <label class="form-label">Posizione</label>
+            <label class="form-label">Regione</label>
             <select class="form-select" id="filter-region">
-              <option value="all">Tutte</option>
+              <option value="all">Tutte le regioni</option>
+              <option value="Abruzzo">Abruzzo</option>
+              <option value="Basilicata">Basilicata</option>
+              <option value="Calabria">Calabria</option>
+              <option value="Campania">Campania</option>
+              <option value="Emilia-Romagna">Emilia-Romagna</option>
+              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+              <option value="Lazio">Lazio</option>
+              <option value="Liguria">Liguria</option>
+              <option value="Lombardia">Lombardia</option>
+              <option value="Marche">Marche</option>
+              <option value="Molise">Molise</option>
+              <option value="Piemonte">Piemonte</option>
+              <option value="Puglia">Puglia</option>
+              <option value="Sardegna">Sardegna</option>
+              <option value="Sicilia">Sicilia</option>
+              <option value="Toscana">Toscana</option>
+              <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+              <option value="Umbria">Umbria</option>
+              <option value="Valle d'Aosta">Valle d'Aosta</option>
+              <option value="Veneto">Veneto</option>
             </select>
           </div>
         </div>
@@ -2149,22 +2190,11 @@
               <textarea class="form-textarea" id="profile-bio" rows="3" maxlength="200"></textarea>
             </div>
           </div>
-          
-          <div class="setting-item">
-            <div class="setting-header">
-              <div class="setting-title">Logout</div>
-            </div>
-            <div class="setting-description">
-              Esci dal tuo account
-            </div>
-            <div class="setting-control">
-              <button class="btn btn-danger" onclick="logout()" style="width:100%">Logout</button>
-            </div>
-          </div>
         </div>
 
         <div class="flex gap-2 mt-2">
           <button class="btn btn-primary" onclick="saveProfileSettings()" style="flex:1">Salva modifiche</button>
+          <button class="btn btn-danger" onclick="logout()">Logout</button>
         </div>
       </div>
 
@@ -2204,11 +2234,31 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Zona generica</label>
+            <label class="form-label">Regione</label>
             <select class="form-select" id="input-region">
-              <option value="">Seleziona una regione o città</option>
+              <option value="">Seleziona regione...</option>
+              <option value="Abruzzo">Abruzzo</option>
+              <option value="Basilicata">Basilicata</option>
+              <option value="Calabria">Calabria</option>
+              <option value="Campania">Campania</option>
+              <option value="Emilia-Romagna">Emilia-Romagna</option>
+              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+              <option value="Lazio">Lazio</option>
+              <option value="Liguria">Liguria</option>
+              <option value="Lombardia">Lombardia</option>
+              <option value="Marche">Marche</option>
+              <option value="Molise">Molise</option>
+              <option value="Piemonte">Piemonte</option>
+              <option value="Puglia">Puglia</option>
+              <option value="Sardegna">Sardegna</option>
+              <option value="Sicilia">Sicilia</option>
+              <option value="Toscana">Toscana</option>
+              <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+              <option value="Umbria">Umbria</option>
+              <option value="Valle d'Aosta">Valle d'Aosta</option>
+              <option value="Veneto">Veneto</option>
             </select>
-            <div class="form-hint">Solo zona generica, mai l'indirizzo</div>
+            <div class="form-hint">Seleziona la regione dello spot</div>
           </div>
 
           <div class="form-group">
@@ -2226,8 +2276,8 @@
 
         <div class="form-group">
           <label class="form-label">Coordinate GPS o Link Google Maps</label>
-          <input type="text" class="form-input" id="input-coordinates" placeholder="es. 45.4642, 9.1900 oppure https://maps.app.goo.gl/...">
-          <div class="form-hint">⚠️ Saranno visibili SOLO dopo l'accettazione dello scambio e verifica. Accetta coordinate o link Google Maps.</div>
+          <input type="text" class="form-input" id="input-coordinates" placeholder="es. 45.4642, 9.1900 o link Google Maps">
+          <div class="form-hint">⚠️ Saranno visibili SOLO dopo l'accettazione dello scambio e verifica. Puoi inserire coordinate o un link Google Maps.</div>
         </div>
 
         <div class="form-group">
@@ -2332,33 +2382,6 @@
   <script>
     // ========== CONSTANTS ==========
     const API_BASE = '/api';
-    
-    // Lista di regioni e città italiane per i dropdown
-    const ITALIAN_LOCATIONS = [
-      "Abruzzo", "Basilicata", "Calabria", "Campania", "Emilia-Romagna", 
-      "Friuli-Venezia Giulia", "Lazio", "Liguria", "Lombardia", "Marche", 
-      "Molise", "Piemonte", "Puglia", "Sardegna", "Sicilia", "Toscana", 
-      "Trentino-Alto Adige", "Umbria", "Valle d'Aosta", "Veneto",
-      "Agrigento", "Alessandria", "Ancona", "Aosta", "Arezzo", "Ascoli Piceno", 
-      "Asti", "Avellino", "Bari", "Barletta-Andria-Trani", "Belluno", "Benevento", 
-      "Bergamo", "Biella", "Bologna", "Bolzano", "Brescia", "Brindisi", "Cagliari", 
-      "Caltanissetta", "Campobasso", "Carbonia-Iglesias", "Caserta", "Catania", 
-      "Catanzaro", "Chieti", "Como", "Cosenza", "Cremona", "Crotone", "Cuneo", 
-      "Enna", "Fermo", "Ferrara", "Firenze", "Foggia", "Forlì-Cesena", "Frosinone", 
-      "Genova", "Gorizia", "Grosseto", "Imperia", "Isernia", "La Spezia", "L'Aquila", 
-      "Latina", "Lecce", "Lecco", "Livorno", "Lodi", "Lucca", "Macerata", "Mantova", 
-      "Massa-Carrara", "Matera", "Messina", "Milano", "Modena", "Monza e Brianza", 
-      "Napoli", "Novara", "Nuoro", "Ogliastra", "Olbia-Tempio", "Oristano", "Padova", 
-      "Palermo", "Parma", "Pavia", "Perugia", "Pesaro e Urbino", "Pescara", "Piacenza", 
-      "Pisa", "Pistoia", "Pordenone", "Potenza", "Prato", "Ragusa", "Ravenna", 
-      "Reggio Calabria", "Reggio Emilia", "Rieti", "Rimini", "Roma", "Rovigo", 
-      "Salerno", "Medio Campidano", "Sassari", "Savona", "Siena", "Siracusa", 
-      "Sondrio", "Taranto", "Teramo", "Terni", "Torino", "Trapani", "Trento", 
-      "Treviso", "Trieste", "Udine", "Varese", "Venezia", "Verbano-Cusio-Ossola", 
-      "Vercelli", "Verona", "Vibo Valentia", "Vicenza", "Viterbo",
-      "Lago di Como", "Lago di Garda", "Lago Maggiore", "Alpi", "Appennini",
-      "Costa Adriatica", "Costa Tirrenica", "Costa Ligure", "Costa Sarda"
-    ];
 
     // ========== STATE ==========
     let state = {
@@ -2377,6 +2400,72 @@
     let map = null;
     let markers = [];
     let currentMapFilter = 'all';
+
+    // ========== UTILITY FUNCTIONS ==========
+    
+    // Funzione per pulire le coordinate
+    function cleanCoordinates(coords) {
+      if (!coords) return coords;
+      
+      // Rimuovi parentesi, spazi extra e altri caratteri non necessari
+      let cleaned = coords.trim()
+        .replace(/^\(+/, '')  // Rimuovi parentesi di apertura all'inizio
+        .replace(/\)+$/, '')  // Rimuovi parentesi di chiusura alla fine
+        .replace(/\s+/g, ' ') // Normalizza spazi multipli
+        .trim();
+      
+      return cleaned;
+    }
+    
+    // Funzione per estrarre coordinate da link Google Maps
+    async function extractCoordinatesFromLink(link) {
+      if (!link) return null;
+      
+      // Se è già in formato coordinate, puliscile e restituiscile
+      if (link.includes(',') && !link.includes('http')) {
+        return cleanCoordinates(link);
+      }
+      
+      // Se è un link Google Maps shortlink (goo.gl o maps.app.goo.gl)
+      if (link.includes('goo.gl') || link.includes('maps.app.goo.gl')) {
+        try {
+          // Prova a seguire il redirect per ottenere l'URL completo
+          const response = await fetch(`/api/resolve-map-link?url=${encodeURIComponent(link)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.coordinates) {
+              return cleanCoordinates(data.coordinates);
+            }
+          }
+        } catch (error) {
+          console.error('Error resolving Google Maps link:', error);
+        }
+      }
+      
+      // Se è un link Google Maps normale, cerca le coordinate nell'URL
+      if (link.includes('google.com/maps')) {
+        // Cerca pattern @lat,lng
+        const atMatch = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (atMatch) {
+          return `${atMatch[1]}, ${atMatch[2]}`;
+        }
+        
+        // Cerca pattern q=lat,lng
+        const qMatch = link.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (qMatch) {
+          return `${qMatch[1]}, ${qMatch[2]}`;
+        }
+        
+        // Cerca pattern ll=lat,lng
+        const llMatch = link.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (llMatch) {
+          return `${llMatch[1]}, ${llMatch[2]}`;
+        }
+      }
+      
+      // Se nessun pattern è stato trovato, restituisci il link pulito
+      return cleanCoordinates(link);
+    }
 
     // ========== INIT ==========
     async function init() {
@@ -2586,9 +2675,6 @@
       document.querySelector('header').style.display = 'none';
       document.querySelector('.container').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'block';
-      
-      // Popola il dropdown delle regioni nell'admin
-      populateLocationDropdown('spot-region');
       
       // Setup admin tabs
       document.querySelectorAll('[data-admin-tab]').forEach(tab => {
@@ -2905,7 +2991,7 @@
                 </button>
               ` : ''}
               ${spot.coordinates ? `
-                <button class="btn btn-primary" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+                <button class="btn btn-primary" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
                   🗺️ Mappa
                 </button>
               ` : ''}
@@ -2941,48 +3027,42 @@
               ${spot.status === 'active' ? 'Attivo' : spot.status === 'in_trade' ? 'In scambio' : spot.status === 'completed' ? 'Completato' : 'Eliminato'}
             </span>
             ${spot.acquired ? '<span class="badge badge-warning">Ottenuto</span>' : ''}
-            ${spot.offeredForTrade ? '<span class="badge badge-primary">In offerta</span>' : ''}
           </div>
         </div>
         
         <div class="mb-3">
-          <strong>Autore:</strong> ${escapeHtml(spot.author)}
-          ${spot.originalAuthor ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Originale: ${escapeHtml(spot.originalAuthor)}</div>` : ''}
+          <strong>Autore:</strong> ${escapeHtml(spot.author)}<br>
+          <strong>Zona:</strong> ${escapeHtml(spot.region)}<br>
+          <strong>Creato:</strong> ${new Date(spot.createdAt).toLocaleString('it-IT')}<br>
+          ${spot.acquiredDate ? `<strong>Ottenuto il:</strong> ${new Date(spot.acquiredDate).toLocaleDateString('it-IT')}<br>` : ''}
+          ${spot.currentOwner ? `<strong>Proprietario attuale:</strong> ${escapeHtml(spot.currentOwner)}<br>` : ''}
+          ${spot.originalAuthor ? `<strong>Autore originale:</strong> ${escapeHtml(spot.originalAuthor)}<br>` : ''}
         </div>
-
-        <div class="mb-3">
-          <strong>Zona:</strong> 📍 ${escapeHtml(spot.region)}
-        </div>
-
-        <div class="mb-3">
-          <strong>Pubblicato:</strong> ${getTimeAgo(spot.createdAt)}
-          ${spot.acquiredDate ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Ottenuto: ${new Date(spot.acquiredDate).toLocaleDateString('it-IT')}</div>` : ''}
-        </div>
-
+        
         <div class="mb-3">
           <strong>Offre:</strong> ${escapeHtml(spot.give)}<br>
           <strong>Cerca:</strong> ${escapeHtml(spot.want)}
         </div>
-
+        
         <div class="mb-3">
           <strong>Descrizione:</strong><br>
           <div style="background: var(--bg-light); padding: 10px; border-radius: 6px; margin-top: 5px;">
             ${escapeHtml(spot.description || 'Nessuna descrizione')}
           </div>
         </div>
-
+        
         ${spot.coordinates ? `
           <div class="mb-3">
-            <strong>Coordinate GPS o Link:</strong><br>
+            <strong>Coordinate GPS:</strong><br>
             <div style="background: var(--bg-light); padding: 10px; border-radius: 6px; margin-top: 5px; font-family: monospace;">
               ${escapeHtml(spot.coordinates)}
             </div>
-            <button class="btn btn-primary mt-2" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+            <button class="btn btn-primary mt-2" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
               🗺️ Apri in Google Maps
             </button>
           </div>
         ` : ''}
-
+        
         <div class="mb-3">
           <strong>Dettagli tecnici:</strong><br>
           <div style="font-size: 12px; color: var(--text-muted);">
@@ -3046,7 +3126,7 @@
               </div>
               ${spot.coordinates ? `
                 <div style="margin-top: 8px;">
-                  <strong>Coordinate/Link:</strong>
+                  <strong>Coordinate:</strong>
                   <div style="font-family: monospace; font-size: 12px; background: var(--bg); padding: 6px; border-radius: 4px;">
                     ${escapeHtml(spot.coordinates)}
                   </div>
@@ -3068,7 +3148,7 @@
                 </div>
                 ${s.coordinates ? `
                   <div style="margin-top: 6px;">
-                    <strong>Coordinate/Link:</strong>
+                    <strong>Coordinate:</strong>
                     <div style="font-family: monospace; font-size: 11px; background: var(--bg); padding: 4px; border-radius: 4px;">
                       ${escapeHtml(s.coordinates)}
                     </div>
@@ -3088,7 +3168,7 @@
                 </div>
                 ${trade.selectedSpotId.coordinates ? `
                   <div style="margin-top: 6px;">
-                    <strong>Coordinate/Link:</strong>
+                    <strong>Coordinate:</strong>
                     <div style="font-family: monospace; font-size: 11px; background: var(--bg); padding: 4px; border-radius: 4px;">
                       ${escapeHtml(trade.selectedSpotId.coordinates)}
                     </div>
@@ -3259,16 +3339,40 @@
       const username = document.getElementById('spot-username').value.trim();
       const title = document.getElementById('spot-title').value.trim();
       const want = document.getElementById('spot-want').value.trim();
-      const region = document.getElementById('spot-region').value;
+      const region = document.getElementById('spot-region-admin').value;
       
       if (!username || !title || !want || !region) {
         alert('Compila tutti i campi');
         return;
       }
       
-      // Generate random coordinates in Italy
-      const lat = 41.8719 + (Math.random() - 0.5) * 5;
-      const lng = 12.5674 + (Math.random() - 0.5) * 5;
+      // Generate random coordinates in Italy based on region
+      const regionCoordinates = {
+        'Abruzzo': { lat: 42.3506, lng: 13.3995 },
+        'Basilicata': { lat: 40.6390, lng: 15.8057 },
+        'Calabria': { lat: 38.9101, lng: 16.5875 },
+        'Campania': { lat: 40.8359, lng: 14.2488 },
+        'Emilia-Romagna': { lat: 44.4949, lng: 11.3426 },
+        'Friuli-Venezia Giulia': { lat: 45.6371, lng: 13.8038 },
+        'Lazio': { lat: 41.8719, lng: 12.5674 },
+        'Liguria': { lat: 44.4056, lng: 8.9463 },
+        'Lombardia': { lat: 45.4642, lng: 9.1900 },
+        'Marche': { lat: 43.6158, lng: 13.5189 },
+        'Molise': { lat: 41.5616, lng: 14.6682 },
+        'Piemonte': { lat: 45.0703, lng: 7.6869 },
+        'Puglia': { lat: 40.9476, lng: 17.1047 },
+        'Sardegna': { lat: 39.2238, lng: 9.1217 },
+        'Sicilia': { lat: 38.1157, lng: 13.3615 },
+        'Toscana': { lat: 43.7696, lng: 11.2558 },
+        'Trentino-Alto Adige': { lat: 46.4983, lng: 11.3548 },
+        'Umbria': { lat: 42.9380, lng: 12.6144 },
+        "Valle d'Aosta": { lat: 45.7376, lng: 7.3207 },
+        'Veneto': { lat: 45.4408, lng: 12.3155 }
+      };
+      
+      const baseCoords = regionCoordinates[region] || { lat: 41.8719, lng: 12.5674 };
+      const lat = baseCoords.lat + (Math.random() - 0.5) * 0.5;
+      const lng = baseCoords.lng + (Math.random() - 0.5) * 0.5;
       const coordinates = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
       
       const spotData = {
@@ -3298,7 +3402,7 @@
           document.getElementById('spot-username').value = '';
           document.getElementById('spot-title').value = '';
           document.getElementById('spot-want').value = '';
-          document.getElementById('spot-region').value = '';
+          document.getElementById('spot-region-admin').value = '';
           
           // Reload admin spots
           loadAdminSpots();
@@ -3320,74 +3424,12 @@
         showToast('Errore nella copia', 'error');
       });
     }
-    
-    // Funzione per popolare dropdown delle location
-    function populateLocationDropdown(selectId, includeAllOption = false) {
-      const select = document.getElementById(selectId);
-      if (!select) return;
-      
-      // Clear existing options
-      select.innerHTML = '';
-      
-      if (includeAllOption) {
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = 'Tutte';
-        select.appendChild(allOption);
-      } else {
-        const placeholderOption = document.createElement('option');
-        placeholderOption.value = '';
-        placeholderOption.textContent = 'Seleziona una regione o città';
-        placeholderOption.disabled = true;
-        placeholderOption.selected = true;
-        select.appendChild(placeholderOption);
-      }
-      
-      // Aggiungi le location ordinate alfabeticamente
-      ITALIAN_LOCATIONS.sort().forEach(location => {
-        const option = document.createElement('option');
-        option.value = location;
-        option.textContent = location;
-        select.appendChild(option);
-      });
-    }
-    
-    // Funzione per normalizzare le coordinate
-    function normalizeCoordinates(input) {
-      if (!input) return '';
-      
-      // Se è già un URL, ritorna così com'è
-      if (input.startsWith('http://') || input.startsWith('https://')) {
-        return input.trim();
-      }
-      
-      // Rimuovi parentesi e spazi extra
-      let clean = input.replace(/[()]/g, '').trim();
-      
-      // Sostituisci eventuali punti e virgole con virgole
-      clean = clean.replace(/;/g, ',');
-      
-      // Rimuovi spazi multipli
-      clean = clean.replace(/\s+/g, ' ');
-      
-      // Verifica se è nel formato corretto (lat, lng)
-      const parts = clean.split(',');
-      if (parts.length === 2) {
-        const lat = parseFloat(parts[0].trim());
-        const lng = parseFloat(parts[1].trim());
-        if (!isNaN(lat) && !isNaN(lng)) {
-          return `${lat}, ${lng}`;
-        }
-      }
-      
-      return clean;
-    }
 
     // ========== DATA LOADING ==========
     async function loadInitialData() {
       try {
         const [spotsResponse, requestsResponse] = await Promise.all([
-          fetch(`${API_BASE}/spots?excludeRequested=true`), // MODIFICA: Escludi spot già richiesti
+          fetch(`${API_BASE}/spots?excludeRequested=true`),
           fetch(`${API_BASE}/trade-requests`)
         ]);
         
@@ -3398,10 +3440,6 @@
         state.spots = await spotsResponse.json();
         state.tradeRequests = await requestsResponse.json();
         
-        // Popola i dropdown delle location dopo aver caricato i dati
-        populateLocationDropdown('input-region');
-        populateLocationDropdown('filter-region', true);
-        
       } catch (error) {
         console.error('Error loading initial data:', error);
         showToast('Errore nel caricamento dei dati', 'error');
@@ -3410,7 +3448,6 @@
 
     async function loadMarketSpots() {
       try {
-        // MODIFICA: Escludi gli spot per cui l'utente ha già inviato richieste
         const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
         if (response.ok) {
           state.spots = await response.json();
@@ -3616,7 +3653,8 @@
         let lat, lng;
         
         if (spot.coordinates && spot.coordinates.includes(',')) {
-          const coords = spot.coordinates.split(',').map(c => parseFloat(c.trim()));
+          const cleanedCoords = cleanCoordinates(spot.coordinates);
+          const coords = cleanedCoords.split(',').map(c => parseFloat(c.trim()));
           if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
             lat = coords[0];
             lng = coords[1];
@@ -3625,31 +3663,29 @@
         
         if (!lat || !lng) {
           const regionMap = {
-            'lombardia': { lat: 45.4642, lng: 9.1900 },
-            'bergamo': { lat: 45.6983, lng: 9.6773 },
-            'piemonte': { lat: 45.0703, lng: 7.6869 },
-            'torino': { lat: 45.0703, lng: 7.6869 },
-            'trentino': { lat: 46.4983, lng: 11.3548 },
-            'alto adige': { lat: 46.4983, lng: 11.3548 },
-            'valle d\'aosta': { lat: 45.7376, lng: 7.3207 },
-            'toscana': { lat: 43.7696, lng: 11.2558 },
-            'firenze': { lat: 43.7696, lng: 11.2558 },
-            'liguria': { lat: 44.4056, lng: 8.9463 },
-            'genova': { lat: 44.4056, lng: 8.9463 },
-            'emilia': { lat: 44.4949, lng: 11.3426 },
-            'romagna': { lat: 44.4949, lng: 11.3426 },
-            'umbria': { lat: 43.1107, lng: 12.3908 },
-            'perugia': { lat: 43.1107, lng: 12.3908 },
-            'veneto': { lat: 45.4408, lng: 12.3155 },
-            'venezia': { lat: 45.4408, lng: 12.3155 },
-            'lago di como': { lat: 45.8170, lng: 9.0856 },
-            'como': { lat: 45.8170, lng: 9.0856 },
-            'sardegna': { lat: 39.1642, lng: 8.5219 },
-            'carbonia': { lat: 39.1642, lng: 8.5219 }
+            'Abruzzo': { lat: 42.3506, lng: 13.3995 },
+            'Basilicata': { lat: 40.6390, lng: 15.8057 },
+            'Calabria': { lat: 38.9101, lng: 16.5875 },
+            'Campania': { lat: 40.8359, lng: 14.2488 },
+            'Emilia-Romagna': { lat: 44.4949, lng: 11.3426 },
+            'Friuli-Venezia Giulia': { lat: 45.6371, lng: 13.8038 },
+            'Lazio': { lat: 41.8719, lng: 12.5674 },
+            'Liguria': { lat: 44.4056, lng: 8.9463 },
+            'Lombardia': { lat: 45.4642, lng: 9.1900 },
+            'Marche': { lat: 43.6158, lng: 13.5189 },
+            'Molise': { lat: 41.5616, lng: 14.6682 },
+            'Piemonte': { lat: 45.0703, lng: 7.6869 },
+            'Puglia': { lat: 40.9476, lng: 17.1047 },
+            'Sardegna': { lat: 39.2238, lng: 9.1217 },
+            'Sicilia': { lat: 38.1157, lng: 13.3615 },
+            'Toscana': { lat: 43.7696, lng: 11.2558 },
+            'Trentino-Alto Adige': { lat: 46.4983, lng: 11.3548 },
+            'Umbria': { lat: 42.9380, lng: 12.6144 },
+            "Valle d'Aosta": { lat: 45.7376, lng: 7.3207 },
+            'Veneto': { lat: 45.4408, lng: 12.3155 }
           };
           
-          const regionKey = spot.region.toLowerCase().split('-')[0].trim();
-          const regionCoords = regionMap[regionKey];
+          const regionCoords = regionMap[spot.region];
           
           if (regionCoords) {
             lat = regionCoords.lat;
@@ -3766,7 +3802,6 @@
       const region = document.getElementById('filter-region').value;
 
       try {
-        // MODIFICA: Escludi gli spot per cui l'utente ha già inviato richieste
         const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
         if (!response.ok) throw new Error('Failed to load spots');
         
@@ -3784,7 +3819,6 @@
             (spot.description && spot.description.toLowerCase().includes(search));
             
           const matchCategory = category === 'all' || spot.category === category;
-          
           const matchRegion = region === 'all' || spot.region === region;
 
           return matchSearch && matchCategory && matchRegion;
@@ -3921,7 +3955,7 @@
           <div class="spot-actions">
             <button class="btn btn-ghost" onclick="viewSpotDetail('${spot._id}')">Dettagli</button>
             ${spot.coordinates && spot.coordinates.includes(',') ? `
-              <button class="btn btn-primary" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+              <button class="btn btn-primary" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
                 <span style="display:flex;align-items:center;gap:4px">🗺️ Mappa</span>
               </button>
             ` : ''}
@@ -3976,7 +4010,7 @@
           <div class="spot-actions">
             <button class="btn btn-ghost" onclick="viewSpotDetail('${spot._id}')">Dettagli</button>
             ${spot.coordinates ? `
-              <button class="btn btn-primary" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+              <button class="btn btn-primary" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
                 <span style="display:flex;align-items:center;gap:4px">🗺️ Mappa</span>
               </button>
             ` : ''}
@@ -4051,7 +4085,6 @@
     // ========== REQUESTS ==========
     async function renderRequests() {
       
-      // MODIFICA: Filtra le richieste ricevute solo quelle approvate dall'admin
       const received = state.tradeRequests.filter(r => 
         r.toUser === state.user.username && 
         r.adminApproved && 
@@ -4183,7 +4216,7 @@
       if (req.fromUser === state.user.username) {
         html += `<div style="margin-top:6px">📍 ${escapeHtml(spot.give || '')}: ${escapeHtml(spot.coordinates || 'Non disponibili')}</div>`;
         if (spot.coordinates) {
-          html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+          html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
             Apri in Google Maps
           </button>
           `;
@@ -4191,7 +4224,7 @@
       } else {
         html += `<div style="margin-top:6px">📍 ${escapeHtml(selectedSpot.give || '')}: ${escapeHtml(selectedSpot.coordinates || 'Non disponibili')}</div>`;
         if (selectedSpot.coordinates) {
-          html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${selectedSpot.coordinates}', '${escapeHtml(selectedSpot.give)}')">
+          html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${escapeHtml(selectedSpot.coordinates)}', '${escapeHtml(selectedSpot.give)}')">
             Apri in Google Maps
           </button>
           `;
@@ -4205,9 +4238,6 @@
     // ========== TRADE ACTIONS ==========
     async function openOfferModal(spotId) {
       try {
-        // Chiudi eventuali modali aperti prima
-        closeModal('modal-detail');
-        
         const response = await fetch(`${API_BASE}/spots?userOnly=true`);
         const mySpots = await response.json();
         
@@ -4238,6 +4268,8 @@
           </label>
         `).join('');
 
+        // Chiudi il modal detail prima di aprire questo
+        closeModal('modal-detail');
         openModal('modal-offer');
       } catch (error) {
         console.error('Error opening offer modal:', error);
@@ -4290,7 +4322,7 @@
           showToast('Proposta inviata! Attendi l\'approvazione dell\'admin.', 'success');
           showView('requests');
           await loadTradeRequests();
-          await loadMarketSpots(); // MODIFICA: Ricarica il mercato per rimuovere lo spot richiesto
+          await loadMarketSpots();
           await loadUserSpots();
         } else {
           showToast(data.error || 'Errore nell\'invio della proposta', 'error');
@@ -4302,9 +4334,6 @@
     }
 
     async function chooseSpotFromOffer(requestId) {
-      // Chiudi eventuali modali aperti prima
-      closeModal('modal-detail');
-      
       state.currentRequestId = requestId;
       const request = state.tradeRequests.find(r => r._id === requestId);
       
@@ -4451,11 +4480,11 @@
         return;
       }
 
-      // Normalizza le coordinate
-      const coordinates = normalizeCoordinates(coordinatesInput);
+      // Estrai coordinate da link o pulisci le coordinate
+      let coordinates = await extractCoordinatesFromLink(coordinatesInput);
       
-      if (!coordinates) {
-        showToast('Coordinate o link non validi', 'error');
+      if (!coordinates || !coordinates.includes(',')) {
+        showToast('Coordinate non valide. Inserisci coordinate nel formato "lat, lng" o un link Google Maps valido', 'error');
         return;
       }
 
@@ -4570,9 +4599,9 @@
 
           ${spot.coordinates && (spot.status === 'completed' || spot.acquired) ? `
             <div class="coordinates-box">
-              <strong>📍 Coordinate GPS/Link</strong>
+              <strong>📍 Coordinate GPS</strong>
               <div style="margin-top:6px">${escapeHtml(spot.coordinates)}</div>
-              <button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+              <button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
                 Apri in Google Maps
               </button>
             </div>
@@ -4613,42 +4642,25 @@
     // ========== GOOGLE MAPS ==========
     function openInGoogleMaps(coordinates, title) {
       if (!coordinates) {
-        showToast('Coordinate o link non valide', 'error');
+        showToast('Coordinate non disponibili', 'error');
         return;
       }
       
-      // Se è già un URL, aprilo direttamente
-      if (coordinates.startsWith('http://') || coordinates.startsWith('https://')) {
-        window.open(coordinates, '_blank');
+      // Pulisci le coordinate
+      const cleanedCoords = cleanCoordinates(coordinates);
+      
+      if (!cleanedCoords || !cleanedCoords.includes(',')) {
+        showToast('Coordinate non valide', 'error');
         return;
       }
       
-      // Altrimenti, tratta come coordinate
-      const cleanCoords = coordinates.replace(/[()]/g, '').replace(/\s+/g, '');
-      const parts = cleanCoords.split(',');
+      const url = `https://www.google.com/maps?q=${encodeURIComponent(cleanedCoords)}&z=15&t=s&hl=it&layer=s`;
       
-      if (parts.length === 2) {
-        const lat = parseFloat(parts[0].trim());
-        const lng = parseFloat(parts[1].trim());
-        
-        if (!isNaN(lat) && !isNaN(lng)) {
-          const cleanTitle = encodeURIComponent(title || 'Spot');
-          const url = `https://www.google.com/maps?q=${lat},${lng}&z=15&t=s&hl=it&layer=s`;
-          window.open(url, '_blank');
-          return;
-        }
-      }
-      
-      showToast('Coordinate non valide', 'error');
+      window.open(url, '_blank');
     }
 
     // ========== MODAL ==========
     function openModal(id) {
-      // Chiudi tutti i modali prima di aprirne uno nuovo
-      document.querySelectorAll('.modal-overlay').forEach(modal => {
-        modal.classList.remove('show');
-      });
-      
       document.getElementById(id).classList.add('show');
     }
 
@@ -4662,7 +4674,6 @@
     }
 
     function updateRequestsCount() {
-      // MODIFICA: Conta solo le richieste approvate dall'admin
       const pendingReceived = state.tradeRequests.filter(r => 
         r.toUser === state.user.username && 
         r.adminApproved && 
