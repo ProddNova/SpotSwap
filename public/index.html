@@ -1681,6 +1681,63 @@
       font-weight: 600;
       margin-top: 15px
     }
+    
+    /* ADMIN SPOT MANAGEMENT */
+    .spot-list-item {
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: all .2s
+    }
+    
+    .spot-list-item:hover {
+      border-color: var(--border-light);
+      background: var(--card)
+    }
+    
+    .spot-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px
+    }
+    
+    .spot-list-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap
+    }
+    
+    .spot-list-actions .btn {
+      padding: 5px 10px;
+      font-size: 11px
+    }
+    
+    /* ADMIN TRADE MANAGEMENT */
+    .trade-details-box {
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 10px 0
+    }
+    
+    .trade-spot-info {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      margin: 6px 0
+    }
+    
+    .admin-action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap
+    }
   </style>
 </head>
 <body>
@@ -1769,7 +1826,10 @@
     <div style="max-width: 1400px; margin: 0 auto;">
       <div class="flex-between" style="margin-bottom: 30px;">
         <h1 style="font-size: 24px; font-weight: 700;">SpotSwap Admin Panel</h1>
-        <button class="btn btn-danger" onclick="logout()">Logout</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-primary" onclick="loadAdminData()">🔄 Aggiorna</button>
+          <button class="btn btn-danger" onclick="logout()">Logout</button>
+        </div>
       </div>
       
       <div id="admin-stats" class="admin-stats-grid"></div>
@@ -1813,20 +1873,34 @@
         </div>
       </div>
       
-      <div class="admin-section">
-        <h2 style="margin-bottom: 15px; font-size: 20px;">Trades in Verifica</h2>
-        <div id="verifying-trades"></div>
+      <div class="tabs" style="margin-bottom: 20px;">
+        <button class="tab active" data-admin-tab="trades">🔄 Scambi in Attesa</button>
+        <button class="tab" data-admin-tab="spots">📝 Tutti gli Spot</button>
+        <button class="tab" data-admin-tab="users">👥 Utenti</button>
+        <button class="tab" data-admin-tab="invites">🔗 Codici</button>
       </div>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-        <div class="admin-section">
-          <h2 style="margin-bottom: 15px; font-size: 20px;">Utenti</h2>
-          <div id="users-list"></div>
+      <div id="admin-tab-trades" class="admin-section">
+        <h2 style="margin-bottom: 15px; font-size: 20px;">Scambi in Attesa di Approvazione</h2>
+        <div id="admin-trades-list"></div>
+      </div>
+      
+      <div id="admin-tab-spots" class="admin-section hidden">
+        <h2 style="margin-bottom: 15px; font-size: 20px;">Gestione Spot</h2>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <input type="text" id="admin-spot-search" class="form-input" placeholder="Cerca spot..." oninput="searchAdminSpots()">
         </div>
-        <div class="admin-section">
-          <h2 style="margin-bottom: 15px; font-size: 20px;">Codici Attivi</h2>
-          <div id="active-invites"></div>
-        </div>
+        <div id="admin-spots-list"></div>
+      </div>
+      
+      <div id="admin-tab-users" class="admin-section hidden">
+        <h2 style="margin-bottom: 15px; font-size: 20px;">Gestione Utenti</h2>
+        <div id="users-list"></div>
+      </div>
+      
+      <div id="admin-tab-invites" class="admin-section hidden">
+        <h2 style="margin-bottom: 15px; font-size: 20px;">Gestione Codici</h2>
+        <div id="active-invites"></div>
       </div>
     </div>
   </div>
@@ -1871,7 +1945,7 @@
     <!-- MARKET VIEW -->
     <section id="view-market">
       <div class="alert alert-info">
-        <strong>🔒 Sistema sicuro</strong> — Coordinate visibili solo dopo scambio completato e verifica
+        <strong>🔒 Sistema sicuro</strong> — Coordinate visibili solo dopo scambio completato e verifica. Gli spot per cui hai già inviato una richiesta non sono visibili.
       </div>
 
       <div class="section-header">
@@ -2208,6 +2282,20 @@
     </div>
   </div>
 
+  <!-- MODAL: ADMIN TRADE DETAIL -->
+  <div class="modal-overlay" id="modal-admin-trade">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Dettagli Scambio</h3>
+        <button class="modal-close" onclick="closeModal('modal-admin-trade')">&times;</button>
+      </div>
+
+      <div id="admin-trade-detail"></div>
+
+      <div id="admin-trade-actions" class="mt-2"></div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
@@ -2229,7 +2317,9 @@
       tradeRequests: [],
       currentOfferId: null,
       currentRequestId: null,
-      selectedOfferSpots: []
+      selectedOfferSpots: [],
+      adminSpots: [],
+      adminTrades: []
     };
 
     // ========== MAP VARIABLES ==========
@@ -2445,6 +2535,26 @@
       document.querySelector('header').style.display = 'none';
       document.querySelector('.container').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'block';
+      
+      // Setup admin tabs
+      document.querySelectorAll('[data-admin-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabName = tab.dataset.adminTab;
+          document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          document.getElementById('admin-tab-trades').classList.toggle('hidden', tabName !== 'trades');
+          document.getElementById('admin-tab-spots').classList.toggle('hidden', tabName !== 'spots');
+          document.getElementById('admin-tab-users').classList.toggle('hidden', tabName !== 'users');
+          document.getElementById('admin-tab-invites').classList.toggle('hidden', tabName !== 'invites');
+          
+          if (tabName === 'spots') {
+            loadAdminSpots();
+          } else if (tabName === 'trades') {
+            loadAdminTrades();
+          }
+        });
+      });
     }
 
     async function loadAdminData() {
@@ -2482,7 +2592,17 @@
             <div class="admin-small-stat" style="color: var(--warning);">${stats.activeInvites || 0}</div>
             <div style="color: var(--text-muted); font-size: 12px;">Codici Attivi</div>
           </div>
+          <div class="admin-stat-card">
+            <div class="admin-small-stat" style="color: var(--danger);">${stats.pendingAdminApprovalTrades || 0}</div>
+            <div style="color: var(--text-muted); font-size: 12px;">Scambi da Approvare</div>
+          </div>
         `;
+        
+        // Store admin trades
+        state.adminTrades = trades;
+        
+        // Render admin trades list
+        renderAdminTradesList();
         
         // Render users
         document.getElementById('users-list').innerHTML = users.map(user => `
@@ -2506,24 +2626,6 @@
               </span>
             </div>
             ${user.isFan ? '<div style="margin-top: 5px; font-size: 11px; color: var(--warning);">👥 Fan Account</div>' : ''}
-          </div>
-        `).join('');
-        
-        // Render verifying trades
-        const verifyingTrades = trades.filter(t => t.status === 'verifying');
-        document.getElementById('verifying-trades').innerHTML = verifyingTrades.map(trade => `
-          <div class="invite-list-item">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <strong>${trade.fromUser} → ${trade.toUser}</strong>
-                <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
-                  ${new Date(trade.createdAt).toLocaleString('it-IT')}
-                </div>
-              </div>
-              <button class="btn btn-success" onclick="completeTrade('${trade._id}')" style="padding: 6px 12px; font-size: 11px;">
-                Completa Scambio
-              </button>
-            </div>
           </div>
         `).join('');
         
@@ -2575,6 +2677,483 @@
       } catch (error) {
         console.error('Error loading admin data:', error);
         document.getElementById('admin-stats').innerHTML = '<div class="text-muted">Errore nel caricamento dei dati</div>';
+      }
+    }
+
+    async function loadAdminTrades() {
+      try {
+        const response = await fetch(`${API_BASE}/admin/trades`);
+        if (response.ok) {
+          state.adminTrades = await response.json();
+          renderAdminTradesList();
+        }
+      } catch (error) {
+        console.error('Error loading admin trades:', error);
+        showToast('Errore nel caricamento degli scambi', 'error');
+      }
+    }
+
+    async function loadAdminSpots() {
+      try {
+        const response = await fetch(`${API_BASE}/admin/spots`);
+        if (response.ok) {
+          state.adminSpots = await response.json();
+          renderAdminSpotsList();
+        }
+      } catch (error) {
+        console.error('Error loading admin spots:', error);
+        showToast('Errore nel caricamento degli spot', 'error');
+      }
+    }
+
+    function renderAdminTradesList() {
+      const pendingTrades = state.adminTrades.filter(t => 
+        !t.adminApproved && !t.adminRejected && t.status === 'pending'
+      );
+      
+      const container = document.getElementById('admin-trades-list');
+      
+      if (pendingTrades.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">✅</div>
+            <div>Nessuno scambio in attesa di approvazione</div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = pendingTrades.map(trade => {
+        const spot = trade.spotId || {};
+        const offeredSpots = trade.offeredSpots || [];
+        
+        return `
+          <div class="trade-request">
+            <div class="flex-between mb-2">
+              <div>
+                <strong>${escapeHtml(trade.fromUser)} → ${escapeHtml(trade.toUser)}</strong>
+                <div class="text-muted" style="font-size:12px;margin-top:2px">
+                  ${new Date(trade.createdAt).toLocaleString('it-IT')}
+                </div>
+              </div>
+              <span class="trade-status pending">⏳ In attesa</span>
+            </div>
+            
+            <div class="trade-details-box">
+              <div style="margin-bottom: 10px;">
+                <strong>Spot richiesto:</strong>
+                <div class="trade-spot-info">
+                  <strong>${escapeHtml(spot.give || 'N/A')}</strong>
+                  <div style="font-size: 12px; color: var(--text-muted);">
+                    📍 ${escapeHtml(spot.region || '')} • ${spot.category || ''}
+                  </div>
+                  <div style="font-size: 11px; margin-top: 4px;">
+                    ${escapeHtml(spot.description || '').substring(0, 100)}${spot.description && spot.description.length > 100 ? '...' : ''}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <strong>Spot offerti in cambio:</strong>
+                ${offeredSpots.map(s => `
+                  <div class="trade-spot-info">
+                    <strong>${escapeHtml(s.give || 'N/A')}</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">
+                      📍 ${escapeHtml(s.region || '')} • ${s.category || ''}
+                    </div>
+                    <div style="font-size: 11px; margin-top: 4px;">
+                      ${escapeHtml((s.description || '').substring(0, 80))}${s.description && s.description.length > 80 ? '...' : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="admin-action-buttons">
+              <button class="btn btn-success" onclick="approveTrade('${trade._id}')">
+                ✅ Approva Scambio
+              </button>
+              <button class="btn btn-danger" onclick="rejectTrade('${trade._id}')">
+                ❌ Rifiuta Scambio
+              </button>
+              <button class="btn btn-ghost" onclick="viewAdminTradeDetail('${trade._id}')">
+                📋 Dettagli
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAdminSpotsList() {
+      const container = document.getElementById('admin-spots-list');
+      
+      if (state.adminSpots.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <div>Nessuno spot trovato</div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = state.adminSpots.map(spot => {
+        let statusBadge = '';
+        switch(spot.status) {
+          case 'active':
+            statusBadge = '<span class="badge badge-success">Attivo</span>';
+            break;
+          case 'in_trade':
+            statusBadge = '<span class="badge badge-warning">In Scambio</span>';
+            break;
+          case 'completed':
+            statusBadge = '<span class="badge badge-info">Completato</span>';
+            break;
+          case 'deleted':
+            statusBadge = '<span class="badge badge-danger">Eliminato</span>';
+            break;
+        }
+        
+        return `
+          <div class="spot-list-item">
+            <div class="spot-list-header">
+              <div style="flex: 1;">
+                <strong>${escapeHtml(spot.give)}</strong>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                  📍 ${escapeHtml(spot.region)} • ${spot.category} • di ${escapeHtml(spot.author)}
+                </div>
+                ${spot.isAdminCreated ? '<div style="font-size: 11px; color: var(--warning); margin-top: 2px;">Creato da Admin</div>' : ''}
+              </div>
+              <div>
+                ${statusBadge}
+              </div>
+            </div>
+            
+            <div style="font-size: 12px; margin: 8px 0;">
+              <strong>Offre:</strong> ${escapeHtml(spot.give)}<br>
+              <strong>Cerca:</strong> ${escapeHtml(spot.want)}
+            </div>
+            
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+              Creato: ${new Date(spot.createdAt).toLocaleDateString('it-IT')}
+              ${spot.acquired ? `<br>Ottenuto da: ${escapeHtml(spot.currentOwner || '')}` : ''}
+              ${spot.hasPendingTradeRequest ? '<br><span style="color: var(--warning);">⚠️ Ha richieste pendenti</span>' : ''}
+            </div>
+            
+            <div class="spot-list-actions">
+              <button class="btn btn-ghost" onclick="viewAdminSpotDetail('${spot._id}')">
+                👁️ Dettagli
+              </button>
+              ${spot.status !== 'deleted' ? `
+                <button class="btn btn-danger" onclick="deleteAdminSpot('${spot._id}')">
+                  🗑️ Elimina
+                </button>
+              ` : ''}
+              ${spot.coordinates ? `
+                <button class="btn btn-primary" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+                  🗺️ Mappa
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function searchAdminSpots() {
+      const search = document.getElementById('admin-spot-search').value;
+      try {
+        const response = await fetch(`${API_BASE}/admin/spots${search ? `?search=${encodeURIComponent(search)}` : ''}`);
+        if (response.ok) {
+          state.adminSpots = await response.json();
+          renderAdminSpotsList();
+        }
+      } catch (error) {
+        console.error('Error searching admin spots:', error);
+      }
+    }
+
+    async function viewAdminSpotDetail(spotId) {
+      const spot = state.adminSpots.find(s => s._id === spotId);
+      if (!spot) return;
+      
+      const content = `
+        <div style="margin-bottom: 15px;">
+          <h4 style="margin-bottom: 10px;">${escapeHtml(spot.give)}</h4>
+          <div class="tags mb-2">
+            <span class="badge badge-info">${spot.category}</span>
+            <span class="badge ${spot.status === 'active' ? 'badge-success' : spot.status === 'in_trade' ? 'badge-warning' : spot.status === 'completed' ? 'badge-info' : 'badge-danger'}">
+              ${spot.status === 'active' ? 'Attivo' : spot.status === 'in_trade' ? 'In scambio' : spot.status === 'completed' ? 'Completato' : 'Eliminato'}
+            </span>
+            ${spot.acquired ? '<span class="badge badge-warning">Ottenuto</span>' : ''}
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <strong>Autore:</strong> ${escapeHtml(spot.author)}<br>
+          <strong>Zona:</strong> ${escapeHtml(spot.region)}<br>
+          <strong>Creato:</strong> ${new Date(spot.createdAt).toLocaleString('it-IT')}<br>
+          ${spot.acquiredDate ? `<strong>Ottenuto il:</strong> ${new Date(spot.acquiredDate).toLocaleDateString('it-IT')}<br>` : ''}
+          ${spot.currentOwner ? `<strong>Proprietario attuale:</strong> ${escapeHtml(spot.currentOwner)}<br>` : ''}
+          ${spot.originalAuthor ? `<strong>Autore originale:</strong> ${escapeHtml(spot.originalAuthor)}<br>` : ''}
+        </div>
+        
+        <div class="mb-3">
+          <strong>Offre:</strong> ${escapeHtml(spot.give)}<br>
+          <strong>Cerca:</strong> ${escapeHtml(spot.want)}
+        </div>
+        
+        <div class="mb-3">
+          <strong>Descrizione:</strong><br>
+          <div style="background: var(--bg-light); padding: 10px; border-radius: 6px; margin-top: 5px;">
+            ${escapeHtml(spot.description || 'Nessuna descrizione')}
+          </div>
+        </div>
+        
+        ${spot.coordinates ? `
+          <div class="mb-3">
+            <strong>Coordinate GPS:</strong><br>
+            <div style="background: var(--bg-light); padding: 10px; border-radius: 6px; margin-top: 5px; font-family: monospace;">
+              ${escapeHtml(spot.coordinates)}
+            </div>
+            <button class="btn btn-primary mt-2" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
+              🗺️ Apri in Google Maps
+            </button>
+          </div>
+        ` : ''}
+        
+        <div class="mb-3">
+          <strong>Dettagli tecnici:</strong><br>
+          <div style="font-size: 12px; color: var(--text-muted);">
+            ID: ${spot._id}<br>
+            ${spot.isAdminCreated ? 'Creato da Admin<br>' : ''}
+            ${spot.hasPendingTradeRequest ? 'Ha richieste di scambio pendenti<br>' : ''}
+            ${spot.requestedBy && spot.requestedBy.length > 0 ? `Richiesto da: ${spot.requestedBy.join(', ')}<br>` : ''}
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('admin-trade-detail').innerHTML = content;
+      document.getElementById('admin-trade-actions').innerHTML = `
+        <div class="flex gap-2">
+          <button class="btn btn-ghost" onclick="closeModal('modal-admin-trade')">Chiudi</button>
+          ${spot.status !== 'deleted' ? `
+            <button class="btn btn-danger" onclick="deleteAdminSpot('${spot._id}')">Elimina Spot</button>
+          ` : ''}
+        </div>
+      `;
+      
+      document.getElementById('modal-admin-trade').querySelector('.modal-title').textContent = `Dettagli Spot: ${escapeHtml(spot.give)}`;
+      openModal('modal-admin-trade');
+    }
+
+    async function viewAdminTradeDetail(tradeId) {
+      const trade = state.adminTrades.find(t => t._id === tradeId);
+      if (!trade) return;
+      
+      const spot = trade.spotId || {};
+      const offeredSpots = trade.offeredSpots || [];
+      
+      const content = `
+        <div style="margin-bottom: 15px;">
+          <h4 style="margin-bottom: 10px;">Scambio tra ${escapeHtml(trade.fromUser)} e ${escapeHtml(trade.toUser)}</h4>
+          <div class="tags mb-2">
+            <span class="trade-status ${trade.status}">
+              ${trade.status === 'pending' ? 'In attesa' : trade.status === 'verifying' ? 'In verifica' : trade.status === 'accepted' ? 'Accettato' : 'Rifiutato'}
+            </span>
+            ${trade.adminApproved ? '<span class="badge badge-success">Approvato da Admin</span>' : ''}
+            ${trade.adminRejected ? '<span class="badge badge-danger">Rifiutato da Admin</span>' : ''}
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <strong>Creato:</strong> ${new Date(trade.createdAt).toLocaleString('it-IT')}<br>
+          <strong>Aggiornato:</strong> ${new Date(trade.updatedAt).toLocaleString('it-IT')}<br>
+          ${trade.verificationStartedAt ? `<strong>Verifica iniziata:</strong> ${new Date(trade.verificationStartedAt).toLocaleString('it-IT')}<br>` : ''}
+        </div>
+        
+        <div class="trade-details-box">
+          <div style="margin-bottom: 15px;">
+            <strong>Spot richiesto da ${escapeHtml(trade.fromUser)}:</strong>
+            <div class="trade-spot-info">
+              <strong>${escapeHtml(spot.give || 'N/A')}</strong>
+              <div style="font-size: 12px; color: var(--text-muted);">
+                📍 ${escapeHtml(spot.region || '')} • ${spot.category || ''}
+              </div>
+              <div style="font-size: 11px; margin-top: 4px;">
+                ${escapeHtml(spot.description || '').substring(0, 150)}${spot.description && spot.description.length > 150 ? '...' : ''}
+              </div>
+              ${spot.coordinates ? `
+                <div style="margin-top: 8px;">
+                  <strong>Coordinate:</strong>
+                  <div style="font-family: monospace; font-size: 12px; background: var(--bg); padding: 6px; border-radius: 4px;">
+                    ${escapeHtml(spot.coordinates)}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <strong>Spot offerti da ${escapeHtml(trade.fromUser)}:</strong>
+            ${offeredSpots.map(s => `
+              <div class="trade-spot-info">
+                <strong>${escapeHtml(s.give || 'N/A')}</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                  📍 ${escapeHtml(s.region || '')} • ${s.category || ''}
+                </div>
+                <div style="font-size: 11px; margin-top: 4px;">
+                  ${escapeHtml((s.description || '').substring(0, 100))}${s.description && s.description.length > 100 ? '...' : ''}
+                </div>
+                ${s.coordinates ? `
+                  <div style="margin-top: 6px;">
+                    <strong>Coordinate:</strong>
+                    <div style="font-family: monospace; font-size: 11px; background: var(--bg); padding: 4px; border-radius: 4px;">
+                      ${escapeHtml(s.coordinates)}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+          
+          ${trade.selectedSpotId ? `
+            <div>
+              <strong>Spot selezionato da ${escapeHtml(trade.toUser)}:</strong>
+              <div class="trade-spot-info">
+                <strong>${escapeHtml(trade.selectedSpotId.give || 'N/A')}</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                  📍 ${escapeHtml(trade.selectedSpotId.region || '')} • ${trade.selectedSpotId.category || ''}
+                </div>
+                ${trade.selectedSpotId.coordinates ? `
+                  <div style="margin-top: 6px;">
+                    <strong>Coordinate:</strong>
+                    <div style="font-family: monospace; font-size: 11px; background: var(--bg); padding: 4px; border-radius: 4px;">
+                      ${escapeHtml(trade.selectedSpotId.coordinates)}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      let actions = '';
+      if (!trade.adminApproved && !trade.adminRejected) {
+        actions = `
+          <div class="admin-action-buttons">
+            <button class="btn btn-success" onclick="approveTrade('${trade._id}')">
+              ✅ Approva Scambio
+            </button>
+            <button class="btn btn-danger" onclick="rejectTrade('${trade._id}')">
+              ❌ Rifiuta Scambio
+            </button>
+          </div>
+        `;
+      } else if (trade.status === 'verifying' && trade.adminApproved) {
+        actions = `
+          <div class="admin-action-buttons">
+            <button class="btn btn-success" onclick="completeTrade('${trade._id}')">
+              ✅ Completa Scambio
+            </button>
+            <button class="btn btn-danger" onclick="rejectTrade('${trade._id}')">
+              ❌ Annulla Scambio
+            </button>
+          </div>
+        `;
+      }
+      
+      document.getElementById('admin-trade-detail').innerHTML = content;
+      document.getElementById('admin-trade-actions').innerHTML = actions || '<button class="btn btn-ghost" onclick="closeModal(\'modal-admin-trade\')">Chiudi</button>';
+      
+      document.getElementById('modal-admin-trade').querySelector('.modal-title').textContent = `Dettagli Scambio #${trade._id.substring(0, 8)}`;
+      openModal('modal-admin-trade');
+    }
+
+    async function approveTrade(tradeId) {
+      try {
+        const response = await fetch(`${API_BASE}/admin/trade-requests/${tradeId}/approve`, {
+          method: 'PUT'
+        });
+        
+        if (response.ok) {
+          showToast('Scambio approvato! Il destinatario può ora vedere la richiesta.', 'success');
+          closeModal('modal-admin-trade');
+          loadAdminData();
+        } else {
+          const data = await response.json();
+          showToast(data.error || 'Errore nell\'approvazione', 'error');
+        }
+      } catch (error) {
+        console.error('Error approving trade:', error);
+        showToast('Errore nell\'approvazione', 'error');
+      }
+    }
+
+    async function rejectTrade(tradeId) {
+      if (!confirm('Sei sicuro di voler rifiutare questo scambio?')) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/admin/trade-requests/${tradeId}/reject`, {
+          method: 'PUT'
+        });
+        
+        if (response.ok) {
+          showToast('Scambio rifiutato', 'success');
+          closeModal('modal-admin-trade');
+          loadAdminData();
+        } else {
+          const data = await response.json();
+          showToast(data.error || 'Errore nel rifiuto', 'error');
+        }
+      } catch (error) {
+        console.error('Error rejecting trade:', error);
+        showToast('Errore nel rifiuto', 'error');
+      }
+    }
+
+    async function completeTrade(tradeId) {
+      try {
+        const response = await fetch(`${API_BASE}/trade-requests/${tradeId}/complete`, {
+          method: 'PUT'
+        });
+        
+        if (response.ok) {
+          showToast('Scambio completato! Le coordinate sono ora disponibili per entrambe le parti.', 'success');
+          closeModal('modal-admin-trade');
+          loadAdminData();
+        } else {
+          const data = await response.json();
+          showToast(data.error || 'Errore nel completamento', 'error');
+        }
+      } catch (error) {
+        console.error('Error completing trade:', error);
+        showToast('Errore nel completamento', 'error');
+      }
+    }
+
+    async function deleteAdminSpot(spotId) {
+      if (!confirm('Sei sicuro di voler eliminare questo spot? Verranno eliminate anche tutte le richieste di scambio associate.')) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/admin/spots/${spotId}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          showToast('Spot eliminato con successo', 'success');
+          closeModal('modal-admin-trade');
+          loadAdminSpots();
+          loadAdminData(); // Per aggiornare le statistiche
+        } else {
+          const data = await response.json();
+          showToast(data.error || 'Errore nell\'eliminazione', 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting admin spot:', error);
+        showToast('Errore nell\'eliminazione', 'error');
       }
     }
 
@@ -2660,31 +3239,15 @@
           document.getElementById('spot-title').value = '';
           document.getElementById('spot-want').value = '';
           document.getElementById('spot-region').value = '';
+          
+          // Reload admin spots
+          loadAdminSpots();
         } else {
           alert(data.error || 'Errore nella creazione dello spot');
         }
       } catch (error) {
         console.error('Error creating admin spot:', error);
         alert('Errore di connessione');
-      }
-    }
-
-    async function completeTrade(tradeId) {
-      try {
-        const response = await fetch(`${API_BASE}/trade-requests/${tradeId}/complete`, {
-          method: 'PUT'
-        });
-        
-        if (response.ok) {
-          showToast('Scambio completato', 'success');
-          loadAdminData();
-        } else {
-          const data = await response.json();
-          showToast(data.error || 'Errore', 'error');
-        }
-      } catch (error) {
-        console.error('Error completing trade:', error);
-        showToast('Errore nel completamento', 'error');
       }
     }
 
@@ -2702,7 +3265,7 @@
     async function loadInitialData() {
       try {
         const [spotsResponse, requestsResponse] = await Promise.all([
-          fetch(`${API_BASE}/spots`),
+          fetch(`${API_BASE}/spots?excludeRequested=true`), // MODIFICA: Escludi spot già richiesti
           fetch(`${API_BASE}/trade-requests`)
         ]);
         
@@ -2721,7 +3284,8 @@
 
     async function loadMarketSpots() {
       try {
-        const response = await fetch(`${API_BASE}/spots`);
+        // MODIFICA: Escludi gli spot per cui l'utente ha già inviato richieste
+        const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
         if (response.ok) {
           state.spots = await response.json();
           renderMarket();
@@ -3075,7 +3639,8 @@
       const category = document.getElementById('filter-category').value;
 
       try {
-        const response = await fetch(`${API_BASE}/spots`);
+        // MODIFICA: Escludi gli spot per cui l'utente ha già inviato richieste
+        const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
         if (!response.ok) throw new Error('Failed to load spots');
         
         let spots = await response.json();
@@ -3166,9 +3731,7 @@
         !s.offeredForTrade
       );
       
-      const acquired = state.spots.filter(s => 
-        s.acquired && s.currentOwner === state.user.username
-      );
+      const acquired = state.spots.filter(s => s.acquired && s.currentOwner === state.user.username);
       
       document.getElementById('published-count').textContent = `(${published.length})`;
       document.getElementById('acquired-count').textContent = `(${acquired.length})`;
@@ -3239,9 +3802,7 @@
     }
 
     function renderAcquiredSpots() {
-      const acquiredSpots = state.spots.filter(s => 
-        s.acquired === true && s.currentOwner === state.user.username
-      );
+      const acquiredSpots = state.spots.filter(s => s.acquired && s.currentOwner === state.user.username);
       
       const grid = document.getElementById('acquired-spots-grid');
 
@@ -3361,9 +3922,17 @@
     async function renderRequests() {
       await loadTradeRequests();
       
-      const received = state.tradeRequests.filter(r => r.toUser === state.user.username);
+      // MODIFICA: Filtra le richieste ricevute solo quelle approvate dall'admin
+      const received = state.tradeRequests.filter(r => 
+        r.toUser === state.user.username && 
+        r.adminApproved && 
+        !r.adminRejected
+      );
+      
       const sent = state.tradeRequests.filter(r => r.fromUser === state.user.username);
-      const allRequests = state.tradeRequests;
+      const allRequests = state.tradeRequests.filter(r => 
+        (r.fromUser === state.user.username || (r.toUser === state.user.username && r.adminApproved && !r.adminRejected))
+      );
 
       document.getElementById('received-count').textContent = `(${received.length})`;
       document.getElementById('sent-count').textContent = `(${sent.length})`;
@@ -3375,7 +3944,7 @@
           <div class="empty-state">
             <div class="empty-state-icon">📭</div>
             <div>Nessuna richiesta ricevuta</div>
-            <p class="text-muted">Le richieste attive appariranno qui</p>
+            <p class="text-muted">Le richieste approvate dall'admin appariranno qui</p>
           </div>
         `;
       } else {
@@ -3421,9 +3990,13 @@
 
       switch(req.status) {
         case 'pending':
-          statusBadge = '<span class="trade-status pending">⏳ In attesa</span>';
-          if (type === 'received') {
-            actions = `<button class="btn btn-success" onclick="chooseSpotFromOffer('${req._id}')">Scegli spot</button>`;
+          if (req.adminApproved) {
+            statusBadge = '<span class="trade-status pending">⏳ In attesa di risposta</span>';
+            if (type === 'received') {
+              actions = `<button class="btn btn-success" onclick="chooseSpotFromOffer('${req._id}')">Scegli spot</button>`;
+            }
+          } else {
+            statusBadge = '<span class="trade-status verifying">🔄 In attesa di approvazione admin</span>';
           }
           break;
         case 'verifying':
@@ -3484,14 +4057,16 @@
         if (spot.coordinates) {
           html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
             Apri in Google Maps
-          </button>`;
+          </button>
+          `;
         }
       } else {
         html += `<div style="margin-top:6px">📍 ${escapeHtml(selectedSpot.give || '')}: ${escapeHtml(selectedSpot.coordinates || 'Non disponibili')}</div>`;
         if (selectedSpot.coordinates) {
           html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${selectedSpot.coordinates}', '${escapeHtml(selectedSpot.give)}')">
             Apri in Google Maps
-          </button>`;
+          </button>
+          `;
         }
       }
       
@@ -3581,9 +4156,10 @@
         
         if (data.success) {
           closeModal('modal-offer');
-          showToast('Proposta inviata con successo!', 'success');
+          showToast('Proposta inviata! Attendi l\'approvazione dell\'admin.', 'success');
           showView('requests');
           await loadTradeRequests();
+          await loadMarketSpots(); // MODIFICA: Ricarica il mercato per rimuovere lo spot richiesto
           await loadUserSpots();
         } else {
           showToast(data.error || 'Errore nell\'invio della proposta', 'error');
@@ -3600,6 +4176,11 @@
       
       if (!request) {
         showToast('Richiesta non trovata', 'error');
+        return;
+      }
+
+      if (!request.adminApproved) {
+        showToast('Questa richiesta non è ancora stata approvata dall\'admin', 'error');
         return;
       }
 
@@ -3857,7 +4438,7 @@
         `;
 
         const actions = document.getElementById('detail-actions');
-        if (spot.author !== state.user.username && spot.status === 'active') {
+        if (spot.author !== state.user.username && spot.status === 'active' && !spot.hasPendingTradeRequest) {
           actions.innerHTML = `
             <button class="btn btn-primary btn-lg" onclick="openOfferModal('${spot._id}')">
               Proponi scambio
@@ -3868,6 +4449,12 @@
             <div class="flex gap-2">
               <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Chiudi</button>
               <button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina spot</button>
+            </div>
+          `;
+        } else if (spot.hasPendingTradeRequest) {
+          actions.innerHTML = `
+            <div class="alert alert-info">
+              ⏳ Hai già inviato una richiesta per questo spot
             </div>
           `;
         } else {
@@ -3910,9 +4497,12 @@
     }
 
     function updateRequestsCount() {
+      // MODIFICA: Conta solo le richieste approvate dall'admin
       const pendingReceived = state.tradeRequests.filter(r => 
         r.toUser === state.user.username && 
-        (r.status === 'pending' || r.status === 'verifying')
+        r.adminApproved && 
+        !r.adminRejected &&
+        r.status === 'pending'
       ).length;
 
       const badge = document.getElementById('requests-count');
