@@ -319,32 +319,37 @@ app.get('/api/spots', requireAuth, async (req, res) => {
             ];
         }
         
-        if (status) {
-            query.status = status;
-        } else {
-            query.status = 'active';
-        }
-        
-        if (userOnly === 'true') {
-            query.$or = [
-                { author: req.session.user.username },
-                { currentOwner: req.session.user.username }
-            ];
-        } else {
-            query.author = { $ne: req.session.user.username };
-            
-            // Se excludeRequested è true, escludi spot per cui l'utente ha già fatto richiesta
-            if (excludeRequested === 'true') {
-                // Trova tutti gli spot per cui l'utente ha richieste pendenti
-                const userTradeRequests = await TradeRequest.find({
-                    fromUser: req.session.user.username,
-                    status: { $in: ['pending', 'verifying'] }
-                });
-                
-                const requestedSpotIds = userTradeRequests.map(req => req.spotId.toString());
-                query._id = { $nin: requestedSpotIds };
-            }
-        }
+        // status: per il mercato default "active", ma per userOnly vogliamo TUTTI (tranne deleted)
+if (status) {
+    query.status = status;
+} else {
+    if (userOnly === 'true') {
+        // non forzare 'active'
+        query.status = { $ne: 'deleted' };
+    } else {
+        query.status = 'active';
+    }
+}
+
+if (userOnly === 'true') {
+    query.$or = [
+        { author: req.session.user.username },
+        { currentOwner: req.session.user.username }
+    ];
+} else {
+    query.author = { $ne: req.session.user.username };
+
+    if (excludeRequested === 'true') {
+        const userTradeRequests = await TradeRequest.find({
+            fromUser: req.session.user.username,
+            status: { $in: ['pending', 'verifying'] }
+        });
+
+        const requestedSpotIds = userTradeRequests.map(req => req.spotId.toString());
+        query._id = { $nin: requestedSpotIds };
+    }
+}
+
         
         const spots = await Spot.find(query)
             .sort({ createdAt: -1 })
@@ -728,63 +733,90 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
         }
 
         // Salvo autori originali PRIMA di cambiare author
-        const requestedOriginalAuthor = requestedSpot.author;
-        const chosenOriginalAuthor = chosenSpot.author;
+        // Salvo gli autori originali
+const requestedOriginalAuthor = requestedSpot.author; // A
+const chosenOriginalAuthor = chosenSpot.author;       // B
 
-        // 1) aggiorno richiesta => accepted subito
-        request.selectedSpotId = selectedSpotId;
-        request.status = 'accepted';
-        request.updatedAt = new Date();
-        await request.save({ session: sessionDb });
+// 1) aggiorno richiesta => accepted
+request.selectedSpotId = selectedSpotId;
+request.status = 'accepted';
+request.updatedAt = new Date();
+await request.save({ session: sessionDb });
 
-        // 2) trasferisco spot richiesto al mittente (fromUser)
-        await Spot.findByIdAndUpdate(
-            request.spotId,
-            {
-                status: 'completed',
-                acquired: true,
-                originalAuthor: requestedSpot.originalAuthor || requestedOriginalAuthor,
-                currentOwner: request.fromUser,
-                acquiredDate: new Date(),
-                author: request.fromUser,
+// 2) BLOCCO gli spot originali (restano ai proprietari originali)
+await Spot.findByIdAndUpdate(
+  request.spotId,
+  {
+    status: 'completed',
+    hasPendingTradeRequest: false,
+    requestedBy: [],
+    offeredForTrade: false
+  },
+  { session: sessionDb }
+);
 
-                // pulizia richieste
-                hasPendingTradeRequest: false,
-                requestedBy: [],
-                offeredForTrade: false
-            },
-            { session: sessionDb }
-        );
+await Spot.findByIdAndUpdate(
+  selectedSpotId,
+  {
+    status: 'completed',
+    offeredForTrade: false
+  },
+  { session: sessionDb }
+);
 
-        // 3) trasferisco spot scelto al destinatario (toUser)
-        await Spot.findByIdAndUpdate(
-            selectedSpotId,
-            {
-                status: 'completed',
-                acquired: true,
-                originalAuthor: chosenSpot.originalAuthor || chosenOriginalAuthor,
-                currentOwner: request.toUser,
-                acquiredDate: new Date(),
-                author: request.toUser,
-                offeredForTrade: false
-            },
-            { session: sessionDb }
-        );
+// 3) CREO COPIA per B (fromUser) => ottiene lo spot di A
+await Spot.create([{
+  give: requestedSpot.give,
+  want: requestedSpot.want,
+  region: requestedSpot.region,
+  coordinates: requestedSpot.coordinates,
+  category: requestedSpot.category,
+  description: requestedSpot.description,
+  author: request.fromUser,              // proprietario “visibile” della copia
+  authorId: request.fromUserId,
+  status: 'completed',
+  acquired: true,
+  originalAuthor: requestedSpot.originalAuthor || requestedOriginalAuthor,
+  currentOwner: request.fromUser,
+  acquiredDate: new Date(),
+  originalSpotId: requestedSpot._id,
+  offeredForTrade: false,
+  isAdminCreated: requestedSpot.isAdminCreated || false
+}], { session: sessionDb });
 
-        // 4) rimetto "liberi" gli altri spot offerti ma NON scelti
-        const otherOffered = offeredIds.filter(id => id !== selectedSpotId.toString());
-        if (otherOffered.length > 0) {
-            await Spot.updateMany(
-                { _id: { $in: otherOffered } },
-                {
-                    $set: {
-                        offeredForTrade: false,
-                        status: 'active'
-                    }
-                },
-                { session: sessionDb }
-            );
-        }
+// 4) CREO COPIA per A (toUser) => ottiene lo spot scelto di B
+await Spot.create([{
+  give: chosenSpot.give,
+  want: chosenSpot.want,
+  region: chosenSpot.region,
+  coordinates: chosenSpot.coordinates,
+  category: chosenSpot.category,
+  description: chosenSpot.description,
+  author: request.toUser,
+  authorId: request.toUserId,
+
+  status: 'completed',
+  acquired: true,
+  originalAuthor: chosenSpot.originalAuthor || chosenOriginalAuthor,
+  currentOwner: request.toUser,
+  acquiredDate: new Date(),
+  originalSpotId: chosenSpot._id,
+  offeredForTrade: false,
+  isAdminCreated: chosenSpot.isAdminCreated || false
+}], { session: sessionDb });
+
+// 5) rendo liberi gli altri spot offerti non scelti
+const offeredIds = (request.offeredSpots || []).map(x => x.toString());
+const otherOffered = offeredIds.filter(id => id !== selectedSpotId.toString());
+
+if (otherOffered.length > 0) {
+  await Spot.updateMany(
+    { _id: { $in: otherOffered } },
+    { $set: { offeredForTrade: false, status: 'active' } },
+    { session: sessionDb }
+  );
+}
+
 
         // 5) rifiuto automaticamente le altre richieste pendenti sullo stesso spot richiesto
         await TradeRequest.updateMany(
