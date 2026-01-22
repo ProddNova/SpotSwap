@@ -5,6 +5,8 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const path = require('path');
 const crypto = require('crypto');
+const csv = require('csv-parser');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +15,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
+
+// Configure multer for file upload
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // Session configuration
 app.use(session({
@@ -76,7 +82,7 @@ const spotSchema = new mongoose.Schema({
     originalAuthor: String,
     currentOwner: String,
     acquiredDate: Date,
-    originalSpotId: mongoose.Schema.Types.ObjectId,
+    originalSpotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot' },
     isAdminCreated: { type: Boolean, default: false },
     hasPendingTradeRequest: { type: Boolean, default: false },
     requestedBy: [{ type: String }],
@@ -110,7 +116,7 @@ const fanInviteSchema = new mongoose.Schema({
     token: { type: String, required: true, unique: true },
     createdBy: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
-    expiresAt: { type: Date, required: true },
+    expiresAt: { type: Date },
     used: { type: Boolean, default: false },
     usedBy: { type: String },
     usedAt: { type: Date }
@@ -234,15 +240,14 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ error: 'Password deve essere di almeno 6 caratteri' });
         }
         
-        // Check if token exists and is valid
+        // Check if token exists and is valid (not used)
         const invite = await FanInvite.findOne({ 
             token, 
-            used: false,
-            expiresAt: { $gt: new Date() }
+            used: false
         });
         
         if (!invite) {
-            return res.status(400).json({ error: 'Codice non valido o scaduto' });
+            return res.status(400).json({ error: 'Codice non valido o già utilizzato' });
         }
         
         // Check if username already exists
@@ -319,37 +324,41 @@ app.get('/api/spots', requireAuth, async (req, res) => {
             ];
         }
         
-        // status: per il mercato default "active", ma per userOnly vogliamo TUTTI (tranne deleted)
-if (status) {
-    query.status = status;
-} else {
-    if (userOnly === 'true') {
-        // non forzare 'active'
-        query.status = { $ne: 'deleted' };
-    } else {
-        query.status = 'active';
-    }
-}
+        if (status) {
+            query.status = status;
+        } else {
+            if (userOnly === 'true') {
+                // For user's spots, show all statuses except deleted
+                query.status = { $ne: 'deleted' };
+            } else {
+                // For market, only show active spots
+                query.status = 'active';
+            }
+        }
 
-if (userOnly === 'true') {
-    query.$or = [
-        { author: req.session.user.username },
-        { currentOwner: req.session.user.username }
-    ];
-} else {
-    query.author = { $ne: req.session.user.username };
+        if (userOnly === 'true') {
+            // Show both published and acquired spots for the user
+            query.$or = [
+                { author: req.session.user.username, originalSpotId: { $exists: false } }, // Original published spots
+                { currentOwner: req.session.user.username, acquired: true } // Acquired spots
+            ];
+        } else {
+            // Exclude user's own spots from market
+            query.author = { $ne: req.session.user.username };
 
-    if (excludeRequested === 'true') {
-        const userTradeRequests = await TradeRequest.find({
-            fromUser: req.session.user.username,
-            status: { $in: ['pending', 'verifying'] }
-        });
+            if (excludeRequested === 'true') {
+                const userTradeRequests = await TradeRequest.find({
+                    fromUser: req.session.user.username,
+                    status: { $in: ['pending', 'verifying'] }
+                });
 
-        const requestedSpotIds = userTradeRequests.map(req => req.spotId.toString());
-        query._id = { $nin: requestedSpotIds };
-    }
-}
-
+                const requestedSpotIds = userTradeRequests.map(req => req.spotId.toString());
+                query._id = { $nin: requestedSpotIds };
+            }
+            
+            // In market, only show original spots (not copies)
+            query.originalSpotId = { $exists: false };
+        }
         
         const spots = await Spot.find(query)
             .sort({ createdAt: -1 })
@@ -430,6 +439,125 @@ app.post('/api/admin/spots', requireAdmin, async (req, res) => {
         
     } catch (error) {
         console.error('Error creating admin spot:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+// Admin import spots from CSV
+app.post('/api/admin/spots/import', requireAdmin, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nessun file caricato' });
+        }
+        
+        const fileBuffer = req.file.buffer.toString();
+        const lines = fileBuffer.split('\n');
+        const spots = [];
+        let errors = [];
+        
+        // Skip header
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            const parts = line.split(',');
+            if (parts.length < 6) {
+                errors.push(`Riga ${i}: formato non valido`);
+                continue;
+            }
+            
+            const username = parts[0].trim();
+            const give = parts[1].trim();
+            const want = parts[2].trim();
+            const region = parts[3].trim();
+            const category = parts[4].trim();
+            const coordinates = parts[5].trim();
+            const description = parts[6] ? parts[6].trim() : 'Spot importato da file';
+            
+            if (!username || !give || !want || !region || !category) {
+                errors.push(`Riga ${i}: campi mancanti`);
+                continue;
+            }
+            
+            // Check if user exists or create new
+            let user = await User.findOne({ username });
+            if (!user) {
+                const randomPassword = crypto.randomBytes(8).toString('hex');
+                const hashedPassword = await bcrypt.hash(randomPassword, 10);
+                
+                user = new User({
+                    username,
+                    password: hashedPassword,
+                    bio: 'Utente creato da import',
+                    role: 'user',
+                    isFan: true
+                });
+                await user.save();
+            }
+            
+            // Generate coordinates if not provided
+            let finalCoordinates = coordinates;
+            if (!finalCoordinates) {
+                const regionCoordinates = {
+                    'Abruzzo': { lat: 42.3506, lng: 13.3995 },
+                    'Basilicata': { lat: 40.6390, lng: 15.8057 },
+                    'Calabria': { lat: 38.9101, lng: 16.5875 },
+                    'Campania': { lat: 40.8359, lng: 14.2488 },
+                    'Emilia-Romagna': { lat: 44.4949, lng: 11.3426 },
+                    'Friuli-Venezia Giulia': { lat: 45.6371, lng: 13.8038 },
+                    'Lazio': { lat: 41.8719, lng: 12.5674 },
+                    'Liguria': { lat: 44.4056, lng: 8.9463 },
+                    'Lombardia': { lat: 45.4642, lng: 9.1900 },
+                    'Marche': { lat: 43.6158, lng: 13.5189 },
+                    'Molise': { lat: 41.5616, lng: 14.6682 },
+                    'Piemonte': { lat: 45.0703, lng: 7.6869 },
+                    'Puglia': { lat: 40.9476, lng: 17.1047 },
+                    'Sardegna': { lat: 39.2238, lng: 9.1217 },
+                    'Sicilia': { lat: 38.1157, lng: 13.3615 },
+                    'Toscana': { lat: 43.7696, lng: 11.2558 },
+                    'Trentino-Alto Adige': { lat: 46.4983, lng: 11.3548 },
+                    'Umbria': { lat: 42.9380, lng: 12.6144 },
+                    "Valle d'Aosta": { lat: 45.7376, lng: 7.3207 },
+                    'Veneto': { lat: 45.4408, lng: 12.3155 }
+                };
+                
+                const baseCoords = regionCoordinates[region] || { lat: 41.8719, lng: 12.5674 };
+                const lat = baseCoords.lat + (Math.random() - 0.5) * 0.5;
+                const lng = baseCoords.lng + (Math.random() - 0.5) * 0.5;
+                finalCoordinates = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            }
+            
+            spots.push({
+                give,
+                want,
+                region,
+                coordinates: finalCoordinates,
+                category,
+                description,
+                author: username,
+                authorId: user._id,
+                status: 'active',
+                isAdminCreated: true,
+                createdAt: new Date()
+            });
+        }
+        
+        if (spots.length === 0) {
+            return res.status(400).json({ error: 'Nessuno spot valido trovato nel file' });
+        }
+        
+        // Insert all spots
+        const insertedSpots = await Spot.insertMany(spots);
+        
+        res.json({
+            success: true,
+            imported: insertedSpots.length,
+            errors: errors.length > 0 ? errors : null,
+            message: `Importati ${insertedSpots.length} spot con successo`
+        });
+        
+    } catch (error) {
+        console.error('Error importing spots:', error);
         res.status(500).json({ error: 'Errore interno del server' });
     }
 });
@@ -732,98 +860,94 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
             return res.status(404).json({ error: 'Spot selezionato non trovato' });
         }
 
-        // Salvo autori originali PRIMA di cambiare author
         // Salvo gli autori originali
-const requestedOriginalAuthor = requestedSpot.author; // A
-const chosenOriginalAuthor = chosenSpot.author;       // B
+        const requestedOriginalAuthor = requestedSpot.author; // A
+        const chosenOriginalAuthor = chosenSpot.author;       // B
 
-// 1) aggiorno richiesta => accepted
-request.selectedSpotId = selectedSpotId;
-request.status = 'accepted';
-request.updatedAt = new Date();
-await request.save({ session: sessionDb });
+        // 1) aggiorno richiesta => accepted
+        request.selectedSpotId = selectedSpotId;
+        request.status = 'accepted';
+        request.updatedAt = new Date();
+        await request.save({ session: sessionDb });
 
-// 2) BLOCCO gli spot originali (restano ai proprietari originali)
-await Spot.findByIdAndUpdate(
-  request.spotId,
-  {
-    status: 'completed',
-    hasPendingTradeRequest: false,
-    requestedBy: [],
-    offeredForTrade: false
-  },
-  { session: sessionDb }
-);
+        // 2) BLOCCO gli spot originali (restano ai proprietari originali)
+        await Spot.findByIdAndUpdate(
+          request.spotId,
+          {
+            status: 'completed',
+            hasPendingTradeRequest: false,
+            requestedBy: [],
+            offeredForTrade: false
+          },
+          { session: sessionDb }
+        );
 
-await Spot.findByIdAndUpdate(
-  selectedSpotId,
-  {
-    status: 'completed',
-    offeredForTrade: false
-  },
-  { session: sessionDb }
-);
+        await Spot.findByIdAndUpdate(
+          selectedSpotId,
+          {
+            status: 'completed',
+            offeredForTrade: false
+          },
+          { session: sessionDb }
+        );
 
-// 3) CREO COPIA per B (fromUser) => ottiene lo spot di A
-await Spot.create([{
-  give: requestedSpot.give,
-  want: requestedSpot.want,
-  region: requestedSpot.region,
-  coordinates: requestedSpot.coordinates,
-  category: requestedSpot.category,
-  description: requestedSpot.description,
-  author: request.fromUser,              // proprietario “visibile” della copia
-  authorId: request.fromUserId,
-  status: 'completed',
-  acquired: true,
-  originalAuthor: requestedSpot.originalAuthor || requestedOriginalAuthor,
-  currentOwner: request.fromUser,
-  acquiredDate: new Date(),
-  originalSpotId: requestedSpot._id,
-  offeredForTrade: false,
-  isAdminCreated: requestedSpot.isAdminCreated || false
-}], { session: sessionDb });
+        // 3) CREO COPIA per B (fromUser) => ottiene lo spot di A
+        await Spot.create([{
+          give: requestedSpot.give,
+          want: requestedSpot.want,
+          region: requestedSpot.region,
+          coordinates: requestedSpot.coordinates,
+          category: requestedSpot.category,
+          description: requestedSpot.description,
+          author: request.fromUser,              // proprietario "visibile" della copia
+          authorId: request.fromUserId,
+          status: 'completed',
+          acquired: true,
+          originalAuthor: requestedSpot.originalAuthor || requestedOriginalAuthor,
+          currentOwner: request.fromUser,
+          acquiredDate: new Date(),
+          originalSpotId: requestedSpot._id,
+          offeredForTrade: false,
+          isAdminCreated: requestedSpot.isAdminCreated || false
+        }], { session: sessionDb });
 
-// 4) CREO COPIA per A (toUser) => ottiene lo spot scelto di B
-await Spot.create([{
-  give: chosenSpot.give,
-  want: chosenSpot.want,
-  region: chosenSpot.region,
-  coordinates: chosenSpot.coordinates,
-  category: chosenSpot.category,
-  description: chosenSpot.description,
-  author: request.toUser,
-  authorId: request.toUserId,
+        // 4) CREO COPIA per A (toUser) => ottiene lo spot scelto di B
+        await Spot.create([{
+          give: chosenSpot.give,
+          want: chosenSpot.want,
+          region: chosenSpot.region,
+          coordinates: chosenSpot.coordinates,
+          category: chosenSpot.category,
+          description: chosenSpot.description,
+          author: request.toUser,
+          authorId: request.toUserId,
+          status: 'completed',
+          acquired: true,
+          originalAuthor: chosenSpot.originalAuthor || chosenOriginalAuthor,
+          currentOwner: request.toUser,
+          acquiredDate: new Date(),
+          originalSpotId: chosenSpot._id,
+          offeredForTrade: false,
+          isAdminCreated: chosenSpot.isAdminCreated || false
+        }], { session: sessionDb });
 
-  status: 'completed',
-  acquired: true,
-  originalAuthor: chosenSpot.originalAuthor || chosenOriginalAuthor,
-  currentOwner: request.toUser,
-  acquiredDate: new Date(),
-  originalSpotId: chosenSpot._id,
-  offeredForTrade: false,
-  isAdminCreated: chosenSpot.isAdminCreated || false
-}], { session: sessionDb });
+        // 5) rendo liberi gli altri spot offerti non scelti
+        const otherOffered = offeredIds.filter(id => id !== selectedSpotId.toString());
 
-// 5) rendo liberi gli altri spot offerti non scelti
+        if (otherOffered.length > 0) {
+          await Spot.updateMany(
+            { _id: { $in: otherOffered } },
+            { $set: { offeredForTrade: false, status: 'active' } },
+            { session: sessionDb }
+          );
+        }
 
-const otherOffered = offeredIds.filter(id => id !== selectedSpotId.toString());
-
-if (otherOffered.length > 0) {
-  await Spot.updateMany(
-    { _id: { $in: otherOffered } },
-    { $set: { offeredForTrade: false, status: 'active' } },
-    { session: sessionDb }
-  );
-}
-
-
-        // 5) rifiuto automaticamente le altre richieste pendenti sullo stesso spot richiesto
+        // 6) rifiuto automaticamente le altre richieste pendenti sullo stesso spot richiesto
         await TradeRequest.updateMany(
             {
                 _id: { $ne: request._id },
                 spotId: request.spotId,
-                status: { $in: ['pending', 'verifying'] } // anche se esiste legacy
+                status: { $in: ['pending', 'verifying'] }
             },
             {
                 $set: {
@@ -845,54 +969,6 @@ if (otherOffered.length > 0) {
         return res.status(500).json({ error: 'Errore interno del server' });
     } finally {
         sessionDb.endSession();
-    }
-});
-
-
-app.put('/api/trade-requests/:id/complete', requireAdmin, async (req, res) => {
-    try {
-        const request = await TradeRequest.findById(req.params.id);
-        
-        if (!request) {
-            return res.status(404).json({ error: 'Richiesta di scambio non trovata' });
-        }
-        
-        request.status = 'accepted';
-        await request.save();
-        
-        // Trasferisci lo spot richiesto al mittente
-        await Spot.findByIdAndUpdate(request.spotId, {
-            status: 'completed',
-            acquired: true,
-            originalAuthor: (await Spot.findById(request.spotId)).author,
-            currentOwner: request.fromUser,
-            acquiredDate: Date.now(),
-            author: request.fromUser,
-            hasPendingTradeRequest: false,
-            requestedBy: []
-        });
-        
-        // Trasferisci lo spot selezionato al destinatario
-        await Spot.findByIdAndUpdate(request.selectedSpotId, {
-            status: 'completed',
-            acquired: true,
-            originalAuthor: (await Spot.findById(request.selectedSpotId)).author,
-            currentOwner: request.toUser,
-            acquiredDate: Date.now(),
-            author: request.toUser,
-            offeredForTrade: false
-        });
-        
-        // Aggiorna tutti gli altri spot offerti a non più in offerta
-        await Spot.updateMany(
-            { _id: { $in: request.offeredSpots, $ne: request.selectedSpotId } },
-            { $set: { offeredForTrade: false } }
-        );
-        
-        res.json({ success: true, request });
-    } catch (error) {
-        console.error('Error completing trade:', error);
-        res.status(500).json({ error: 'Errore interno del server' });
     }
 });
 
@@ -976,11 +1052,11 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
         ] = await Promise.all([
             User.countDocuments(),
             Spot.countDocuments({ status: { $ne: 'deleted' } }),
-            Spot.countDocuments({ status: 'active' }),
+            Spot.countDocuments({ status: 'active', originalSpotId: { $exists: false } }),
             TradeRequest.countDocuments(),
             TradeRequest.countDocuments({ status: 'pending' }),
             User.countDocuments({ isFan: true }),
-            FanInvite.countDocuments({ used: false, expiresAt: { $gt: new Date() } }),
+            FanInvite.countDocuments({ used: false }),
             TradeRequest.countDocuments({ adminApproved: false, adminRejected: false })
         ]);
         
@@ -1006,6 +1082,115 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+// Admin user management
+app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    try {
+        const { username, bio, role, password } = req.body;
+        
+        if (!username) {
+            return res.status(400).json({ error: 'Username richiesto' });
+        }
+        
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ error: 'Utente non trovato' });
+        }
+        
+        // Check if username already exists (excluding current user)
+        if (username !== user.username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({ error: 'Username già in uso' });
+            }
+        }
+        
+        user.username = username;
+        user.bio = bio || user.bio;
+        user.role = role || user.role;
+        
+        if (password) {
+            user.password = await bcrypt.hash(password, 10);
+        }
+        
+        await user.save();
+        
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ error: 'Utente non trovato' });
+        }
+        
+        // Prevent deleting admin accounts
+        if (user.role === 'admin') {
+            return res.status(403).json({ error: 'Non puoi eliminare un account admin' });
+        }
+        
+        // Delete user's spots
+        await Spot.deleteMany({
+            $or: [
+                { author: user.username },
+                { currentOwner: user.username }
+            ]
+        });
+        
+        // Delete user's trade requests
+        await TradeRequest.deleteMany({
+            $or: [
+                { fromUser: user.username },
+                { toUser: user.username }
+            ]
+        });
+        
+        // Delete the user
+        await User.findByIdAndDelete(req.params.id);
+        
+        res.json({ success: true, message: 'Utente eliminato con successo' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
+});
+
+// Admin login as user
+app.post('/api/admin/login-as', requireAdmin, async (req, res) => {
+    try {
+        const { username } = req.body;
+        
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: 'Utente non trovato' });
+        }
+        
+        // Set session as the target user
+        req.session.user = {
+            id: user._id,
+            username: user.username,
+            role: user.role
+        };
+        
+        res.json({ 
+            success: true, 
+            user: { 
+                username: user.username, 
+                bio: user.bio,
+                settings: user.settings
+            },
+            isAdmin: user.role === 'admin'
+        });
+    } catch (error) {
+        console.error('Error logging in as user:', error);
         res.status(500).json({ error: 'Errore interno del server' });
     }
 });
@@ -1045,6 +1230,9 @@ app.get('/api/admin/spots', requireAdmin, async (req, res) => {
             ];
         }
         
+        // Filter out duplicate spots (copies from trades) - only show original spots
+        query.originalSpotId = { $exists: false };
+        
         const spots = await Spot.find(query)
             .sort({ createdAt: -1 })
             .lean();
@@ -1056,19 +1244,16 @@ app.get('/api/admin/spots', requireAdmin, async (req, res) => {
     }
 });
 
-// Fan invite routes - now generates codes instead of URLs
+// Fan invite routes - now generates codes that never expire
 app.post('/api/admin/invites', requireAdmin, async (req, res) => {
     try {
-        const { hoursValid } = req.body;
-        const expiresHours = parseInt(hoursValid) || 24;
-        
         // Generate unique token (12 characters, formatted as XXXX-XXXX-XXXX)
         const token = crypto.randomBytes(6).toString('hex').toUpperCase(); // 12 characters
         
         const invite = new FanInvite({
             token,
             createdBy: req.session.user.username,
-            expiresAt: new Date(Date.now() + expiresHours * 60 * 60 * 1000)
+            // No expiresAt - codes never expire
         });
         
         await invite.save();
@@ -1078,8 +1263,7 @@ app.post('/api/admin/invites', requireAdmin, async (req, res) => {
             invite: {
                 token,
                 createdBy: invite.createdBy,
-                createdAt: invite.createdAt,
-                expiresAt: invite.expiresAt
+                createdAt: invite.createdAt
             }
         });
         
@@ -1119,17 +1303,15 @@ app.get('/api/check-token/:token', async (req, res) => {
         
         const invite = await FanInvite.findOne({ 
             token, 
-            used: false,
-            expiresAt: { $gt: new Date() }
+            used: false
         });
         
         if (!invite) {
-            return res.json({ valid: false, message: 'Codice non valido o scaduto' });
+            return res.json({ valid: false, message: 'Codice non valido o già utilizzato' });
         }
         
         res.json({ 
             valid: true, 
-            expiresAt: invite.expiresAt,
             createdBy: invite.createdBy
         });
         
@@ -1139,25 +1321,19 @@ app.get('/api/check-token/:token', async (req, res) => {
     }
 });
 
+// Download CSV template
+app.get('/api/admin/template', requireAdmin, (req, res) => {
+    const csv = 'username,give,want,region,category,coordinates,description\ntest,Ex fabbrica tessile,Hotel abbandonato,Lombardia,industriale,45.4642,9.1900,Descrizione spot di esempio';
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=template_spot.csv');
+    res.send(csv);
+});
+
 // Serve HTML
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-// Clean up expired invites every hour
-setInterval(async () => {
-    try {
-        const result = await FanInvite.deleteMany({
-            expiresAt: { $lt: new Date() },
-            used: false
-        });
-        if (result.deletedCount > 0) {
-            console.log(`Puliti ${result.deletedCount} codici scaduti`);
-        }
-    } catch (error) {
-        console.error('Error cleaning expired invites:', error);
-    }
-}, 60 * 60 * 1000); // Every hour
 
 // Start server
 app.listen(PORT, () => {
