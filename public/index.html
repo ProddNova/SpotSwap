@@ -43,6 +43,35 @@
       overflow-x:hidden
     }
 
+    /* LOADER */
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+    
+    .loader-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* LAYOUT */
     header{
       background:linear-gradient(135deg,#1a1a1a 0%,#0d0d0d 100%);
@@ -664,15 +693,17 @@
       gap:12px;
       width:100%
     }
-
+    
     .spot-selector:hover{
       border-color:var(--border-light);
       background:var(--card)
     }
-
+    
     .spot-selector.selected{
       border-color:var(--primary);
-      background:rgba(220,38,38,.05)
+      background:rgba(220,38,38,.05);
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
     }
 
     .spot-selector input[type="checkbox"],
@@ -1741,6 +1772,11 @@
   </style>
 </head>
 <body>
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="loader-spinner"></div>
+  </div>
+
   <!-- LOGIN SCREEN -->
   <div id="login-screen">
     <div class="login-container">
@@ -1865,7 +1901,29 @@
           </div>
           <div class="form-group">
             <label class="form-label">Regione</label>
-            <input type="text" id="spot-region" class="form-input" placeholder="es: Lombardia">
+            <select class="form-select" id="spot-region">
+              <option value="">Seleziona regione...</option>
+              <option value="Abruzzo">Abruzzo</option>
+              <option value="Basilicata">Basilicata</option>
+              <option value="Calabria">Calabria</option>
+              <option value="Campania">Campania</option>
+              <option value="Emilia-Romagna">Emilia-Romagna</option>
+              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+              <option value="Lazio">Lazio</option>
+              <option value="Liguria">Liguria</option>
+              <option value="Lombardia">Lombardia</option>
+              <option value="Marche">Marche</option>
+              <option value="Molise">Molise</option>
+              <option value="Piemonte">Piemonte</option>
+              <option value="Puglia">Puglia</option>
+              <option value="Sardegna">Sardegna</option>
+              <option value="Sicilia">Sicilia</option>
+              <option value="Toscana">Toscana</option>
+              <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+              <option value="Umbria">Umbria</option>
+              <option value="Valle d'Aosta">Valle d'Aosta</option>
+              <option value="Veneto">Veneto</option>
+            </select>
           </div>
           <button class="btn btn-success" onclick="createAdminSpot()" style="width: 100%;">
             Crea Spot
@@ -1933,9 +1991,6 @@
         <button class="nav-btn" data-route="new">
           + Nuovo
         </button>
-        <button class="nav-btn" onclick="logout()">
-          Logout
-        </button>
       </nav>
     </div>
   </header>
@@ -1970,6 +2025,33 @@
               <option value="sanitario">Sanitario</option>
               <option value="militare">Militare</option>
               <option value="altro">Altro</option>
+            </select>
+          </div>
+          
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Zona</label>
+            <select class="form-select" id="filter-region">
+              <option value="all">Tutte le zone</option>
+              <option value="Abruzzo">Abruzzo</option>
+              <option value="Basilicata">Basilicata</option>
+              <option value="Calabria">Calabria</option>
+              <option value="Campania">Campania</option>
+              <option value="Emilia-Romagna">Emilia-Romagna</option>
+              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+              <option value="Lazio">Lazio</option>
+              <option value="Liguria">Liguria</option>
+              <option value="Lombardia">Lombardia</option>
+              <option value="Marche">Marche</option>
+              <option value="Molise">Molise</option>
+              <option value="Piemonte">Piemonte</option>
+              <option value="Puglia">Puglia</option>
+              <option value="Sardegna">Sardegna</option>
+              <option value="Sicilia">Sicilia</option>
+              <option value="Toscana">Toscana</option>
+              <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+              <option value="Umbria">Umbria</option>
+              <option value="Valle d'Aosta">Valle d'Aosta</option>
+              <option value="Veneto">Veneto</option>
             </select>
           </div>
         </div>
@@ -2138,6 +2220,20 @@
               <textarea class="form-textarea" id="profile-bio" rows="3" maxlength="200"></textarea>
             </div>
           </div>
+
+          <div class="setting-item">
+            <div class="setting-header">
+              <div class="setting-title">Account</div>
+            </div>
+            <div class="setting-description">
+              Gestisci il tuo account e sessione
+            </div>
+            <div class="setting-control">
+              <button class="btn btn-danger" onclick="logout()" style="width: 100%; margin-top: 10px;">
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="flex gap-2 mt-2">
@@ -2181,8 +2277,30 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Zona generica</label>
-            <input type="text" class="form-input" id="input-region" placeholder="es. Lombardia nord">
+            <label class="form-label">Regione</label>
+            <select class="form-select" id="input-region">
+              <option value="">Seleziona regione...</option>
+              <option value="Abruzzo">Abruzzo</option>
+              <option value="Basilicata">Basilicata</option>
+              <option value="Calabria">Calabria</option>
+              <option value="Campania">Campania</option>
+              <option value="Emilia-Romagna">Emilia-Romagna</option>
+              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+              <option value="Lazio">Lazio</option>
+              <option value="Liguria">Liguria</option>
+              <option value="Lombardia">Lombardia</option>
+              <option value="Marche">Marche</option>
+              <option value="Molise">Molise</option>
+              <option value="Piemonte">Piemonte</option>
+              <option value="Puglia">Puglia</option>
+              <option value="Sardegna">Sardegna</option>
+              <option value="Sicilia">Sicilia</option>
+              <option value="Toscana">Toscana</option>
+              <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+              <option value="Umbria">Umbria</option>
+              <option value="Valle d'Aosta">Valle d'Aosta</option>
+              <option value="Veneto">Veneto</option>
+            </select>
             <div class="form-hint">Solo zona generica, mai l'indirizzo</div>
           </div>
 
@@ -2202,7 +2320,7 @@
         <div class="form-group">
           <label class="form-label">Coordinate GPS</label>
           <input type="text" class="form-input" id="input-coordinates" placeholder="es. 45.4642, 9.1900">
-          <div class="form-hint">⚠️ Saranno visibili SOLO dopo l'accettazione dello scambio e verifica</div>
+          <div class="form-hint">⚠️ Saranno visibili SOLO dopo l'accettazione dello scambio e verifica. Formati accettati: "45.4642, 9.1900" o "(45.4642, 9.1900)"</div>
         </div>
 
         <div class="form-group">
@@ -2307,6 +2425,12 @@
   <script>
     // ========== CONSTANTS ==========
     const API_BASE = '/api';
+    const REGION_LIST = [
+      "Abruzzo", "Basilicata", "Calabria", "Campania", "Emilia-Romagna",
+      "Friuli-Venezia Giulia", "Lazio", "Liguria", "Lombardia", "Marche",
+      "Molise", "Piemonte", "Puglia", "Sardegna", "Sicilia", "Toscana",
+      "Trentino-Alto Adige", "Umbria", "Valle d'Aosta", "Veneto"
+    ];
 
     // ========== STATE ==========
     let state = {
@@ -2325,6 +2449,54 @@
     let map = null;
     let markers = [];
     let currentMapFilter = 'all';
+
+    // ========== LOADER MANAGEMENT ==========
+    let activeRequests = 0;
+
+    function showLoader() {
+      activeRequests++;
+      document.getElementById('loader').style.display = 'flex';
+    }
+
+    function hideLoader() {
+      activeRequests = Math.max(0, activeRequests - 1);
+      if (activeRequests === 0) {
+        setTimeout(() => {
+          document.getElementById('loader').style.display = 'none';
+        }, 300);
+      }
+    }
+
+    // ========== UTILITY FUNCTIONS ==========
+    function cleanCoordinates(coords) {
+      if (!coords) return '';
+      // Rimuovi parentesi, spazi extra e caratteri non necessari
+      let cleaned = coords.replace(/[()\[\]{}]/g, '').trim();
+      
+      // Se è un link di Google Maps, estrai le coordinate
+      if (cleaned.includes('goo.gl') || cleaned.includes('google.com/maps') || cleaned.includes('maps.app')) {
+        // Prova ad estrarre le coordinate da un link Google Maps
+        const match = cleaned.match(/@([-0-9.]+),([-0-9.]+)/);
+        if (match && match[1] && match[2]) {
+          return `${match[1]}, ${match[2]}`;
+        }
+        return cleaned; // Se non riesci a estrarre, restituisci il link originale
+      }
+      
+      // Formatta come "lat, lng"
+      const parts = cleaned.split(',').map(p => p.trim()).filter(p => p);
+      if (parts.length >= 2) {
+        return `${parts[0]}, ${parts[1]}`;
+      }
+      
+      return cleaned;
+    }
+
+    function formatCoordinatesForMaps(coords) {
+      const cleaned = cleanCoordinates(coords);
+      // Per Google Maps, rimuovi tutti gli spazi
+      return cleaned.replace(/\s/g, '');
+    }
 
     // ========== INIT ==========
     async function init() {
@@ -2345,6 +2517,7 @@
 
     // ========== AUTH FUNCTIONS ==========
     async function checkSession() {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/session`);
         const data = await response.json();
@@ -2358,6 +2531,8 @@
       } catch (error) {
         console.error('Session check error:', error);
         return false;
+      } finally {
+        hideLoader();
       }
     }
 
@@ -2372,6 +2547,7 @@
         return;
       }
       
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/login`, {
           method: 'POST',
@@ -2404,16 +2580,21 @@
         console.error('Login error:', error);
         errorDiv.textContent = 'Errore di connessione';
         errorDiv.style.display = 'block';
+      } finally {
+        hideLoader();
       }
     }
 
     async function logout() {
+      showLoader();
       try {
         await fetch(`${API_BASE}/logout`, { method: 'POST' });
         location.reload();
       } catch (error) {
         console.error('Logout error:', error);
         location.reload();
+      } finally {
+        hideLoader();
       }
     }
 
@@ -2493,6 +2674,7 @@
         return;
       }
       
+      showLoader();
       try {
         const response = await fetch('/api/register', {
           method: 'POST',
@@ -2524,6 +2706,8 @@
         console.error('Registration error:', error);
         errorDiv.textContent = 'Errore di connessione';
         errorDiv.style.display = 'block';
+      } finally {
+        hideLoader();
       }
     }
 
@@ -2557,6 +2741,7 @@
     }
 
     async function loadAdminData() {
+      showLoader();
       try {
         const [stats, users, trades, invites] = await Promise.all([
           fetch(`${API_BASE}/admin/stats`).then(r => r.json()),
@@ -2676,10 +2861,13 @@
       } catch (error) {
         console.error('Error loading admin data:', error);
         document.getElementById('admin-stats').innerHTML = '<div class="text-muted">Errore nel caricamento dei dati</div>';
+      } finally {
+        hideLoader();
       }
     }
 
     async function loadAdminTrades() {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/trades`);
         if (response.ok) {
@@ -2689,10 +2877,13 @@
       } catch (error) {
         console.error('Error loading admin trades:', error);
         showToast('Errore nel caricamento degli scambi', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function loadAdminSpots() {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/spots`);
         if (response.ok) {
@@ -2702,6 +2893,8 @@
       } catch (error) {
         console.error('Error loading admin spots:', error);
         showToast('Errore nel caricamento degli spot', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
@@ -2862,6 +3055,7 @@
 
     async function searchAdminSpots() {
       const search = document.getElementById('admin-spot-search').value;
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/spots${search ? `?search=${encodeURIComponent(search)}` : ''}`);
         if (response.ok) {
@@ -2870,6 +3064,8 @@
         }
       } catch (error) {
         console.error('Error searching admin spots:', error);
+      } finally {
+        hideLoader();
       }
     }
 
@@ -2914,7 +3110,7 @@
           <div class="mb-3">
             <strong>Coordinate GPS:</strong><br>
             <div style="background: var(--bg-light); padding: 10px; border-radius: 6px; margin-top: 5px; font-family: monospace;">
-              ${escapeHtml(spot.coordinates)}
+              ${escapeHtml(cleanCoordinates(spot.coordinates))}
             </div>
             <button class="btn btn-primary mt-2" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
               🗺️ Apri in Google Maps
@@ -2987,7 +3183,7 @@
                 <div style="margin-top: 8px;">
                   <strong>Coordinate:</strong>
                   <div style="font-family: monospace; font-size: 12px; background: var(--bg); padding: 6px; border-radius: 4px;">
-                    ${escapeHtml(spot.coordinates)}
+                    ${escapeHtml(cleanCoordinates(spot.coordinates))}
                   </div>
                 </div>
               ` : ''}
@@ -3009,7 +3205,7 @@
                   <div style="margin-top: 6px;">
                     <strong>Coordinate:</strong>
                     <div style="font-family: monospace; font-size: 11px; background: var(--bg); padding: 4px; border-radius: 4px;">
-                      ${escapeHtml(s.coordinates)}
+                      ${escapeHtml(cleanCoordinates(s.coordinates))}
                     </div>
                   </div>
                 ` : ''}
@@ -3029,7 +3225,7 @@
                   <div style="margin-top: 6px;">
                     <strong>Coordinate:</strong>
                     <div style="font-family: monospace; font-size: 11px; background: var(--bg); padding: 4px; border-radius: 4px;">
-                      ${escapeHtml(trade.selectedSpotId.coordinates)}
+                      ${escapeHtml(cleanCoordinates(trade.selectedSpotId.coordinates))}
                     </div>
                   </div>
                 ` : ''}
@@ -3072,6 +3268,7 @@
     }
 
     async function approveTrade(tradeId) {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/trade-requests/${tradeId}/approve`, {
           method: 'PUT'
@@ -3088,12 +3285,15 @@
       } catch (error) {
         console.error('Error approving trade:', error);
         showToast('Errore nell\'approvazione', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function rejectTrade(tradeId) {
       if (!confirm('Sei sicuro di voler rifiutare questo scambio?')) return;
       
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/trade-requests/${tradeId}/reject`, {
           method: 'PUT'
@@ -3110,10 +3310,13 @@
       } catch (error) {
         console.error('Error rejecting trade:', error);
         showToast('Errore nel rifiuto', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function completeTrade(tradeId) {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/trade-requests/${tradeId}/complete`, {
           method: 'PUT'
@@ -3130,12 +3333,15 @@
       } catch (error) {
         console.error('Error completing trade:', error);
         showToast('Errore nel completamento', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function deleteAdminSpot(spotId) {
       if (!confirm('Sei sicuro di voler eliminare questo spot? Verranno eliminate anche tutte le richieste di scambio associate.')) return;
       
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/spots/${spotId}`, {
           method: 'DELETE'
@@ -3153,12 +3359,15 @@
       } catch (error) {
         console.error('Error deleting admin spot:', error);
         showToast('Errore nell\'eliminazione', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function generateInviteCode() {
       const hours = document.getElementById('invite-hours').value;
       
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/invites`, {
           method: 'POST',
@@ -3191,6 +3400,8 @@
         }
       } catch (error) {
         console.error('Error generating invite:', error);
+      } finally {
+        hideLoader();
       }
     }
 
@@ -3198,7 +3409,7 @@
       const username = document.getElementById('spot-username').value.trim();
       const title = document.getElementById('spot-title').value.trim();
       const want = document.getElementById('spot-want').value.trim();
-      const region = document.getElementById('spot-region').value.trim();
+      const region = document.getElementById('spot-region').value;
       
       if (!username || !title || !want || !region) {
         alert('Compila tutti i campi');
@@ -3221,6 +3432,7 @@
         authorId: 'admin_created'
       };
       
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/admin/spots`, {
           method: 'POST',
@@ -3247,6 +3459,8 @@
       } catch (error) {
         console.error('Error creating admin spot:', error);
         alert('Errore di connessione');
+      } finally {
+        hideLoader();
       }
     }
 
@@ -3262,6 +3476,7 @@
 
     // ========== DATA LOADING ==========
     async function loadInitialData() {
+      showLoader();
       try {
         const [spotsResponse, requestsResponse] = await Promise.all([
           fetch(`${API_BASE}/spots?excludeRequested=true`), // MODIFICA: Escludi spot già richiesti
@@ -3278,10 +3493,13 @@
       } catch (error) {
         console.error('Error loading initial data:', error);
         showToast('Errore nel caricamento dei dati', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function loadMarketSpots() {
+      showLoader();
       try {
         // MODIFICA: Escludi gli spot per cui l'utente ha già inviato richieste
         const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
@@ -3291,10 +3509,13 @@
         }
       } catch (error) {
         console.error('Error loading market spots:', error);
+      } finally {
+        hideLoader();
       }
     }
 
     async function loadUserSpots() {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/spots?userOnly=true`);
         if (response.ok) {
@@ -3303,10 +3524,13 @@
         }
       } catch (error) {
         console.error('Error loading user spots:', error);
+      } finally {
+        hideLoader();
       }
     }
 
     async function loadTradeRequests() {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/trade-requests`);
         if (response.ok) {
@@ -3315,6 +3539,8 @@
         }
       } catch (error) {
         console.error('Error loading trade requests:', error);
+      } finally {
+        hideLoader();
       }
     }
 
@@ -3354,7 +3580,7 @@
         }
       });
 
-      ['filter-search', 'filter-category'].forEach(id => {
+      ['filter-search', 'filter-category', 'filter-region'].forEach(id => {
         document.getElementById(id).addEventListener('input', renderMarket);
       });
       
@@ -3489,7 +3715,8 @@
         let lat, lng;
         
         if (spot.coordinates && spot.coordinates.includes(',')) {
-          const coords = spot.coordinates.split(',').map(c => parseFloat(c.trim()));
+          const cleanedCoords = cleanCoordinates(spot.coordinates);
+          const coords = cleanedCoords.split(',').map(c => parseFloat(c.trim()));
           if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
             lat = coords[0];
             lng = coords[1];
@@ -3636,7 +3863,9 @@
     async function renderMarket() {
       const search = document.getElementById('filter-search').value.toLowerCase();
       const category = document.getElementById('filter-category').value;
+      const region = document.getElementById('filter-region').value;
 
+      showLoader();
       try {
         // MODIFICA: Escludi gli spot per cui l'utente ha già inviato richieste
         const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
@@ -3656,8 +3885,9 @@
             (spot.description && spot.description.toLowerCase().includes(search));
             
           const matchCategory = category === 'all' || spot.category === category;
+          const matchRegion = region === 'all' || spot.region === region;
 
-          return matchSearch && matchCategory;
+          return matchSearch && matchCategory && matchRegion;
         });
 
         const grid = document.getElementById('market-grid');
@@ -3708,12 +3938,15 @@
       } catch (error) {
         console.error('Error rendering market:', error);
         showToast('Errore nel caricamento del mercato', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     function resetFilters() {
       document.getElementById('filter-search').value = '';
       document.getElementById('filter-category').value = 'all';
+      document.getElementById('filter-region').value = 'all';
       renderMarket();
       showToast('Filtri resettati');
     }
@@ -3865,6 +4098,7 @@
     }
 
     async function saveProfileSettings() {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/profile`, {
           method: 'PUT',
@@ -3887,6 +4121,8 @@
       } catch (error) {
         console.error('Error saving profile:', error);
         showToast('Errore nel salvataggio', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
@@ -4050,7 +4286,7 @@
       html += '<strong>🎉 Scambio completato! Ecco le coordinate:</strong>';
       
       if (req.fromUser === state.user.username) {
-        html += `<div style="margin-top:6px">📍 ${escapeHtml(spot.give || '')}: ${escapeHtml(spot.coordinates || 'Non disponibili')}</div>`;
+        html += `<div style="margin-top:6px">📍 ${escapeHtml(spot.give || '')}: ${escapeHtml(cleanCoordinates(spot.coordinates) || 'Non disponibili')}</div>`;
         if (spot.coordinates) {
           html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
             Apri in Google Maps
@@ -4058,7 +4294,7 @@
           `;
         }
       } else {
-        html += `<div style="margin-top:6px">📍 ${escapeHtml(selectedSpot.give || '')}: ${escapeHtml(selectedSpot.coordinates || 'Non disponibili')}</div>`;
+        html += `<div style="margin-top:6px">📍 ${escapeHtml(selectedSpot.give || '')}: ${escapeHtml(cleanCoordinates(selectedSpot.coordinates) || 'Non disponibili')}</div>`;
         if (selectedSpot.coordinates) {
           html += `<button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${selectedSpot.coordinates}', '${escapeHtml(selectedSpot.give)}')">
             Apri in Google Maps
@@ -4073,6 +4309,7 @@
 
     // ========== TRADE ACTIONS ==========
     async function openOfferModal(spotId) {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/spots?userOnly=true`);
         const mySpots = await response.json();
@@ -4104,10 +4341,13 @@
           </label>
         `).join('');
 
+        closeAllModals();
         openModal('modal-offer');
       } catch (error) {
         console.error('Error opening offer modal:', error);
         showToast('Errore nel caricamento degli spot', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
@@ -4139,6 +4379,7 @@
         return;
       }
 
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/trade-requests`, {
           method: 'POST',
@@ -4164,6 +4405,8 @@
       } catch (error) {
         console.error('Error sending offer:', error);
         showToast('Errore nell\'invio della proposta', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
@@ -4198,6 +4441,7 @@
         </label>
       `).join('');
 
+      closeAllModals();
       openModal('modal-choose');
     }
 
@@ -4219,6 +4463,7 @@
         return;
       }
 
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/trade-requests/${state.currentRequestId}/accept`, {
           method: 'PUT',
@@ -4238,10 +4483,13 @@
       } catch (error) {
         console.error('Error accepting trade:', error);
         showToast('Errore nell\'accettazione', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function offerAcquiredSpot(spotId) {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/spots/${spotId}`, {
           method: 'PUT',
@@ -4256,10 +4504,13 @@
       } catch (error) {
         console.error('Error offering spot:', error);
         showToast('Errore nell\'offerta dello spot', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function cancelOffer(spotId) {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/spots/${spotId}`, {
           method: 'PUT',
@@ -4274,6 +4525,8 @@
       } catch (error) {
         console.error('Error canceling offer:', error);
         showToast('Errore nell\'annullamento', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
@@ -4293,7 +4546,7 @@
     async function publishSpot() {
       const give = document.getElementById('input-give').value.trim();
       const want = document.getElementById('input-want').value.trim();
-      const region = document.getElementById('input-region').value.trim();
+      const region = document.getElementById('input-region').value;
       const coordinates = document.getElementById('input-coordinates').value.trim();
       const category = document.getElementById('input-category').value;
       const description = document.getElementById('input-description').value.trim();
@@ -4314,12 +4567,16 @@
         return;
       }
 
+      // Pulisci le coordinate prima di inviarle
+      const cleanedCoordinates = cleanCoordinates(coordinates);
+
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/spots`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            give, want, region, coordinates,
+            give, want, region, coordinates: cleanedCoordinates,
             category,
             description: description || 'Nessuna descrizione'
           })
@@ -4344,12 +4601,15 @@
       } catch (error) {
         console.error('Error publishing spot:', error);
         showToast('Errore nella pubblicazione', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     async function deleteSpot(spotId) {
       if (!confirm('Sei sicuro di voler eliminare questo spot?')) return;
       
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/spots/${spotId}`, {
           method: 'DELETE'
@@ -4365,11 +4625,14 @@
       } catch (error) {
         console.error('Error deleting spot:', error);
         showToast('Errore nell\'eliminazione', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     // ========== SPOT DETAIL ==========
     async function viewSpotDetail(spotId) {
+      showLoader();
       try {
         const response = await fetch(`${API_BASE}/spots`);
         const spots = await response.json();
@@ -4426,7 +4689,7 @@
           ${spot.coordinates && (spot.status === 'completed' || spot.acquired) ? `
             <div class="coordinates-box">
               <strong>📍 Coordinate GPS</strong>
-              <div style="margin-top:6px">${escapeHtml(spot.coordinates)}</div>
+              <div style="margin-top:6px">${escapeHtml(cleanCoordinates(spot.coordinates))}</div>
               <button class="btn btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px" onclick="openInGoogleMaps('${spot.coordinates}', '${escapeHtml(spot.give)}')">
                 Apri in Google Maps
               </button>
@@ -4458,29 +4721,47 @@
           actions.innerHTML = '';
         }
 
+        closeAllModals();
         openModal('modal-detail');
       } catch (error) {
         console.error('Error viewing spot detail:', error);
         showToast('Errore nel caricamento dei dettagli', 'error');
+      } finally {
+        hideLoader();
       }
     }
 
     // ========== GOOGLE MAPS ==========
     function openInGoogleMaps(coordinates, title) {
-      if (!coordinates || !coordinates.includes(',')) {
+      if (!coordinates) {
         showToast('Coordinate non valide', 'error');
         return;
       }
       
+      const cleanedCoords = formatCoordinatesForMaps(coordinates);
       const cleanTitle = encodeURIComponent(title);
-      const cleanCoords = coordinates.replace(/\s/g, '');
-      const url = `https://www.google.com/maps?q=${cleanCoords}&z=15&t=s&hl=it&layer=s`;
       
-      window.open(url, '_blank');
+      // Controlla se è già un link completo
+      if (cleanedCoords.includes('http://') || cleanedCoords.includes('https://')) {
+        window.open(cleanedCoords, '_blank');
+      } else if (cleanedCoords.includes(',')) {
+        // Formato coordinate
+        const url = `https://www.google.com/maps?q=${cleanedCoords}&z=15&t=s&hl=it&layer=s`;
+        window.open(url, '_blank');
+      } else {
+        showToast('Formato coordinate non riconosciuto', 'error');
+      }
     }
 
     // ========== MODAL ==========
+    function closeAllModals() {
+      document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.classList.remove('show');
+      });
+    }
+
     function openModal(id) {
+      closeAllModals();
       document.getElementById(id).classList.add('show');
     }
 
