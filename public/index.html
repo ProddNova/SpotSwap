@@ -2307,7 +2307,6 @@
   <script>
     // ========== CONSTANTS ==========
     const API_BASE = '/api';
-    const VERIFICATION_TIME = 10000; // 10 seconds
 
     // ========== STATE ==========
     let state = {
@@ -3920,7 +3919,6 @@
 
     // ========== REQUESTS ==========
     async function renderRequests() {
-      await loadTradeRequests();
       
       // MODIFICA: Filtra le richieste ricevute solo quelle approvate dall'admin
       const received = state.tradeRequests.filter(r => 
@@ -4000,8 +3998,7 @@
           }
           break;
         case 'verifying':
-          const remaining = Math.ceil((new Date(req.verificationStartedAt).getTime() + VERIFICATION_TIME - Date.now()) / 1000);
-          statusBadge = `<span class="trade-status verifying">🔍 Verifica admin (${remaining > 0 ? remaining : 0}s)</span>`;
+          statusBadge = '<span class="trade-status verifying">⏳ In elaborazione...</span>';
           break;
         case 'accepted':
           statusBadge = '<span class="trade-status accepted">✅ Completato</span>';
