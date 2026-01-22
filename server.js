@@ -236,7 +236,7 @@ app.post('/api/register', async (req, res) => {
         });
         
         if (!invite) {
-            return res.status(400).json({ error: 'Token non valido o scaduto' });
+            return res.status(400).json({ error: 'Codice non valido o scaduto' });
         }
         
         // Check if username already exists
@@ -699,14 +699,14 @@ app.get('/api/admin/trades', requireAdmin, async (req, res) => {
     }
 });
 
-// Fan invite routes
+// Fan invite routes - now generates codes instead of URLs
 app.post('/api/admin/invites', requireAdmin, async (req, res) => {
     try {
         const { hoursValid } = req.body;
         const expiresHours = parseInt(hoursValid) || 24;
         
-        // Generate unique token
-        const token = crypto.randomBytes(20).toString('hex');
+        // Generate unique token (12 characters, formatted as XXXX-XXXX-XXXX)
+        const token = crypto.randomBytes(6).toString('hex').toUpperCase(); // 12 characters
         
         const invite = new FanInvite({
             token,
@@ -716,18 +716,13 @@ app.post('/api/admin/invites', requireAdmin, async (req, res) => {
         
         await invite.save();
         
-        // Generate registration URL
-        const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-        const registrationUrl = `${baseUrl}/register.html?token=${token}`;
-        
         res.json({
             success: true,
             invite: {
                 token,
                 createdBy: invite.createdBy,
                 createdAt: invite.createdAt,
-                expiresAt: invite.expiresAt,
-                registrationUrl
+                expiresAt: invite.expiresAt
             }
         });
         
@@ -772,7 +767,7 @@ app.get('/api/check-token/:token', async (req, res) => {
         });
         
         if (!invite) {
-            return res.json({ valid: false, message: 'Token non valido o scaduto' });
+            return res.json({ valid: false, message: 'Codice non valido o scaduto' });
         }
         
         res.json({ 
@@ -800,7 +795,7 @@ setInterval(async () => {
             used: false
         });
         if (result.deletedCount > 0) {
-            console.log(`Puliti ${result.deletedCount} inviti scaduti`);
+            console.log(`Puliti ${result.deletedCount} codici scaduti`);
         }
     } catch (error) {
         console.error('Error cleaning expired invites:', error);
