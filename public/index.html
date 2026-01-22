@@ -27,11 +27,11 @@
       --info:#6366f1;
       --radius:10px;
       --shadow:0 2px 8px rgba(0,0,0,.3);
-      --shadow-lg:0 8px 24px rgba(0,0,0,.4);
+      --shadow-lg:0 8px 24px rgba(0,0,0,.4)
     }
     
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;overflow-x:hidden; width:100%}
+    html,body{height:100%;overflow-x:hidden;width:100%}
     body{
       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
       color:var(--text);
@@ -40,19 +40,19 @@
       -webkit-font-smoothing:antialiased;
       position:relative;
       max-width:100vw;
-      overflow-x:hidden;
+      overflow-x:hidden
     }
 
     /* LAYOUT */
     header{
-      background:linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+      background:linear-gradient(135deg,#1a1a1a 0%,#0d0d0d 100%);
       border-bottom:1px solid var(--border);
       position:sticky;
       top:0;
       z-index:100;
       backdrop-filter:blur(10px);
       width:100%;
-      display:none;
+      display:none
     }
     
     .header-content{
@@ -63,14 +63,14 @@
       align-items:center;
       justify-content:space-between;
       gap:16px;
-      width:100%;
+      width:100%
     }
     
     .logo-area{
       display:flex;
       align-items:center;
       gap:10px;
-      flex-shrink:0;
+      flex-shrink:0
     }
     
     .logo{
@@ -80,13 +80,13 @@
       display:grid;
       place-items:center;
       overflow:hidden;
-      box-shadow:0 4px 12px rgba(220,38,38,.3);
+      box-shadow:0 4px 12px rgba(220,38,38,.3)
     }
     
     .logo img{
       width:100%;
       height:100%;
-      object-fit:cover;
+      object-fit:cover
     }
     
     .brand h1{
@@ -94,22 +94,22 @@
       color:var(--text);
       white-space:nowrap;
       font-weight:700;
-      letter-spacing:-0.5px;
-      line-height:1.2;
+      letter-spacing:-.5px;
+      line-height:1.2
     }
     
     .brand p{
       font-size:11px;
       color:var(--text-muted);
       white-space:nowrap;
-      font-weight:500;
+      font-weight:500
     }
     
     .brand .gang-name{
       font-size:10px;
       color:var(--primary);
       margin-top:2px;
-      font-weight:600;
+      font-weight:600
     }
 
     nav{
@@ -118,7 +118,7 @@
       flex-wrap:wrap;
       justify-content:flex-end;
       flex:1;
-      min-width:0;
+      min-width:0
     }
     
     .nav-btn{
@@ -129,24 +129,24 @@
       border-radius:7px;
       cursor:pointer;
       font-weight:600;
-      transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition:all .2s cubic-bezier(0.4,0,0.2,1);
       font-size:13px;
       position:relative;
       white-space:nowrap;
-      flex-shrink:0;
+      flex-shrink:0
     }
     
     .nav-btn:hover{
       background:var(--card);
       border-color:var(--primary);
-      transform:translateY(-1px);
+      transform:translateY(-1px)
     }
     
     .nav-btn.active{
       background:linear-gradient(135deg,var(--primary),var(--primary-light));
       border-color:var(--primary);
-      color:white;
-      box-shadow:0 4px 12px rgba(220,38,38,.25);
+      color:#fff;
+      box-shadow:0 4px 12px rgba(220,38,38,.25)
     }
 
     .nav-btn .badge-count{
@@ -154,14 +154,14 @@
       top:-6px;
       right:-6px;
       background:var(--primary);
-      color:white;
+      color:#fff;
       border-radius:10px;
       padding:2px 6px;
       font-size:10px;
       font-weight:700;
       min-width:16px;
       text-align:center;
-      box-shadow:0 2px 6px rgba(220,38,38,.4);
+      box-shadow:0 2px 6px rgba(220,38,38,.4)
     }
 
     .container{
@@ -170,7 +170,7 @@
       padding:20px;
       width:100%;
       overflow-x:hidden;
-      display:none;
+      display:none
     }
 
     /* CARDS */
@@ -181,7 +181,7 @@
       padding:20px;
       margin-bottom:16px;
       transition:all .3s ease;
-      width:100%;
+      width:100%
     }
 
     .spot-card{
@@ -190,10 +190,10 @@
       border-radius:var(--radius);
       padding:16px;
       cursor:pointer;
-      transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition:all .3s cubic-bezier(0.4,0,0.2,1);
       position:relative;
       overflow:hidden;
-      width:100%;
+      width:100%
     }
     
     .spot-card::before{
@@ -205,18 +205,18 @@
       height:2px;
       background:linear-gradient(90deg,var(--primary),var(--primary-light));
       opacity:0;
-      transition:opacity .3s ease;
+      transition:opacity .3s ease
     }
     
     .spot-card:hover{
       border-color:var(--primary);
       transform:translateY(-4px);
       box-shadow:var(--shadow-lg);
-      background:var(--card-hover);
+      background:var(--card-hover)
     }
     
     .spot-card:hover::before{
-      opacity:1;
+      opacity:1
     }
 
     .spot-header{
@@ -224,7 +224,7 @@
       justify-content:space-between;
       align-items:flex-start;
       gap:12px;
-      margin-bottom:10px;
+      margin-bottom:10px
     }
 
     .spot-title{
@@ -232,7 +232,7 @@
       font-weight:700;
       margin-bottom:4px;
       color:var(--text);
-      letter-spacing:-0.3px;
+      letter-spacing:-.3px
     }
 
     .spot-meta{
@@ -241,7 +241,7 @@
       display:flex;
       align-items:center;
       gap:4px;
-      font-weight:500;
+      font-weight:500
     }
 
     .spot-exchange{
@@ -251,7 +251,7 @@
       padding:10px;
       margin:10px 0;
       font-size:13px;
-      width:100%;
+      width:100%
     }
 
     .spot-exchange-row{
@@ -259,11 +259,11 @@
       align-items:center;
       gap:8px;
       flex-wrap:wrap;
-      margin-bottom:4px;
+      margin-bottom:4px
     }
     
     .spot-exchange-row:last-child{
-      margin-bottom:0;
+      margin-bottom:0
     }
 
     .spot-exchange strong{
@@ -271,14 +271,14 @@
       font-weight:700;
       font-size:11px;
       text-transform:uppercase;
-      letter-spacing:0.5px;
+      letter-spacing:.5px
     }
 
     .tags{
       display:flex;
       flex-wrap:wrap;
       gap:6px;
-      margin-top:10px;
+      margin-top:10px
     }
 
     /* BADGES */
@@ -292,37 +292,37 @@
       font-weight:700;
       border:1px solid;
       text-transform:uppercase;
-      letter-spacing:0.3px;
+      letter-spacing:.3px
     }
 
     .badge-primary{
       background:rgba(220,38,38,.15);
       border-color:var(--primary);
-      color:var(--primary-light);
+      color:var(--primary-light)
     }
 
     .badge-success{
       background:rgba(34,197,94,.15);
       border-color:var(--success);
-      color:var(--success);
+      color:var(--success)
     }
 
     .badge-warning{
       background:rgba(245,158,11,.15);
       border-color:var(--warning);
-      color:var(--warning);
+      color:var(--warning)
     }
 
     .badge-danger{
       background:rgba(220,38,38,.15);
       border-color:var(--danger);
-      color:var(--danger);
+      color:var(--danger)
     }
 
     .badge-info{
       background:rgba(99,102,241,.15);
       border-color:var(--info);
-      color:var(--info);
+      color:var(--info)
     }
 
     /* BUTTONS */
@@ -332,66 +332,66 @@
       border:1px solid;
       font-weight:600;
       cursor:pointer;
-      transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition:all .2s cubic-bezier(0.4,0,0.2,1);
       font-size:13px;
       text-align:center;
-      display:inline-block;
+      display:inline-block
     }
 
     .btn-primary{
       background:linear-gradient(135deg,var(--primary),var(--primary-light));
       border-color:var(--primary);
-      color:white;
-      box-shadow:0 4px 12px rgba(220,38,38,.2);
+      color:#fff;
+      box-shadow:0 4px 12px rgba(220,38,38,.2)
     }
 
     .btn-primary:hover{
       transform:translateY(-2px);
-      box-shadow:0 6px 16px rgba(220,38,38,.3);
+      box-shadow:0 6px 16px rgba(220,38,38,.3)
     }
 
     .btn-success{
       background:var(--success);
       border-color:var(--success);
-      color:white;
+      color:#fff
     }
     
     .btn-success:hover{
       transform:translateY(-2px);
-      box-shadow:0 4px 12px rgba(34,197,94,.3);
+      box-shadow:0 4px 12px rgba(34,197,94,.3)
     }
 
     .btn-danger{
       background:var(--danger);
       border-color:var(--danger);
-      color:white;
+      color:#fff
     }
 
     .btn-ghost{
       background:transparent;
       border-color:var(--border);
-      color:var(--text);
+      color:var(--text)
     }
 
     .btn-ghost:hover{
       background:var(--card);
-      border-color:var(--border-light);
+      border-color:var(--border-light)
     }
 
     .btn-lg{
       padding:12px 24px;
       font-size:14px;
-      width:100%;
+      width:100%
     }
 
     .btn:disabled{
       opacity:.5;
-      cursor:not-allowed;
+      cursor:not-allowed
     }
 
     /* FORMS */
     .form-group{
-      margin-bottom:16px;
+      margin-bottom:16px
     }
 
     .form-label{
@@ -400,7 +400,7 @@
       margin-bottom:6px;
       font-size:13px;
       color:var(--text);
-      letter-spacing:0.3px;
+      letter-spacing:.3px
     }
 
     .form-input,
@@ -415,7 +415,7 @@
       font-size:13px;
       transition:all .2s;
       font-family:inherit;
-      max-width:100%;
+      max-width:100%
     }
 
     .form-input:focus,
@@ -423,26 +423,26 @@
     .form-textarea:focus{
       outline:none;
       border-color:var(--primary);
-      box-shadow:0 0 0 3px rgba(220,38,38,.1);
+      box-shadow:0 0 0 3px rgba(220,38,38,.1)
     }
 
     .form-textarea{
       min-height:100px;
-      resize:vertical;
+      resize:vertical
     }
 
     .form-hint{
       font-size:11px;
       color:var(--text-muted);
       margin-top:4px;
-      font-weight:500;
+      font-weight:500
     }
 
     .form-row{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
       gap:16px;
-      width:100%;
+      width:100%
     }
 
     .checkbox-label{
@@ -455,16 +455,16 @@
       border-radius:7px;
       cursor:pointer;
       transition:all .2s;
-      width:100%;
+      width:100%
     }
     
     .checkbox-label:hover{
       border-color:var(--border-light);
-      background:var(--card);
+      background:var(--card)
     }
 
     .checkbox-label input{
-      margin-top:2px;
+      margin-top:2px
     }
 
     /* GRID */
@@ -472,13 +472,13 @@
       display:grid;
       grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
       gap:14px;
-      width:100%;
+      width:100%
     }
 
     @media (max-width:768px){
       .grid{
         grid-template-columns:1fr;
-        gap:12px;
+        gap:12px
       }
     }
 
@@ -489,7 +489,7 @@
       border-radius:var(--radius);
       padding:16px;
       margin-bottom:16px;
-      width:100%;
+      width:100%
     }
 
     /* ALERT */
@@ -500,25 +500,25 @@
       border:1px solid;
       font-size:13px;
       font-weight:500;
-      width:100%;
+      width:100%
     }
 
     .alert-info{
       background:rgba(99,102,241,.1);
       border-color:var(--info);
-      color:var(--text);
+      color:var(--text)
     }
 
     .alert-warning{
       background:rgba(245,158,11,.1);
       border-color:var(--warning);
-      color:var(--text);
+      color:var(--text)
     }
 
     .alert-success{
       background:rgba(34,197,94,.1);
       border-color:var(--success);
-      color:var(--text);
+      color:var(--text)
     }
 
     /* MODAL */
@@ -532,7 +532,7 @@
       align-items:center;
       justify-content:center;
       padding:20px;
-      animation:fadeIn .2s ease;
+      animation:fadeIn .2s ease
     }
 
     @keyframes fadeIn{
@@ -541,7 +541,7 @@
     }
 
     .modal-overlay.show{
-      display:flex;
+      display:flex
     }
 
     .modal{
@@ -554,17 +554,17 @@
       max-height:90vh;
       overflow-y:auto;
       box-shadow:var(--shadow-lg);
-      animation:slideUp .3s ease;
+      animation:slideUp .3s ease
     }
 
     @keyframes slideUp{
       from{
         opacity:0;
-        transform:translateY(20px);
+        transform:translateY(20px)
       }
       to{
         opacity:1;
-        transform:translateY(0);
+        transform:translateY(0)
       }
     }
 
@@ -574,13 +574,13 @@
       align-items:center;
       margin-bottom:16px;
       padding-bottom:12px;
-      border-bottom:1px solid var(--border);
+      border-bottom:1px solid var(--border)
     }
 
     .modal-title{
       font-size:18px;
       font-weight:700;
-      letter-spacing:-0.5px;
+      letter-spacing:-.5px
     }
 
     .modal-close{
@@ -596,12 +596,12 @@
       align-items:center;
       justify-content:center;
       border-radius:6px;
-      transition:all .2s;
+      transition:all .2s
     }
     
     .modal-close:hover{
       background:var(--bg-light);
-      color:var(--text);
+      color:var(--text)
     }
 
     /* TRADE REQUEST */
@@ -612,11 +612,11 @@
       padding:14px;
       margin-bottom:12px;
       transition:all .2s;
-      width:100%;
+      width:100%
     }
     
     .trade-request:hover{
-      border-color:var(--border-light);
+      border-color:var(--border-light)
     }
 
     .trade-status{
@@ -628,27 +628,27 @@
       font-size:11px;
       font-weight:700;
       text-transform:uppercase;
-      letter-spacing:0.3px;
+      letter-spacing:.3px
     }
 
     .trade-status.pending{
       background:rgba(245,158,11,.15);
-      color:var(--warning);
+      color:var(--warning)
     }
 
     .trade-status.verifying{
       background:rgba(99,102,241,.15);
-      color:var(--info);
+      color:var(--info)
     }
 
     .trade-status.accepted{
       background:rgba(34,197,94,.15);
-      color:var(--success);
+      color:var(--success)
     }
 
     .trade-status.rejected{
       background:rgba(220,38,38,.15);
-      color:var(--danger);
+      color:var(--danger)
     }
 
     .spot-selector{
@@ -662,48 +662,48 @@
       display:flex;
       align-items:flex-start;
       gap:12px;
-      width:100%;
+      width:100%
     }
 
     .spot-selector:hover{
       border-color:var(--border-light);
-      background:var(--card);
+      background:var(--card)
     }
 
     .spot-selector.selected{
       border-color:var(--primary);
-      background:rgba(220,38,38,.05);
+      background:rgba(220,38,38,.05)
     }
 
     .spot-selector input[type="checkbox"],
     .spot-selector input[type="radio"]{
       margin-top:4px;
-      flex-shrink:0;
+      flex-shrink:0
     }
     
     .spot-selector-content{
       flex:1;
-      min-width:0;
+      min-width:0
     }
 
     /* COORDINATES REVEAL */
     .coordinates-box{
       background:linear-gradient(135deg,var(--success),#16a34a);
-      color:white;
+      color:#fff;
       padding:14px;
       border-radius:8px;
       margin:12px 0;
       font-family:monospace;
       font-size:13px;
       box-shadow:0 4px 12px rgba(34,197,94,.2);
-      width:100%;
+      width:100%
     }
 
     .coordinates-box strong{
       display:block;
       margin-bottom:6px;
       font-size:14px;
-      font-weight:700;
+      font-weight:700
     }
 
     /* TOAST */
@@ -722,17 +722,17 @@
       min-width:250px;
       font-size:13px;
       font-weight:600;
-      animation:slideInRight .3s ease;
+      animation:slideInRight .3s ease
     }
 
     @keyframes slideInRight{
       from{
         opacity:0;
-        transform:translateX(100px);
+        transform:translateX(100px)
       }
       to{
         opacity:1;
-        transform:translateX(0);
+        transform:translateX(0)
       }
     }
 
@@ -741,13 +741,13 @@
     .toast.success{
       border-color:var(--success);
       background:rgba(34,197,94,.15);
-      color:var(--success);
+      color:var(--success)
     }
 
     .toast.error{
       border-color:var(--danger);
       background:rgba(220,38,38,.15);
-      color:var(--danger);
+      color:var(--danger)
     }
 
     /* UTILITY */
@@ -764,32 +764,32 @@
       font-size:22px;
       margin-bottom:6px;
       font-weight:700;
-      letter-spacing:-0.5px;
+      letter-spacing:-.5px
     }
 
     h3{
       font-size:16px;
       margin-bottom:10px;
       font-weight:700;
-      letter-spacing:-0.3px;
+      letter-spacing:-.3px
     }
 
     .section-header{
       margin-bottom:16px;
-      width:100%;
+      width:100%
     }
 
     .empty-state{
       text-align:center;
       padding:40px 20px;
       color:var(--text-muted);
-      width:100%;
+      width:100%
     }
 
     .empty-state-icon{
       font-size:40px;
       margin-bottom:12px;
-      opacity:.6;
+      opacity:.6
     }
 
     /* TABS */
@@ -802,11 +802,11 @@
       padding-bottom:2px;
       width:100%;
       -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
+      scrollbar-width:none
     }
     
     .tabs::-webkit-scrollbar{
-      display:none;
+      display:none
     }
 
     .tab{
@@ -820,16 +820,16 @@
       font-weight:600;
       white-space:nowrap;
       flex-shrink:0;
-      font-size:13px;
+      font-size:13px
     }
 
     .tab:hover{
-      color:var(--text);
+      color:var(--text)
     }
 
     .tab.active{
       color:var(--primary);
-      border-bottom-color:var(--primary);
+      border-bottom-color:var(--primary)
     }
 
     /* MAP VIEW - FIXED FOR MOBILE */
@@ -842,7 +842,7 @@
       height:500px;
       margin-bottom:0;
       display:flex;
-      flex-direction:column;
+      flex-direction:column
     }
     
     #map {
@@ -851,7 +851,7 @@
       border-radius:var(--radius);
       z-index:1;
       min-height:300px;
-      position:relative;
+      position:relative
     }
     
     .leaflet-container {
@@ -863,13 +863,13 @@
       top:0 !important;
       left:0 !important;
       right:0 !important;
-      bottom:0 !important;
+      bottom:0 !important
     }
     
     .leaflet-popup-content {
       color: var(--text) !important;
       background: var(--card) !important;
-      font-size:12px !important;
+      font-size:12px !important
     }
     
     .leaflet-popup-content-wrapper {
@@ -878,24 +878,24 @@
       color: var(--text) !important;
       border-radius: 8px !important;
       padding:8px !important;
-      max-width:250px !important;
+      max-width:250px !important
     }
     
     .leaflet-popup-tip {
       background: var(--card) !important;
-      border: 1px solid var(--border) !important;
+      border: 1px solid var(--border) !important
     }
     
     .leaflet-control-attribution {
       background: rgba(0,0,0,0.7) !important;
       color: var(--text-muted) !important;
       font-size:10px !important;
-      padding:2px 5px !important;
+      padding:2px 5px !important
     }
     
     .leaflet-control-attribution a {
       color: var(--primary-light) !important;
-      font-size:10px !important;
+      font-size:10px !important
     }
     
     .leaflet-control-zoom a {
@@ -904,18 +904,18 @@
       border-color: var(--border) !important;
       width:30px !important;
       height:30px !important;
-      line-height:30px !important;
+      line-height:30px !important
     }
     
     .leaflet-control-zoom a:hover {
-      background: var(--card-hover) !important;
+      background: var(--card-hover) !important
     }
     
     .leaflet-control-zoom {
       border:none !important;
       box-shadow:var(--shadow) !important;
       border-radius:5px !important;
-      overflow:hidden;
+      overflow:hidden
     }
     
     /* Map controls container - FIXED FOR MOBILE */
@@ -931,7 +931,7 @@
       position:relative;
       z-index:10;
       overflow:hidden;
-      width:100%;
+      width:100%
     }
     
     .map-controls-container .btn {
@@ -940,7 +940,7 @@
       flex:1;
       min-width:140px;
       max-width:180px;
-      white-space:nowrap;
+      white-space:nowrap
     }
     
     /* Map controls grid layout */
@@ -948,7 +948,7 @@
       display:grid;
       grid-template-columns:repeat(2, 1fr);
       gap:6px;
-      width:100%;
+      width:100%
     }
     
     .map-controls-grid .btn {
@@ -956,7 +956,7 @@
       min-width:0;
       max-width:100%;
       padding:8px 6px;
-      font-size:11px;
+      font-size:11px
     }
 
     /* PROFILE STATS */
@@ -965,7 +965,7 @@
       grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
       gap:12px;
       margin-bottom:20px;
-      width:100%;
+      width:100%
     }
     
     .stat-card{
@@ -974,21 +974,21 @@
       border-radius:8px;
       padding:16px;
       text-align:center;
-      width:100%;
+      width:100%
     }
     
     .stat-value{
       font-size:24px;
       font-weight:700;
       color:var(--primary);
-      margin-bottom:4px;
+      margin-bottom:4px
     }
     
     .stat-label{
       font-size:12px;
       color:var(--text-muted);
       text-transform:uppercase;
-      letter-spacing:0.5px;
+      letter-spacing:.5px
     }
 
     /* PROFILE SETTINGS */
@@ -996,7 +996,7 @@
       display:grid;
       grid-template-columns:1fr;
       gap:16px;
-      width:100%;
+      width:100%
     }
     
     .setting-item{
@@ -1004,7 +1004,7 @@
       border:1px solid var(--border);
       border-radius:8px;
       padding:16px;
-      width:100%;
+      width:100%
     }
     
     .setting-header{
@@ -1012,43 +1012,43 @@
       justify-content:space-between;
       align-items:center;
       margin-bottom:12px;
-      width:100%;
+      width:100%
     }
     
     .setting-title{
       font-size:14px;
       font-weight:600;
-      color:var(--text);
+      color:var(--text)
     }
     
     .setting-description{
       font-size:12px;
       color:var(--text-muted);
-      line-height:1.4;
+      line-height:1.4
     }
     
     .setting-control{
       margin-top:12px;
-      width:100%;
+      width:100%
     }
     
     .setting-switch{
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:10px
     }
     
     .switch{
       position:relative;
       display:inline-block;
       width:50px;
-      height:26px;
+      height:26px
     }
     
     .switch input{
       opacity:0;
       width:0;
-      height:0;
+      height:0
     }
     
     .slider{
@@ -1060,7 +1060,7 @@
       bottom:0;
       background-color:var(--border);
       transition:.4s;
-      border-radius:34px;
+      border-radius:34px
     }
     
     .slider:before{
@@ -1070,17 +1070,17 @@
       width:18px;
       left:4px;
       bottom:4px;
-      background-color:white;
+      background-color:#fff;
       transition:.4s;
-      border-radius:50%;
+      border-radius:50%
     }
     
     input:checked + .slider{
-      background-color:var(--primary);
+      background-color:var(--primary)
     }
     
     input:checked + .slider:before{
-      transform:translateX(24px);
+      transform:translateX(24px)
     }
 
     /* ACTION BUTTONS FOR SPOTS */
@@ -1089,14 +1089,14 @@
       gap:8px;
       margin-top:12px;
       flex-wrap:wrap;
-      width:100%;
+      width:100%
     }
     
     .spot-actions .btn{
       flex:1;
       min-width:120px;
       padding:8px 12px;
-      font-size:12px;
+      font-size:12px
     }
 
     /* RESPONSIVE */
@@ -1106,29 +1106,29 @@
         flex-wrap:wrap;
         padding:10px 16px;
         gap:10px;
-        max-width:100%;
+        max-width:100%
       }
       
       .logo-area{
         flex:1;
-        min-width:0;
+        min-width:0
       }
       
       .logo{
         width:36px;
-        height:36px;
+        height:36px
       }
       
       .brand h1{
-        font-size:16px;
+        font-size:16px
       }
       
       .brand p{
-        font-size:10px;
+        font-size:10px
       }
       
       .brand .gang-name{
-        font-size:9px;
+        font-size:9px
       }
       
       nav{
@@ -1140,17 +1140,17 @@
         margin-top:0;
         -webkit-overflow-scrolling:touch;
         scrollbar-width:none;
-        max-width:100%;
+        max-width:100%
       }
       
       nav::-webkit-scrollbar{
-        display:none;
+        display:none
       }
       
       .nav-btn{
         padding:7px 12px;
         font-size:12px;
-        flex-shrink:0;
+        flex-shrink:0
       }
       
       .nav-btn .badge-count{
@@ -1158,18 +1158,18 @@
         top:0;
         right:0;
         margin-left:4px;
-        display:inline-block;
+        display:inline-block
       }
 
       .container{
         padding:14px;
         max-width:100%;
         width:100%;
-        overflow-x:hidden;
+        overflow-x:hidden
       }
       
       .form-row{
-        grid-template-columns:1fr;
+        grid-template-columns:1fr
       }
 
       .toast{
@@ -1177,44 +1177,44 @@
         right:14px;
         bottom:14px;
         min-width:auto;
-        max-width:calc(100vw - 28px);
+        max-width:calc(100vw - 28px)
       }
       
       .grid{
         grid-template-columns:1fr;
-        gap:10px;
+        gap:10px
       }
       
       .card{
         padding:16px;
-        margin-bottom:12px;
+        margin-bottom:12px
       }
       
       .spot-card{
-        padding:14px;
+        padding:14px
       }
       
       .modal{
         padding:18px 14px;
         margin:10px;
         max-height:85vh;
-        max-width:calc(100vw - 20px);
+        max-width:calc(100vw - 20px)
       }
       
       .section-header h2{
-        font-size:20px;
+        font-size:20px
       }
       
       .filters{
-        padding:14px;
+        padding:14px
       }
       
       .spot-title{
-        font-size:14px;
+        font-size:14px
       }
       
       .spot-meta{
-        font-size:11px;
+        font-size:11px
       }
       
       /* MAP FIXES FOR MOBILE - CORRETTO */
@@ -1226,13 +1226,13 @@
         border-radius:8px;
         overflow:hidden;
         width:100% !important;
-        position:relative;
+        position:relative
       }
       
       #map {
         height:100% !important;
         min-height:300px;
-        position:absolute !important;
+        position:absolute !important
       }
       
       .leaflet-container {
@@ -1243,14 +1243,14 @@
         top:0 !important;
         left:0 !important;
         right:0 !important;
-        bottom:0 !important;
+        bottom:0 !important
       }
       
       .leaflet-control-zoom a {
         width:36px !important;
         height:36px !important;
         line-height:36px !important;
-        font-size:18px !important;
+        font-size:18px !important
       }
       
       /* Map controls for tablet */
@@ -1258,7 +1258,7 @@
         padding:10px;
         gap:6px;
         flex-wrap:wrap;
-        width:100%;
+        width:100%
       }
       
       .map-controls-container .btn {
@@ -1266,91 +1266,91 @@
         font-size:11px;
         min-width:calc(50% - 8px);
         max-width:calc(50% - 8px);
-        flex:1 1 auto;
+        flex:1 1 auto
       }
       
       .map-controls-grid {
         grid-template-columns:repeat(2, 1fr);
         gap:6px;
-        width:100%;
+        width:100%
       }
       
       .profile-stats{
         grid-template-columns:repeat(2, 1fr);
-        gap:10px;
+        gap:10px
       }
       
       .spot-actions .btn{
-        min-width:calc(50% - 4px);
+        min-width:calc(50% - 4px)
       }
       
       .settings-grid{
         grid-template-columns:1fr;
-        gap:12px;
+        gap:12px
       }
       
       .stat-card{
-        padding:12px;
+        padding:12px
       }
       
       .stat-value{
-        font-size:20px;
+        font-size:20px
       }
       
       .tabs{
         overflow-x:auto;
         scrollbar-width:none;
         padding-bottom:0;
-        width:100%;
+        width:100%
       }
       
       .tabs::-webkit-scrollbar{
-        display:none;
+        display:none
       }
       
       .tab{
         padding:8px 12px;
         font-size:12px;
-        white-space:nowrap;
+        white-space:nowrap
       }
     }
     
     @media (max-width:480px){
       .logo{
         width:32px;
-        height:32px;
+        height:32px
       }
       
       .brand h1{
-        font-size:15px;
+        font-size:15px
       }
       
       .nav-btn{
         padding:6px 10px;
-        font-size:11px;
+        font-size:11px
       }
       
       .tabs{
-        gap:4px;
+        gap:4px
       }
       
       .tab{
         padding:8px 12px;
-        font-size:12px;
+        font-size:12px
       }
       
       .spot-exchange{
         padding:8px;
-        font-size:12px;
+        font-size:12px
       }
       
       .profile-stats{
         grid-template-columns:1fr;
-        gap:8px;
+        gap:8px
       }
       
       .spot-actions .btn{
-        min-width:100%;
+        min-width:100%
       }
       
       /* MAP FIXES FOR SMALL MOBILE - CORRETTO */
@@ -1358,12 +1358,12 @@
         height:350px !important;
         min-height:250px;
         max-height:400px;
-        width:100% !important;
+        width:100% !important
       }
       
       #map {
         min-height:250px;
-        position:absolute !important;
+        position:absolute !important
       }
       
       .leaflet-container {
@@ -1372,7 +1372,7 @@
         top:0 !important;
         left:0 !important;
         right:0 !important;
-        bottom:0 !important;
+        bottom:0 !important
       }
       
       /* Map controls for small mobile - FIXED */
@@ -1382,7 +1382,7 @@
         align-items:stretch;
         gap:6px;
         padding:8px;
-        width:100%;
+        width:100%
       }
       
       .map-controls-container .btn {
@@ -1390,23 +1390,23 @@
         max-width:calc(50% - 6px) !important;
         padding:8px 4px;
         font-size:11px;
-        flex:1 1 auto;
+        flex:1 1 auto
       }
       
       .map-controls-grid {
         grid-template-columns:repeat(2, 1fr);
         gap:6px;
-        width:100%;
+        width:100%
       }
       
       .leaflet-popup-content-wrapper {
         max-width:200px !important;
-        padding:6px !important;
+        padding:6px !important
       }
       
       .leaflet-popup-content {
         font-size:11px !important;
-        line-height:1.3 !important;
+        line-height:1.3 !important
       }
     }
     
@@ -1415,32 +1415,32 @@
         height:300px !important;
         min-height:200px;
         max-height:350px;
-        width:100% !important;
+        width:100% !important
       }
       
       #map {
-        min-height:200px;
+        min-height:200px
       }
       
       .leaflet-container {
-        min-height:200px;
+        min-height:200px
       }
       
       .map-controls-container {
         padding:6px;
-        flex-direction:column;
+        flex-direction:column
       }
       
       .map-controls-container .btn {
         min-width:100% !important;
         max-width:100% !important;
         padding:8px 6px;
-        font-size:10px;
+        font-size:10px
       }
       
       .map-controls-grid {
         grid-template-columns:1fr;
-        gap:6px;
+        gap:6px
       }
     }
     
@@ -1449,12 +1449,12 @@
       width: 100%;
       max-width: 100%;
       overflow: hidden;
-      position: relative;
+      position: relative
     }
     
     #tab-map .map-container {
       width: 100% !important;
-      max-width: 100% !important;
+      max-width: 100% !important
     }
     
     /* VIEWS */
@@ -1462,38 +1462,38 @@
       width: 100%;
       max-width: 100%;
       overflow-x: hidden;
-      position: relative;
+      position: relative
     }
 
     /* CUSTOM SCROLLBAR */
     ::-webkit-scrollbar{
       width:8px;
-      height:8px;
+      height:8px
     }
 
     ::-webkit-scrollbar-track{
-      background:var(--bg-light);
+      background:var(--bg-light)
     }
 
     ::-webkit-scrollbar-thumb{
       background:var(--border);
-      border-radius:4px;
+      border-radius:4px
     }
 
     ::-webkit-scrollbar-thumb:hover{
-      background:var(--border-light);
+      background:var(--border-light)
     }
     
     /* FIX per overflow generale */
     main, .container, section, .grid, .card, .spot-card {
       max-width: 100%;
-      overflow-x: hidden;
+      overflow-x: hidden
     }
     
     /* Assicura che tutti i contenitori siano responsive */
     img, video, iframe {
       max-width: 100%;
-      height: auto;
+      height: auto
     }
 
     /* LOGIN STYLES */
@@ -1508,7 +1508,7 @@
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      padding: 20px;
+      padding: 20px
     }
     
     .login-container {
@@ -1518,16 +1518,16 @@
       padding: 40px;
       max-width: 400px;
       width: 100%;
-      text-align: center;
+      text-align: center
     }
     
     .login-logo {
-      margin-bottom: 30px;
+      margin-bottom: 30px
     }
     
     .login-logo h1 {
       font-size: 28px;
-      margin-bottom: 8px;
+      margin-bottom: 8px
     }
     
     .login-test-accounts {
@@ -1535,7 +1535,7 @@
       padding: 15px;
       background: var(--bg-light);
       border-radius: 8px;
-      font-size: 12px;
+      font-size: 12px
     }
     
     .login-error {
@@ -1545,7 +1545,7 @@
       border-radius: 6px;
       padding: 10px;
       margin-bottom: 20px;
-      display: none;
+      display: none
     }
     
     /* ADMIN PANEL STYLES */
@@ -1553,14 +1553,14 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 20px;
+      padding: 20px
     }
     
     .admin-stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 15px;
-      margin-bottom: 25px;
+      margin-bottom: 25px
     }
     
     .admin-stat-card {
@@ -1568,7 +1568,7 @@
       padding: 15px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      text-align: center;
+      text-align: center
     }
     
     .admin-section {
@@ -1576,13 +1576,13 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 20px
     }
     
     .admin-small-stat {
       font-size: 20px !important;
       font-weight: 700;
-      margin-bottom: 4px;
+      margin-bottom: 4px
     }
     
     /* REGISTRATION STYLES */
@@ -1597,7 +1597,7 @@
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      padding: 20px;
+      padding: 20px
     }
     
     .url-box {
@@ -1609,12 +1609,12 @@
       font-size: 12px;
       word-break: break-all;
       cursor: pointer;
-      transition: all .2s;
+      transition: all .2s
     }
     
     .url-box:hover {
       background: var(--card);
-      border-color: var(--primary);
+      border-color: var(--primary)
     }
     
     .invite-list-item {
@@ -1623,7 +1623,7 @@
       border-radius: 7px;
       padding: 12px;
       margin-bottom: 10px;
-      font-size: 12px;
+      font-size: 12px
     }
     
     .invite-status {
@@ -1632,22 +1632,54 @@
       border-radius: 4px;
       font-size: 10px;
       font-weight: 600;
-      text-transform: uppercase;
+      text-transform: uppercase
     }
     
     .invite-status.active {
       background: rgba(34,197,94,.15);
-      color: var(--success);
+      color: var(--success)
     }
     
     .invite-status.used {
       background: rgba(99,102,241,.15);
-      color: var(--info);
+      color: var(--info)
     }
     
     .invite-status.expired {
       background: rgba(245,158,11,.15);
-      color: var(--warning);
+      color: var(--warning)
+    }
+    
+    /* CODE INPUT MODAL */
+    .code-input-modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center
+    }
+    
+    .code-input-field {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-align: center;
+      text-transform: uppercase
+    }
+    
+    .code-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px
+    }
+    
+    .code-success {
+      color: var(--success);
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 15px
     }
   </style>
 </head>
@@ -1677,6 +1709,10 @@
         Accedi
       </button>
       
+      <button class="btn btn-ghost" onclick="showCodeInput()" style="width: 100%; margin-top: 15px;">
+        Ho un codice
+      </button>
+      
       <div class="login-test-accounts">
         <strong>Account di test:</strong><br>
         Username: <code>test</code> | Password: <code>Deba420?</code><br><br>
@@ -1686,42 +1722,43 @@
     </div>
   </div>
 
-  <!-- REGISTRATION SCREEN -->
-  <div id="register-screen">
-    <div class="login-container">
+  <!-- CODE INPUT MODAL -->
+  <div id="code-input-screen" style="display: none;">
+    <div class="code-input-modal">
       <div class="login-logo">
-        <h1>Registrazione Fan</h1>
-        <p class="text-muted">Accesso anticipato per fan di 2Lost2Find</p>
+        <h1>Inserisci codice</h1>
+        <p class="text-muted">Inserisci il codice di registrazione</p>
       </div>
       
-      <div id="register-error" class="login-error"></div>
-      <div id="register-success" class="alert alert-success" style="display: none;"></div>
+      <div id="code-error" class="login-error"></div>
       
       <div class="form-group">
-        <label class="form-label">Token di registrazione</label>
-        <input type="text" id="register-token" class="form-input" placeholder="Inserisci il token ricevuto" readonly>
+        <input type="text" id="code-input" class="form-input code-input-field" placeholder="XXXX-XXXX-XXXX" maxlength="14">
+        <div class="code-hint">Formato: XXXX-XXXX-XXXX</div>
       </div>
+      
+      <div id="code-success" class="code-success" style="display: none;"></div>
       
       <div class="form-group">
         <label class="form-label">Scegli il tuo username</label>
-        <input type="text" id="register-username" class="form-input" placeholder="Username unico">
+        <input type="text" id="code-username" class="form-input" placeholder="Username unico">
       </div>
       
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input type="password" id="register-password" class="form-input" placeholder="Minimo 6 caratteri">
+        <input type="password" id="code-password" class="form-input" placeholder="Minimo 6 caratteri">
       </div>
       
       <div class="form-group">
         <label class="form-label">Conferma Password</label>
-        <input type="password" id="register-confirm-password" class="form-input" placeholder="Ripeti la password">
+        <input type="password" id="code-confirm-password" class="form-input" placeholder="Ripeti la password">
       </div>
       
-      <button class="btn btn-primary btn-lg" onclick="handleRegister()" style="width: 100%; margin-bottom: 15px;">
-        Registrati
+      <button class="btn btn-primary btn-lg" onclick="handleCodeRegistration()" style="width: 100%; margin-bottom: 15px;">
+        Registrati con codice
       </button>
       
-      <button class="btn btn-ghost" onclick="showLoginFromRegister()" style="width: 100%;">
+      <button class="btn btn-ghost" onclick="showLoginFromCode()" style="width: 100%;">
         Torna al Login
       </button>
     </div>
@@ -1738,15 +1775,15 @@
       <div id="admin-stats" class="admin-stats-grid"></div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
-        <!-- GENERATE INVITE LINK -->
+        <!-- GENERATE INVITE CODE -->
         <div class="admin-section">
-          <h2 style="margin-bottom: 15px; font-size: 18px;">🔗 Genera Link per Fan</h2>
+          <h2 style="margin-bottom: 15px; font-size: 18px;">🔗 Genera Codice per Fan</h2>
           <div class="form-group">
             <label class="form-label">Durata validità (ore)</label>
             <input type="number" id="invite-hours" class="form-input" value="72" min="1" max="720">
           </div>
-          <button class="btn btn-primary" onclick="generateInvite()" style="width: 100%; margin-bottom: 15px;">
-            Genera Link di Registrazione
+          <button class="btn btn-primary" onclick="generateInviteCode()" style="width: 100%; margin-bottom: 15px;">
+            Genera Codice di Registrazione
           </button>
           <div id="invite-result" style="display: none; margin-top: 10px;"></div>
         </div>
@@ -1787,7 +1824,7 @@
           <div id="users-list"></div>
         </div>
         <div class="admin-section">
-          <h2 style="margin-bottom: 15px; font-size: 20px;">Inviti Attivi</h2>
+          <h2 style="margin-bottom: 15px; font-size: 20px;">Codici Attivi</h2>
           <div id="active-invites"></div>
         </div>
       </div>
@@ -2202,12 +2239,6 @@
 
     // ========== INIT ==========
     async function init() {
-      // Check if we're on registration page
-      if (window.location.pathname.includes('register.html')) {
-        checkRegistrationToken();
-        return;
-      }
-      
       await checkSession();
       if (!state.user) {
         showLogin();
@@ -2299,7 +2330,7 @@
 
     function showLogin() {
       document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('register-screen').style.display = 'none';
+      document.getElementById('code-input-screen').style.display = 'none';
       document.querySelector('header').style.display = 'none';
       document.querySelector('.container').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'none';
@@ -2307,72 +2338,55 @@
 
     function hideLogin() {
       document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('register-screen').style.display = 'none';
+      document.getElementById('code-input-screen').style.display = 'none';
       document.querySelector('header').style.display = 'block';
       document.querySelector('.container').style.display = 'block';
       document.getElementById('admin-panel').style.display = 'none';
     }
 
-    // ========== REGISTRATION FUNCTIONS ==========
-    function checkRegistrationToken() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      
-      if (token) {
-        showRegistration(token);
-      }
-    }
-
-    function showRegistration(token) {
+    // ========== CODE REGISTRATION FUNCTIONS ==========
+    function showCodeInput() {
       document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('register-screen').style.display = 'flex';
-      document.getElementById('register-token').value = token;
+      document.getElementById('code-input-screen').style.display = 'flex';
       
-      // Check token validity
-      fetch(`/api/check-token/${token}`)
-        .then(response => response.json())
-        .then(data => {
-          if (!data.valid) {
-            document.getElementById('register-error').textContent = data.message || 'Token non valido';
-            document.getElementById('register-error').style.display = 'block';
-            document.getElementById('register-token').disabled = true;
-            document.getElementById('register-username').disabled = true;
-            document.getElementById('register-password').disabled = true;
-            document.getElementById('register-confirm-password').disabled = true;
-          } else {
-            const expiresDate = new Date(data.expiresAt).toLocaleDateString('it-IT');
-            document.getElementById('register-error').innerHTML = `
-              ✅ Token valido! Scade il: ${expiresDate}<br>
-              Creato da: ${data.createdBy}
-            `;
-            document.getElementById('register-error').style.display = 'block';
-            document.getElementById('register-error').style.backgroundColor = 'rgba(34,197,94,.1)';
-            document.getElementById('register-error').style.borderColor = 'var(--success)';
-            document.getElementById('register-error').style.color = 'var(--success)';
-          }
-        })
-        .catch(error => {
-          console.error('Error checking token:', error);
-        });
+      // Formatta automaticamente il codice
+      document.getElementById('code-input').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/-/g, '');
+        if (value.length > 12) value = value.substring(0, 12);
+        
+        // Formatta come XXXX-XXXX-XXXX
+        if (value.length > 8) {
+          value = value.substring(0, 4) + '-' + value.substring(4, 8) + '-' + value.substring(8, 12);
+        } else if (value.length > 4) {
+          value = value.substring(0, 4) + '-' + value.substring(4, 8);
+        }
+        e.target.value = value;
+      });
     }
 
-    function showLoginFromRegister() {
-      document.getElementById('register-screen').style.display = 'none';
+    function showLoginFromCode() {
+      document.getElementById('code-input-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
     }
 
-    async function handleRegister() {
-      const token = document.getElementById('register-token').value;
-      const username = document.getElementById('register-username').value.trim();
-      const password = document.getElementById('register-password').value;
-      const confirmPassword = document.getElementById('register-confirm-password').value;
-      const errorDiv = document.getElementById('register-error');
-      const successDiv = document.getElementById('register-success');
+    async function handleCodeRegistration() {
+      const code = document.getElementById('code-input').value.replace(/-/g, '');
+      const username = document.getElementById('code-username').value.trim();
+      const password = document.getElementById('code-password').value;
+      const confirmPassword = document.getElementById('code-confirm-password').value;
+      const errorDiv = document.getElementById('code-error');
+      const successDiv = document.getElementById('code-success');
       
       errorDiv.style.display = 'none';
       successDiv.style.display = 'none';
       
-      if (!token || !username || !password || !confirmPassword) {
+      if (!code || code.length !== 12) {
+        errorDiv.textContent = 'Codice non valido. Deve essere di 12 caratteri';
+        errorDiv.style.display = 'block';
+        return;
+      }
+      
+      if (!username || !password || !confirmPassword) {
         errorDiv.textContent = 'Compila tutti i campi';
         errorDiv.style.display = 'block';
         return;
@@ -2394,19 +2408,25 @@
         const response = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, username, password })
+          body: JSON.stringify({ token: code, username, password })
         });
         
         const data = await response.json();
         
         if (data.success) {
-          successDiv.textContent = data.message + ' Clicca su "Torna al Login" per accedere.';
+          successDiv.textContent = '✅ Registrazione completata! Ora puoi accedere con le tue credenziali.';
           successDiv.style.display = 'block';
           
           // Clear form
-          document.getElementById('register-username').value = '';
-          document.getElementById('register-password').value = '';
-          document.getElementById('register-confirm-password').value = '';
+          document.getElementById('code-input').value = '';
+          document.getElementById('code-username').value = '';
+          document.getElementById('code-password').value = '';
+          document.getElementById('code-confirm-password').value = '';
+          
+          // Torna al login dopo 3 secondi
+          setTimeout(() => {
+            showLoginFromCode();
+          }, 3000);
         } else {
           errorDiv.textContent = data.error || 'Errore nella registrazione';
           errorDiv.style.display = 'block';
@@ -2421,7 +2441,7 @@
     // ========== ADMIN FUNCTIONS ==========
     function showAdminPanel() {
       document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('register-screen').style.display = 'none';
+      document.getElementById('code-input-screen').style.display = 'none';
       document.querySelector('header').style.display = 'none';
       document.querySelector('.container').style.display = 'none';
       document.getElementById('admin-panel').style.display = 'block';
@@ -2460,7 +2480,7 @@
           </div>
           <div class="admin-stat-card">
             <div class="admin-small-stat" style="color: var(--warning);">${stats.activeInvites || 0}</div>
-            <div style="color: var(--text-muted); font-size: 12px;">Inviti Attivi</div>
+            <div style="color: var(--text-muted); font-size: 12px;">Codici Attivi</div>
           </div>
         `;
         
@@ -2525,14 +2545,14 @@
             statusText = 'Scaduto';
           }
           
-          const baseUrl = window.location.origin;
-          const registrationUrl = `${baseUrl}/register.html?token=${invite.token}`;
+          // Formatta il codice come XXXX-XXXX-XXXX
+          const formattedCode = invite.token.replace(/(.{4})(.{4})(.{4})/, '$1-$2-$3');
           
           return `
             <div class="invite-list-item">
               <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                 <div>
-                  <strong>Token: ${invite.token.substring(0, 10)}...</strong>
+                  <strong>Codice: ${formattedCode}</strong>
                   <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
                     Creato da: ${invite.createdBy} • ${new Date(invite.createdAt).toLocaleDateString('it-IT')}
                   </div>
@@ -2544,8 +2564,8 @@
                 ${invite.usedBy ? `<br>Usato da: ${invite.usedBy}` : ''}
               </div>
               ${!isUsed && !isExpired ? `
-                <div class="url-box" onclick="copyToClipboard('${registrationUrl}')">
-                  ${registrationUrl}
+                <div class="url-box" onclick="copyToClipboard('${formattedCode}')">
+                  ${formattedCode}
                 </div>
               ` : ''}
             </div>
@@ -2558,7 +2578,7 @@
       }
     }
 
-    async function generateInvite() {
+    async function generateInviteCode() {
       const hours = document.getElementById('invite-hours').value;
       
       try {
@@ -2572,14 +2592,16 @@
         
         if (data.success) {
           const resultDiv = document.getElementById('invite-result');
+          const formattedCode = data.invite.token.replace(/(.{4})(.{4})(.{4})/, '$1-$2-$3');
+          
           resultDiv.innerHTML = `
             <div class="alert alert-success">
-              <strong>✅ Link generato con successo!</strong><br><br>
-              <div class="url-box" onclick="copyToClipboard('${data.invite.registrationUrl}')">
-                ${data.invite.registrationUrl}
+              <strong>✅ Codice generato con successo!</strong><br><br>
+              <div class="url-box" onclick="copyToClipboard('${formattedCode}')">
+                ${formattedCode}
               </div>
               <div style="margin-top: 10px; font-size: 12px;">
-                Token: <code>${data.invite.token}</code><br>
+                Codice: <code>${formattedCode}</code><br>
                 Scade: ${new Date(data.invite.expiresAt).toLocaleDateString('it-IT')}
               </div>
             </div>
@@ -2669,7 +2691,7 @@
     // ========== UTILITY FUNCTIONS ==========
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
-        showToast('URL copiato negli appunti!', 'success');
+        showToast('Codice copiato negli appunti!', 'success');
       }).catch(err => {
         console.error('Error copying to clipboard:', err);
         showToast('Errore nella copia', 'error');
