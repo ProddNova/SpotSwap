@@ -806,7 +806,7 @@ await Spot.create([{
 }], { session: sessionDb });
 
 // 5) rendo liberi gli altri spot offerti non scelti
-const offeredIds = (request.offeredSpots || []).map(x => x.toString());
+
 const otherOffered = offeredIds.filter(id => id !== selectedSpotId.toString());
 
 if (otherOffered.length > 0) {
