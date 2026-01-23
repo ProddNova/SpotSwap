@@ -4676,7 +4676,7 @@
       const acquiredSpots = state.spots.filter(s => s.acquired && s.currentOwner === state.user.username);
       
       const grid = document.getElementById('acquired-spots-grid');
-
+    
       if (acquiredSpots.length === 0) {
         grid.innerHTML = `
           <div class="card empty-state" style="grid-column:1/-1">
@@ -4688,7 +4688,7 @@
         `;
         return;
       }
-
+    
       grid.innerHTML = acquiredSpots.map(spot => `
         <div class="spot-card">
           <div class="spot-header">
@@ -4699,16 +4699,16 @@
             <span class="badge badge-success">Ottenuto</span>
             ${spot.offeredForTrade ? '<span class="badge badge-warning" style="margin-left:4px">Offerto</span>' : ''}
           </div>
-
+    
           <div class="spot-exchange">
             <div class="spot-exchange-row">
-              <strong>Ex proprietario:</strong> ${escapeHtml(spot.originalAuthor || 'Sconosciuto')}
+              <strong>Ottenuto da:</strong> ${escapeHtml(spot.originalAuthor || spot.author || 'Sconosciuto')}
             </div>
             <div class="spot-exchange-row">
               <strong>Ottenuto il:</strong> ${new Date(spot.acquiredDate || Date.now()).toLocaleDateString('it-IT')}
             </div>
           </div>
-
+    
           <div class="tags">
             <span class="badge badge-info">${spot.category}</span>
             <span class="badge badge-warning">Scambio</span>
@@ -4721,16 +4721,16 @@
                 <span style="display:flex;align-items:center;gap:4px">🗺️ Mappa</span>
               </button>
             ` : ''}
-            ${!spot.offeredForTrade ? `
+            ${!spot.offeredForTrade && spot.status !== 'in_trade' ? `
               <button class="btn btn-success" onclick="offerAcquiredSpot('${spot._id}')">Offri in scambio</button>
-            ` : `
+            ` : ''}
+            ${spot.offeredForTrade ? `
               <button class="btn btn-ghost" onclick="cancelOffer('${spot._id}')">Annulla offerta</button>
-            `}
+            ` : ''}
           </div>
         </div>
       `).join('');
     }
-
     async function loadProfileSettings() {
       document.getElementById('profile-username').value = state.user.username;
     }
