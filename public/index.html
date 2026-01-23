@@ -2028,6 +2028,67 @@
     nav::-webkit-scrollbar {
       display: none;
     }
+
+    /* FIX PER TAB E PULSANTI GLITCHATI */
+    .nav-btn, .tab, .btn {
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    /* Fix per l'effetto "bordo tagliato" */
+    .nav-btn.active {
+      position: relative;
+      z-index: 2;
+      transform: none !important;
+      margin-top: 0 !important;
+      border-top: 2px solid transparent !important;
+      border-bottom: 2px solid transparent !important;
+    }
+    
+    /* Fix per hover/active states su mobile */
+    @media (hover: none) and (pointer: coarse) {
+      .nav-btn:hover, .tab:hover, .btn:hover {
+        transform: none !important;
+        background: inherit !important;
+      }
+      
+      .nav-btn.active:hover {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light)) !important;
+      }
+    }
+    
+    /* Fix per l'area cliccabile dei tab */
+    .tabs {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .tab {
+      position: relative;
+      z-index: 2;
+      margin-bottom: -2px; /* Per allineare con il bordo */
+    }
+    
+    /* Fix per i bottoni nella card */
+    .spot-actions .btn {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Disabilita effetti su mobile per pulsanti */
+    @media (max-width: 768px) {
+      .nav-btn, .tab, .btn {
+        transition: none !important;
+      }
+      
+      .nav-btn:active, .tab:active, .btn:active {
+        opacity: 0.7;
+      }
+    }
   </style>
 </head>
 <body>
@@ -4238,8 +4299,19 @@
       });
       
       if (view === 'market') renderMarket();
-      if (view === 'requests') renderRequests();
-      if (view === 'my-spots') renderMySpots();
+      if (view === 'requests') {
+        setTimeout(() => {
+          setupTabListeners('#view-requests');
+          renderRequests();
+        }, 50);
+      }
+      
+      if (view === 'my-spots') {
+        setTimeout(() => {
+          setupTabListeners('#view-my-spots');
+          renderMySpots();
+        }, 50);
+      }
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
       
@@ -4254,33 +4326,54 @@
     }
 
     // ========== EVENT LISTENERS ==========
-    function setupEventListeners() {
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        if (btn.dataset.route) {
-          btn.addEventListener('click', () => showView(btn.dataset.route));
-        }
-      });
-
-      ['filter-search', 'filter-category', 'filter-region'].forEach(id => {
-        document.getElementById(id).addEventListener('input', renderMarket);
-      });
+    // Fix per i tab glitchati
+    function setupTabListeners(containerId) {
+      const tabs = document.querySelectorAll(`${containerId} .tab`);
       
-      document.getElementById('btn-reset-filters').addEventListener('click', resetFilters);
-      document.getElementById('btn-publish').addEventListener('click', publishSpot);
-      document.getElementById('btn-send-offer').addEventListener('click', sendOffer);
-      document.getElementById('btn-accept-trade').addEventListener('click', acceptTrade);
-
-      document.querySelectorAll('#view-requests .tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          const tabName = tab.dataset.tab;
-          document.querySelectorAll('#view-requests .tab').forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
+      tabs.forEach(tab => {
+        // Rimuovi tutti i listener precedenti
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        
+        // Aggiungi nuovo listener
+        newTab.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
           
-          document.getElementById('tab-received').classList.toggle('hidden', tabName !== 'received');
-          document.getElementById('tab-sent').classList.toggle('hidden', tabName !== 'sent');
-          document.getElementById('tab-history').classList.toggle('hidden', tabName !== 'history');
+          const tabName = this.dataset.tab;
+          
+          // Rimuovi active da tutti i tab
+          document.querySelectorAll(`${containerId} .tab`).forEach(t => {
+            t.classList.remove('active');
+          });
+          
+          // Aggiungi active al tab cliccato
+          this.classList.add('active');
+          
+          // Nascondi tutti i contenuti
+          const parent = this.closest('section');
+          parent.querySelectorAll('[id^="tab-"]').forEach(content => {
+            content.classList.add('hidden');
+          });
+          
+          // Mostra il contenuto corretto
+          const targetContent = document.getElementById(`tab-${tabName}`);
+          if (targetContent) {
+            targetContent.classList.remove('hidden');
+            
+            // Se è la mappa, inizializzala
+            if (tabName === 'map') {
+              setTimeout(() => {
+                initMap();
+              }, 100);
+            }
+          }
+          
+          // Forza un reflow per evitare glitch
+          void this.offsetWidth;
         });
       });
+    }
 
       document.querySelectorAll('#view-my-spots .tab').forEach(tab => {
         tab.addEventListener('click', () => {
