@@ -243,7 +243,9 @@
       font-size:13px;
       position:relative;
       white-space:nowrap;
-      flex-shrink:0
+      flex-shrink:0;
+      z-index: 2; /* Aggiungi questa riga */
+      margin-top: -1px; /* Aggiungi questa riga */
     }
     
     .nav-btn:hover{
@@ -256,7 +258,8 @@
       background:linear-gradient(135deg,var(--primary),var(--primary-light));
       border-color:var(--primary);
       color:#fff;
-      box-shadow:0 4px 12px rgba(220,38,38,.25)
+      box-shadow:0 4px 12px rgba(220,38,38,.25);
+      z-index: 3; /* Aggiungi questa riga */
     }
 
     .nav-btn .badge-count{
@@ -2024,7 +2027,21 @@
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
+    /* Aggiungi questo nuovo stile */
+    nav {
+      position: relative;
+    }
     
+    nav::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+      z-index: 1;
+    }
     nav::-webkit-scrollbar {
       display: none;
     }
@@ -2260,37 +2277,56 @@
   </div>
 
   <!-- MAIN APP -->
-  <header>
-    <div class="header-content">
-      <div class="logo-area">
-        <div class="logo">
-          <img src="https://yt3.ggpht.com/N4WaWTevD_K5buOS7rOYGHmwowNgBRTA0r6fF5vnylvLEUefL8G4ofnlh9LZ8th2TOrnt0gd-A=s176-c-k-c0x00ffffff-no-rj-mo" alt="2Lost2Find">
+ <header>
+  <div class="header-content">
+    <div class="logo-area">
+      <div class="logo">
+        <img src="https://yt3.ggpht.com/N4WaWTevD_K5buOS7rOYGHmwowNgBRTA0r6fF5vnylvLEUefL8G4ofnlh9LZ8th2TOrnt0gd-A=s176-c-k-c0x00ffffff-no-rj-mo" alt="2Lost2Find">
+      </div>
+      <div class="brand">
+        <h1>SpotSwap</h1>
+        <p>Scambia spot</p>
+        <div class="gang-name">2Lost2Find Gang</div>
+      </div>
+    </div>
+
+    <!-- Aggiunto profilo utente -->
+    <div id="user-profile-display" style="display: none; margin-left: auto; margin-right: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div id="user-avatar" style="width: 28px; height: 28px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; border: 2px solid var(--border);">
+          U
         </div>
-        <div class="brand">
-          <h1>SpotSwap</h1>
-          <p>Scambia spot</p>
-          <div class="gang-name">2Lost2Find Gang</div>
+        <div style="text-align: right;">
+          <div id="user-display-name" style="font-size: 11px; font-weight: 600; color: var(--text);">User</div>
+          <div style="font-size: 9px; color: var(--success); font-weight: 600; display: flex; align-items: center; gap: 2px;">
+            <div style="width: 6px; height: 6px; background: var(--success); border-radius: 50%;"></div>
+            online
+          </div>
         </div>
       </div>
-
-      <nav>
-        <button class="nav-btn active" data-route="market">
-          Mercato
-        </button>
-        <button class="nav-btn" data-route="requests">
-          Scambi
-          <span class="badge-count" id="requests-count">0</span>
-        </button>
-        <button class="nav-btn" data-route="my-spots">
-          Area Privata
-        </button>
-        <button class="nav-btn" data-route="new">
-          + Nuovo
-        </button>
-      </nav>
     </div>
-  </header>
 
+    <nav>
+      <button class="nav-btn active" data-route="market">
+        Mercato
+      </button>
+      <button class="nav-btn" data-route="requests">
+        Scambi
+        <span class="badge-count" id="requests-count">0</span>
+      </button>
+      <button class="nav-btn" data-route="my-spots">
+        Area
+      </button>
+      <button class="nav-btn" data-route="new">
+        + Nuovo
+      </button>
+    </nav>
+  </div>
+</header>
+<!-- BANNER BETA TESTING -->
+<div id="beta-banner" style="background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 6px 0; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; border-bottom: 1px solid rgba(0,0,0,0.2); display: none;">
+  🚧 App in fase di beta testing - Potrebbero verificarsi problemi 🚧
+</div>
   <!-- MAIN -->
   <main class="container">
     <!-- MARKET VIEW -->
@@ -2440,21 +2476,6 @@
         <div class="settings-grid">
           <div class="setting-item">
             <div class="setting-header">
-              <div class="setting-title">Notifiche</div>
-              <div class="setting-switch">
-                <label class="switch">
-                  <input type="checkbox" id="notifications-toggle" checked>
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-description">
-              Ricevi notifiche per nuove richieste e aggiornamenti scambi
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-header">
               <div class="setting-title">Profilo privato</div>
               <div class="setting-switch">
                 <label class="switch">
@@ -2465,36 +2486,6 @@
             </div>
             <div class="setting-description">
               Nascondi le tue statistiche agli altri utenti
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-header">
-              <div class="setting-title">Coordinate precise</div>
-              <div class="setting-switch">
-                <label class="switch">
-                  <input type="checkbox" id="precise-coordinates-toggle">
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-description">
-              Mostra coordinate GPS precise dopo lo scambio
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-header">
-              <div class="setting-title">Email di conferma</div>
-              <div class="setting-switch">
-                <label class="switch">
-                  <input type="checkbox" id="email-confirm-toggle" checked>
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-description">
-              Ricevi email di conferma per ogni scambio
             </div>
           </div>
 
@@ -2537,8 +2528,6 @@
           <div id="map"></div>
         </div>
         <div class="map-controls-container">
-          <button class="btn btn-ghost" onclick="refreshMap()">🔄 Aggiorna</button>
-          <button class="btn btn-primary" onclick="zoomToItaly()">🗺️ Zoom Italia</button>
           <button class="btn btn-ghost" onclick="toggleMarkers('published')">📝 Pubblicati</button>
           <button class="btn btn-ghost" onclick="toggleMarkers('acquired')">🏆 Ottenuti</button>
           <button class="btn btn-primary" onclick="toggleMarkers('all')">🌍 Tutti</button>
@@ -2921,6 +2910,7 @@
     }
 
     async function logout() {
+      document.getElementById('beta-banner').style.display = 'none';
       showLoading('Logout...');
       try {
         await fetch(`${API_BASE}/logout`, { method: 'POST' });
@@ -2982,6 +2972,7 @@
 
     // ========== CODE REGISTRATION FUNCTIONS ==========
     function showCodeInput() {
+      document.getElementById('beta-banner').style.display = 'block';
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('code-input-screen').style.display = 'flex';
       
@@ -4257,7 +4248,11 @@
     function setupEventListeners() {
       document.querySelectorAll('.nav-btn').forEach(btn => {
         if (btn.dataset.route) {
-          btn.addEventListener('click', () => showView(btn.dataset.route));
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showView(btn.dataset.route);
+          });
         }
       });
 
@@ -4270,28 +4265,44 @@
       document.getElementById('btn-send-offer').addEventListener('click', sendOffer);
       document.getElementById('btn-accept-trade').addEventListener('click', acceptTrade);
 
+      // Fix per i tab delle richieste
       document.querySelectorAll('#view-requests .tab').forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
           const tabName = tab.dataset.tab;
           document.querySelectorAll('#view-requests .tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           
-          document.getElementById('tab-received').classList.toggle('hidden', tabName !== 'received');
-          document.getElementById('tab-sent').classList.toggle('hidden', tabName !== 'sent');
-          document.getElementById('tab-history').classList.toggle('hidden', tabName !== 'history');
+          // Reset all
+          document.getElementById('tab-received').classList.add('hidden');
+          document.getElementById('tab-sent').classList.add('hidden');
+          document.getElementById('tab-history').classList.add('hidden');
+          
+          // Show selected
+          document.getElementById(`tab-${tabName}`).classList.remove('hidden');
         });
       });
-
+      
+      // Fix per i tab dell'area privata
       document.querySelectorAll('#view-my-spots .tab').forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
           const tabName = tab.dataset.tab;
           document.querySelectorAll('#view-my-spots .tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           
-          document.getElementById('tab-published').classList.toggle('hidden', tabName !== 'published');
-          document.getElementById('tab-acquired').classList.toggle('hidden', tabName !== 'acquired');
-          document.getElementById('tab-profile').classList.toggle('hidden', tabName !== 'profile');
-          document.getElementById('tab-map').classList.toggle('hidden', tabName !== 'map');
+          // Reset all
+          document.getElementById('tab-published').classList.add('hidden');
+          document.getElementById('tab-acquired').classList.add('hidden');
+          document.getElementById('tab-profile').classList.add('hidden');
+          document.getElementById('tab-map').classList.add('hidden');
+          
+          // Show selected
+          document.getElementById(`tab-${tabName}`).classList.remove('hidden');
           
           if (tabName === 'map') {
             setTimeout(() => {
@@ -4702,7 +4713,7 @@
 
           <div class="spot-exchange">
             <div class="spot-exchange-row">
-              <strong>Ex proprietario:</strong> ${escapeHtml(spot.originalAuthor || 'Sconosciuto')}
+              <strong>Ottenuto da:</strong> ${escapeHtml(spot.originalAuthor || 'Sconosciuto')}
             </div>
             <div class="spot-exchange-row">
               <strong>Ottenuto il:</strong> ${new Date(spot.acquiredDate || Date.now()).toLocaleDateString('it-IT')}
@@ -4745,10 +4756,7 @@
             username: document.getElementById('profile-username').value,
             bio: document.getElementById('profile-bio').value,
             settings: {
-              notifications: document.getElementById('notifications-toggle').checked,
-              privateProfile: document.getElementById('private-profile-toggle').checked,
-              preciseCoordinates: document.getElementById('precise-coordinates-toggle').checked,
-              emailConfirm: document.getElementById('email-confirm-toggle').checked
+              privateProfile: document.getElementById('private-profile-toggle').checked
             }
           })
         });
@@ -5482,8 +5490,18 @@
     // ========== UI UPDATES ==========
     function updateUI() {
       updateRequestsCount();
+      updateUserProfileDisplay();
     }
-
+    function updateUserProfileDisplay() {
+      if (state.user) {
+        document.getElementById('user-profile-display').style.display = 'flex';
+        const initial = state.user.username.charAt(0).toUpperCase();
+        document.getElementById('user-avatar').textContent = initial;
+        document.getElementById('user-display-name').textContent = state.user.username;
+      } else {
+        document.getElementById('user-profile-display').style.display = 'none';
+      }
+    }
     function updateRequestsCount() {
       const pendingReceived = state.tradeRequests.filter(r => 
         r.toUser === state.user.username && 
