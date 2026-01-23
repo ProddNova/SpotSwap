@@ -2183,7 +2183,7 @@
         <input type="password" id="login-password" class="form-input" placeholder="Password">
       </div>
       
-      <button class="btn btn-primary btn-lg" onclick="handleLogin()" style="width: 100%;">
+      <button class="btn btn-primary btn-lg" id="login-button" style="width: 100%;">
         Accedi
       </button>
       
@@ -2823,19 +2823,6 @@
    crossorigin=""></script>
 
   <script>
-    // ========== STATE ==========
-    let state = {
-      user: null,
-      isAdmin: false,
-      spots: [],
-      tradeRequests: [],
-      currentOfferId: null,
-      currentRequestId: null,
-      selectedOfferSpots: [],
-      adminSpots: [],
-      adminTrades: [],
-      adminUsers: []
-    };
     
     // ========== ANTI-SPAM CONTROL ==========
     let isChangingView = false;
@@ -3842,7 +3829,9 @@
         hideLoading();
       }
     }
-
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('login-button').addEventListener('click', handleLogin);
+    });
     async function generateInviteCode() {
       showLoading('Generazione codice...');
       
