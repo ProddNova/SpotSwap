@@ -1165,34 +1165,66 @@ app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
 
 // Admin login as user
 app.post('/api/admin/login-as', requireAdmin, async (req, res) => {
-    try {
-        const { username } = req.body;
-        
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(404).json({ error: 'Utente non trovato' });
-        }
-        
-        // Set session as the target user
-        req.session.user = {
-            id: user._id,
-            username: user.username,
-            role: user.role
-        };
-        
-        res.json({ 
-            success: true, 
-            user: { 
-                username: user.username, 
-                bio: user.bio,
-                settings: user.settings
-            },
-            isAdmin: user.role === 'admin'
-        });
-    } catch (error) {
-        console.error('Error logging in as user:', error);
-        res.status(500).json({ error: 'Errore interno del server' });
+  try {
+    const { username } = req.body;
+    
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' });
     }
+    
+    // Salva l'admin corrente in session
+    req.session.originalAdmin = {
+      id: req.session.user.id,
+      username: req.session.user.username,
+      role: req.session.user.role
+    };
+    
+    // Set session as the target user
+    req.session.user = {
+      id: user._id,
+      username: user.username,
+      role: user.role,
+      isTemporaryLogin: true,
+      originalAdmin: req.session.originalAdmin
+    };
+    
+    res.json({ 
+      success: true, 
+      user: { 
+        username: user.username, 
+        bio: user.bio,
+        settings: user.settings
+      },
+      isAdmin: user.role === 'admin'
+    });
+  } catch (error) {
+    console.error('Error logging in as user:', error);
+    res.status(500).json({ error: 'Errore interno del server' });
+  }
+});
+
+// Ritorna all'account admin dopo login temporaneo
+app.post('/api/admin/return-to-admin', async (req, res) => {
+  try {
+    if (req.session.user && req.session.user.isTemporaryLogin && req.session.user.originalAdmin) {
+      // Ripristina l'admin originale
+      req.session.user = req.session.user.originalAdmin;
+      delete req.session.user.isTemporaryLogin;
+      delete req.session.user.originalAdmin;
+      
+      res.json({ 
+        success: true, 
+        user: req.session.user,
+        isAdmin: true
+      });
+    } else {
+      res.status(400).json({ error: 'Non sei in un login temporaneo' });
+    }
+  } catch (error) {
+    console.error('Error returning to admin:', error);
+    res.status(500).json({ error: 'Errore interno del server' });
+  }
 });
 
 app.get('/api/admin/trades', requireAdmin, async (req, res) => {
