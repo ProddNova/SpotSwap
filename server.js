@@ -776,11 +776,34 @@ app.post('/api/trade-requests', requireAuth, async (req, res) => {
         
         await tradeRequest.save();
         
-        // Segna lo spot come richiesto
-        await Spot.findByIdAndUpdate(spotId, {
-            $addToSet: { requestedBy: req.session.user.username },
-            hasPendingTradeRequest: true
+
+        // 2) Mantieni lo spot originale attivo ma rimuovi la richiesta
+        await Spot.findByIdAndUpdate(
+          request.spotId,
+          {
+            hasPendingTradeRequest: false,
+            $pull: { requestedBy: request.fromUser },
+            offeredForTrade: false
+          },
+          { session: sessionDb }
+        );
+        // Controlla se ci sono ancora richieste pendenti per lo spot richiesto
+        const remainingPendingRequests = await TradeRequest.countDocuments({
+          spotId: request.spotId,
+          status: { $in: ['pending', 'verifying'] }
         });
+        
+        // Se non ci sono più richieste pendenti, rimetti lo spot come attivo
+        if (remainingPendingRequests === 0) {
+          await Spot.findByIdAndUpdate(
+            request.spotId,
+            { 
+              status: 'active',
+              hasPendingTradeRequest: false 
+            },
+            { session: sessionDb }
+          );
+        }
         
         await Spot.updateMany(
             { _id: { $in: offeredSpots } },
