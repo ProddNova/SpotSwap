@@ -2332,6 +2332,9 @@
         <div class="flex gap-2 mt-2">
           <button class="btn btn-primary" onclick="saveProfileSettings()" style="flex:1">Salva modifiche</button>
           <button class="btn btn-danger" onclick="logout()">Logout</button>
+          <button class="btn btn-warning" onclick="returnToAdmin()" style="display: none;" id="return-to-admin-btn">
+            Torna a Admin
+          </button>
         </div>
       </div>
 
@@ -2633,6 +2636,9 @@
         updateUI();
         startVerificationChecker();
       }
+      if (state.user && state.user.isTemporaryLogin) {
+        document.getElementById('return-to-admin-btn').style.display = 'block';
+      }
     }
 
     // ========== AUTH FUNCTIONS ==========
@@ -2713,7 +2719,40 @@
         location.reload();
       }
     }
-
+    async function returnToAdmin() {
+      if (!confirm('Tornare all\'account admin?')) return;
+      
+      showLoading('Ritorno a admin...');
+      try {
+        const response = await fetch(`${API_BASE}/admin/return-to-admin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          state.user = data.user;
+          state.isAdmin = data.isAdmin;
+          
+          // Nascondi l'app principale e mostra il pannello admin
+          document.querySelector('header').style.display = 'none';
+          document.querySelector('.container').style.display = 'none';
+          document.getElementById('admin-panel').style.display = 'block';
+          
+          // Ricarica i dati admin
+          loadAdminData();
+          
+          showToast('Ritornato all\'account admin', 'success');
+        } else {
+          showToast('Errore nel ritorno a admin', 'error');
+        }
+      } catch (error) {
+        console.error('Error returning to admin:', error);
+        showToast('Errore di connessione', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
     function showLogin() {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('code-input-screen').style.display = 'none';
@@ -3843,29 +3882,44 @@
     }
 
     async function loginAsUser(username) {
-      if (!confirm(`Accedere come ${username}? Verrai disconnesso dall'account admin.`)) return;
+  if (!confirm(`Accedere come ${username}? Potrai tornare all'account admin in qualsiasi momento.`)) return;
+  
+  showLoading('Accesso in corso...');
+  try {
+    const response = await fetch(`${API_BASE}/admin/login-as`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      state.user = data.user;
+      state.isAdmin = data.isAdmin;
       
-      showLoading('Accesso in corso...');
-      try {
-        const response = await fetch(`${API_BASE}/admin/login-as`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
-        });
-        
-        if (response.ok) {
-          location.reload();
-        } else {
-          showToast('Errore nell\'accesso', 'error');
-        }
-      } catch (error) {
-        console.error('Error logging in as user:', error);
-        showToast('Errore di connessione', 'error');
-      } finally {
-        hideLoading();
-      }
+      // Chiudi il pannello admin e mostra l'app principale
+      document.getElementById('admin-panel').style.display = 'none';
+      document.querySelector('header').style.display = 'block';
+      document.querySelector('.container').style.display = 'block';
+      
+      // Setup dell'app principale
+      setupEventListeners();
+      await loadInitialData();
+      showView('market');
+      updateUI();
+      startVerificationChecker();
+      
+      showToast(`Accesso effettuato come ${username}`, 'success');
+    } else {
+      showToast('Errore nell\'accesso', 'error');
     }
-
+  } catch (error) {
+    console.error('Error logging in as user:', error);
+    showToast('Errore di connessione', 'error');
+  } finally {
+    hideLoading();
+  }
+}
     // ========== DATA LOADING ==========
     async function loadInitialData() {
       showLoading('Caricamento dati...');
