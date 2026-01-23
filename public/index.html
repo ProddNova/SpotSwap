@@ -51,25 +51,64 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.9);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 20px;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
     }
     
     .loading-overlay.show {
       display: flex;
     }
     
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      max-width: 90%;
+      position: relative;
+      z-index: 10000;
+    }
+    
     .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid var(--border);
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    .loading-text {
+      margin-top: 20px;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      width: 100%;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Fix per iOS Safari */
+    @supports (-webkit-touch-callout: none) {
+      .loading-overlay {
+        height: -webkit-fill-available;
+      }
     }
     /* PREVENZIONE ZOOM SU MOBILE */
     html {
@@ -105,12 +144,7 @@
       to { transform: rotate(360deg); }
     }
     
-    .loading-text {
-      margin-top: 20px;
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 600;
-    }
+
 
     /* LAYOUT */
     header{
@@ -1799,6 +1833,24 @@
       padding: 20px
     }
     
+    #code-input-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001;
+      padding: 20px;
+      width: 100vw;
+      height: 100vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
     .code-input-modal {
       background: var(--card);
       border: 1px solid var(--border);
@@ -1806,7 +1858,11 @@
       padding: 30px;
       max-width: 400px;
       width: 100%;
-      text-align: center
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     
     .code-input-field {
@@ -1814,20 +1870,69 @@
       font-weight: 700;
       letter-spacing: 4px;
       text-align: center;
-      text-transform: uppercase
+      text-transform: uppercase;
+      width: 100%;
+      padding: 15px;
+      background: var(--bg-light);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+    }
+    
+    .code-input-field:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
     }
     
     .code-hint {
       font-size: 12px;
       color: var(--text-muted);
-      margin-top: 10px
+      margin-top: 8px;
+      display: block;
     }
     
     .code-success {
       color: var(--success);
       font-size: 14px;
       font-weight: 600;
-      margin-top: 15px
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(34, 197, 94, 0.1);
+      border-radius: 6px;
+      border: 1px solid var(--success);
+    }
+    
+    /* Responsive fixes */
+    @media (max-width: 768px) {
+      #code-input-screen {
+        padding: 10px;
+        align-items: flex-start;
+        padding-top: 20px;
+      }
+      
+      .code-input-modal {
+        padding: 20px;
+        margin: 10px;
+        max-height: 85vh;
+      }
+      
+      .code-input-field {
+        font-size: 18px;
+        letter-spacing: 2px;
+        padding: 12px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .code-input-modal {
+        padding: 15px;
+      }
+      
+      .code-input-field {
+        font-size: 16px;
+        letter-spacing: 1px;
+      }
     }
 
     .expandable-spots {
@@ -1868,18 +1973,73 @@
       padding: 10px;
       margin-top: 8px;
     }
+    /* FIX PER SCROLL ORIZZONTALE MOBILE */
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    body {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+      overflow-x: hidden !important;
+    }
+    
+    /* Previeni lo scroll orizzontale su tutti gli elementi */
+    .container, main, section, .grid, .card, .spot-card {
+      max-width: 100vw;
+      overflow-x: hidden !important;
+      position: relative;
+    }
+    
+    /* Fix per elementi che potrebbero causare scroll orizzontale */
+    img, video, iframe, canvas {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+    
+    /* Previeni lo spostamento laterale su iOS */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+    
+    /* Disabilita lo scroll orizzontale sui contenitori */
+    #market-grid, #published-spots-grid, #acquired-spots-grid {
+      overflow-x: hidden !important;
+    }
+    
+    /* Fix per i pulsanti di navigazione */
+    nav {
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    nav::-webkit-scrollbar {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <!-- LOADING OVERLAY -->
   <div id="loading-overlay" class="loading-overlay">
-    <div>
+    <div class="loading-content">
       <div class="loading-spinner"></div>
       <div class="loading-text">Caricamento...</div>
     </div>
   </div>
 
-  <!-- LOGIN SCREEN -->
+  <!-- LOGIN SCREEN -->  
   <div id="login-screen">
     <div class="login-container">
       <div class="login-logo">
@@ -2203,9 +2363,14 @@
 
     <!-- REQUESTS VIEW -->
     <section id="view-requests" class="hidden">
-      <div class="section-header">
-        <h2>Richieste di scambio</h2>
-        <p class="text-muted">Gestisci le richieste ricevute e inviate</p>
+      <div class="section-header flex-between">
+        <div>
+          <h2>Richieste di scambio</h2>
+          <p class="text-muted">Gestisci le richieste ricevute e inviate</p>
+        </div>
+        <button class="btn btn-ghost" onclick="loadTradeRequests()" style="padding: 8px 12px; font-size: 12px;">
+          🔄 Aggiorna
+        </button>
       </div>
 
       <div class="tabs">
@@ -2820,7 +2985,17 @@
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('code-input-screen').style.display = 'flex';
       
-      document.getElementById('code-input').addEventListener('input', function(e) {
+      // Reset dei campi
+      document.getElementById('code-input').value = '';
+      document.getElementById('code-username').value = '';
+      document.getElementById('code-password').value = '';
+      document.getElementById('code-confirm-password').value = '';
+      document.getElementById('code-error').style.display = 'none';
+      document.getElementById('code-success').style.display = 'none';
+      
+      // Formattazione automatica del codice
+      const codeInput = document.getElementById('code-input');
+      codeInput.addEventListener('input', function(e) {
         let value = e.target.value.replace(/-/g, '');
         if (value.length > 12) value = value.substring(0, 12);
         
@@ -2829,8 +3004,13 @@
         } else if (value.length > 4) {
           value = value.substring(0, 4) + '-' + value.substring(4, 8);
         }
-        e.target.value = value;
+        e.target.value = value.toUpperCase();
       });
+      
+      // Focus sul campo codice
+      setTimeout(() => {
+        codeInput.focus();
+      }, 100);
     }
 
     function showLoginFromCode() {
@@ -4019,19 +4199,32 @@
     }
 
     async function loadTradeRequests() {
+      // Mostra il loading solo se non ci sono già dati
+      if (state.tradeRequests.length === 0) {
+        showLoading('Caricamento richieste...');
+      }
+      
       try {
         const response = await fetch(`${API_BASE}/trade-requests`);
         if (response.ok) {
-          state.tradeRequests = await response.json();
-          renderRequests();
+          const newRequests = await response.json();
+          
+          // Aggiorna solo se ci sono cambiamenti
+          const hasChanges = JSON.stringify(state.tradeRequests) !== JSON.stringify(newRequests);
+          
+          if (hasChanges) {
+            state.tradeRequests = newRequests;
+            renderRequests();
+            updateUI();
+          }
         }
       } catch (error) {
         console.error('Error loading trade requests:', error);
+        // Non mostrare errore se è solo un problema temporaneo
       } finally {
         hideLoading();
       }
     }
-
     // ========== NAVIGATION ==========
     function showView(view) {
       document.querySelectorAll('section[id^="view-"]').forEach(v => {
@@ -5009,16 +5202,60 @@
     }
 
     // ========== VERIFICATION CHECKER ==========
-    function startVerificationChecker() {
-      setInterval(async () => {
-        try {
-          await loadTradeRequests();
-          renderRequests();
-        } catch (error) {
-          console.error('Error in verification checker:', error);
-        }
-      }, 10000); // Check every 10 seconds
+  function startVerificationChecker() {
+      // Non avviare un intervallo fisso
+      // Aggiorneremo le richieste solo quando necessario
+      console.log('Verification checker ready');
     }
+    
+    // Nuova funzione per aggiornare le richieste quando necessario
+    function updateRequestsIfNeeded() {
+      // Aggiorna solo se siamo nella view delle richieste
+      const currentView = document.querySelector('section:not(.hidden)').id.replace('view-', '');
+      if (currentView === 'requests') {
+        loadTradeRequests();
+      }
+    }
+    
+    // Aggiorna le richieste quando:
+    // 1. L'utente torna online
+    window.addEventListener('online', () => {
+      showToast('Connessione ripristinata', 'success');
+      updateRequestsIfNeeded();
+    });
+    
+    // 2. Quando la pagina diventa visibile
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        updateRequestsIfNeeded();
+      }
+    });
+    
+    // 3. Quando l'utente interagisce con l'app
+    document.addEventListener('click', () => {
+      updateRequestsIfNeeded();
+    });
+    
+    // 4. Quando cambia view
+    const originalShowView = showView;
+    showView = function(view) {
+      originalShowView.call(this, view);
+      
+      // Aggiorna le richieste se stiamo entrando nella view delle richieste
+      if (view === 'requests') {
+        setTimeout(() => {
+          loadTradeRequests();
+        }, 100);
+      }
+    };
+    
+    // 5. Aggiorna periodicamente ma meno frequentemente (ogni 60 secondi invece di 10)
+    setInterval(() => {
+      const currentView = document.querySelector('section:not(.hidden)').id.replace('view-', '');
+      if (currentView === 'requests') {
+        loadTradeRequests();
+      }
+    }, 60000); // 60 secondi
 
     // ========== PUBLISH SPOT ==========
     async function publishSpot() {
@@ -5335,6 +5572,57 @@
       }
       lastTouchEnd = now;
     }, { passive: false });
+
+// Prevenzione scroll orizzontale su mobile
+function preventHorizontalScroll() {
+  document.addEventListener('touchmove', function(e) {
+    if (e.touches.length > 1) {
+      e.preventDefault();
+      return;
+    }
+    
+    const touch = e.touches[0];
+    const x = touch.clientX;
+    const y = touch.clientY;
+    
+    // Se il movimento è principalmente orizzontale, previenilo
+    if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+  
+  // Previeni lo scroll orizzontale con la rotellina del mouse
+  document.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+  
+  // Fix per iOS
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      this.startX = touch.pageX;
+      this.startY = touch.pageY;
+    }
+  }, { passive: true });
+  
+  document.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const diffX = touch.pageX - this.startX;
+        const diffY = touch.pageY - this.startY;
+        
+        // Se il movimento è più orizzontale che verticale, previenilo
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+          e.preventDefault();
+        }
+      }
+    }, { passive: false });
+  }
+  
+  // Chiama la funzione all'inizio
+  preventHorizontalScroll();
     
     // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
