@@ -256,9 +256,33 @@
       background:linear-gradient(135deg,var(--primary),var(--primary-light));
       border-color:var(--primary);
       color:#fff;
-      box-shadow:0 4px 12px rgba(220,38,38,.25)
+      box-shadow:0 4px 12px rgba(220,38,38,.25);
+      position:relative;
+      z-index:3;
+      border-top:2px solid var(--primary) !important;
+      border-bottom:2px solid var(--primary) !important;
+      margin-top:0;
+      transform:none;
     }
-
+    /* Fix per il bordo superiore */
+    header {
+      position: relative;
+      z-index: 100;
+    }
+    
+    .header-content {
+      position: relative;
+      z-index: 101;
+    }
+    
+    /* Fix per card selezionate */
+    .spot-selector.selected {
+      border-color:var(--primary);
+      background:rgba(220,38,38,.05);
+      position:relative;
+      z-index:2;
+      border-width:2px;
+    }
     .nav-btn .badge-count{
       position:absolute;
       top:-6px;
@@ -1033,43 +1057,48 @@
     
     /* Map controls container - FIXED FOR MOBILE */
     .map-controls-container {
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
-      justify-content:center;
-      padding:10px;
-      margin-top:0;
-      background:var(--card);
-      border-top:1px solid var(--border);
-      position:relative;
-      z-index:10;
-      overflow:hidden;
-      width:100%
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      padding: 10px;
+      margin-top: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
+      overflow: hidden;
+      width: 100%;
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
     }
     
-    .map-controls-container .btn {
-      padding:8px 10px;
-      font-size:12px;
-      flex:1;
-      min-width:140px;
-      max-width:180px;
-      white-space:nowrap
-    }
-    
-    /* Map controls grid layout */
     .map-controls-grid {
-      display:grid;
-      grid-template-columns:repeat(2, 1fr);
-      gap:6px;
-      width:100%
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+      max-width: 400px;
     }
     
     .map-controls-grid .btn {
-      width:100%;
-      min-width:0;
-      max-width:100%;
-      padding:8px 6px;
-      font-size:11px
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      padding: 10px 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    
+    @media (max-width: 480px) {
+      .map-controls-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      .map-controls-grid .btn {
+        padding: 8px 4px;
+        font-size: 11px;
+      }
     }
 
     /* PROFILE STATS */
@@ -2089,6 +2118,236 @@
         opacity: 0.7;
       }
     }
+    /* BETA BANNER */
+    #beta-banner {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      color: #000;
+      text-align: center;
+      padding: 8px 15px;
+      font-size: 12px;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      width: 100%;
+      display: none;
+      animation: slideDown 0.3s ease;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .beta-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .beta-icon {
+      font-size: 14px;
+      animation: pulse 2s infinite;
+    }
+    
+    .beta-text {
+      flex: 1;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    
+    @keyframes slideDown {
+      from { transform: translateY(-100%); }
+      to { transform: translateY(0); }
+    }
+    
+    /* Sposta l'header sotto il banner */
+    header {
+      top: 40px; /* Altezza del banner */
+    }
+    
+    /* Nascondi il banner su desktop se vuoi */
+    @media (min-width: 769px) {
+      #beta-banner {
+        display: none !important;
+      }
+      header {
+        top: 0;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      #beta-banner {
+        display: block;
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      
+      .beta-icon {
+        font-size: 12px;
+      }
+      
+      header {
+        top: 38px;
+      }
+    }
+    /* PROFILO UTENTE MOBILE */
+.user-profile-mobile {
+  display: none;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 102;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  border: 2px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.user-status {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: var(--success);
+  border: 2px solid var(--card);
+  border-radius: 50%;
+}
+
+/* MENU UTENTE */
+.user-menu {
+  position: fixed;
+  top: 70px;
+  right: 15px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 15px;
+  min-width: 200px;
+  z-index: 1000;
+  box-shadow: var(--shadow-lg);
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.user-status-online {
+  font-size: 11px;
+  color: var(--success);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.user-menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-menu-item {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.user-menu-item:hover {
+  background: var(--card-hover);
+  border-color: var(--primary);
+}
+
+.user-menu-item span {
+  font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .user-profile-mobile {
+    display: block;
+  }
+  
+  .logo-area {
+    margin-right: 50px;
+  }
+  
+  nav {
+    margin-right: 50px;
+  }
+  
+  .user-menu {
+    top: 60px;
+    right: 10px;
+    min-width: 180px;
+  }
+}
   </style>
 </head>
 <body>
@@ -2319,7 +2578,7 @@
       </div>
     </div>
   </div>
-
+  
   <!-- MAIN APP -->
   <header>
     <div class="header-content">
@@ -2333,17 +2592,51 @@
           <div class="gang-name">2Lost2Find Gang</div>
         </div>
       </div>
-
+  
+      <!-- Profilo utente mobile -->
+      <div class="user-profile-mobile" onclick="toggleUserMenu()">
+        <div class="user-avatar">
+          ${state.user ? state.user.username.charAt(0).toUpperCase() : 'U'}
+        </div>
+        <div class="user-status"></div>
+      </div>
+  
+      <!-- Menu utente (hidden di default) -->
+      <div class="user-menu hidden">
+        <div class="user-info">
+          <div class="user-avatar-large">
+            ${state.user ? state.user.username.charAt(0).toUpperCase() : 'U'}
+          </div>
+          <div class="user-details">
+            <div class="user-name">${state.user ? state.user.username : 'Utente'}</div>
+            <div class="user-status-online">● Online</div>
+          </div>
+        </div>
+        <div class="user-menu-items">
+          <button class="user-menu-item" onclick="showView('profile')">
+            <span>👤</span> Profilo
+          </button>
+          <button class="user-menu-item" onclick="logout()">
+            <span>🚪</span> Logout
+          </button>
+          ${state.user && state.user.isTemporaryLogin ? `
+          <button class="user-menu-item" onclick="returnToAdmin()">
+            <span>👑</span> Torna a Admin
+          </button>
+          ` : ''}
+        </div>
+      </div>
+  
       <nav>
         <button class="nav-btn active" data-route="market">
           Mercato
         </button>
         <button class="nav-btn" data-route="requests">
-          Scambi
+          Richieste
           <span class="badge-count" id="requests-count">0</span>
         </button>
         <button class="nav-btn" data-route="my-spots">
-          Area Privata
+          I miei spot
         </button>
         <button class="nav-btn" data-route="new">
           + Nuovo
@@ -2351,7 +2644,12 @@
       </nav>
     </div>
   </header>
-
+  <div id="beta-banner" style="display: none;">
+    <div class="beta-content">
+      <span class="beta-icon">🚧</span>
+      <span class="beta-text">App in fase di beta testing - Potrebbero verificarsi problemi</span>
+    </div>
+  </div>
   <!-- MAIN -->
   <main class="container">
     <!-- MARKET VIEW -->
@@ -2498,22 +2796,6 @@
           </div>
         </div>
 
-        <div class="settings-grid">
-          <div class="setting-item">
-            <div class="setting-header">
-              <div class="setting-title">Notifiche</div>
-              <div class="setting-switch">
-                <label class="switch">
-                  <input type="checkbox" id="notifications-toggle" checked>
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-description">
-              Ricevi notifiche per nuove richieste e aggiornamenti scambi
-            </div>
-          </div>
-
           <div class="setting-item">
             <div class="setting-header">
               <div class="setting-title">Profilo privato</div>
@@ -2529,35 +2811,6 @@
             </div>
           </div>
 
-          <div class="setting-item">
-            <div class="setting-header">
-              <div class="setting-title">Coordinate precise</div>
-              <div class="setting-switch">
-                <label class="switch">
-                  <input type="checkbox" id="precise-coordinates-toggle">
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-description">
-              Mostra coordinate GPS precise dopo lo scambio
-            </div>
-          </div>
-
-          <div class="setting-item">
-            <div class="setting-header">
-              <div class="setting-title">Email di conferma</div>
-              <div class="setting-switch">
-                <label class="switch">
-                  <input type="checkbox" id="email-confirm-toggle" checked>
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-description">
-              Ricevi email di conferma per ogni scambio
-            </div>
-          </div>
 
           <div class="setting-item">
             <div class="setting-header">
@@ -2895,6 +3148,7 @@
 
     // ========== INIT ==========
     async function init() {
+      initBetaBanner();
       await checkSession();
       if (!state.user) {
         showLogin();
@@ -4407,6 +4661,10 @@
 
     // ========== MAP FUNCTIONS ==========
     function initMap() {
+      const italyBounds = L.latLngBounds(
+        L.latLng(36.65, 6.63),
+        L.latLng(47.09, 18.48)
+      );
       if (map) {
         try {
           map.remove();
@@ -4838,10 +5096,7 @@
             username: document.getElementById('profile-username').value,
             bio: document.getElementById('profile-bio').value,
             settings: {
-              notifications: document.getElementById('notifications-toggle').checked,
-              privateProfile: document.getElementById('private-profile-toggle').checked,
-              preciseCoordinates: document.getElementById('precise-coordinates-toggle').checked,
-              emailConfirm: document.getElementById('email-confirm-toggle').checked
+              privateProfile: document.getElementById('private-profile-toggle').checked
             }
           })
         });
@@ -5716,7 +5971,45 @@ function preventHorizontalScroll() {
   
   // Chiama la funzione all'inizio
   preventHorizontalScroll();
-    
+  function initBetaBanner() {
+    const banner = document.getElementById('beta-banner');
+    if (window.innerWidth <= 768) {
+      banner.style.display = 'block';
+      
+      // Opzionale: nascondi dopo 10 secondi
+  
+    }
+  }
+    function toggleUserMenu() {
+  const menu = document.querySelector('.user-menu');
+  menu.classList.toggle('hidden');
+  
+  // Chiudi il menu se si clicca fuori
+  if (!menu.classList.contains('hidden')) {
+    setTimeout(() => {
+      document.addEventListener('click', closeUserMenuOnClickOutside);
+    }, 10);
+  }
+}
+
+function closeUserMenuOnClickOutside(e) {
+  const menu = document.querySelector('.user-menu');
+  const profileBtn = document.querySelector('.user-profile-mobile');
+  
+  if (!menu.contains(e.target) && !profileBtn.contains(e.target)) {
+    menu.classList.add('hidden');
+    document.removeEventListener('click', closeUserMenuOnClickOutside);
+  }
+}
+
+function showUserProfile() {
+  showView('my-spots');
+  const profileTab = document.querySelector('[data-tab="profile"]');
+  if (profileTab) {
+    profileTab.click();
+  }
+  document.querySelector('.user-menu').classList.add('hidden');
+}
     // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
   </script>
