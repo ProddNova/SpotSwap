@@ -247,7 +247,52 @@
       z-index: 2; /* Aggiungi questa riga */
       margin-top: -1px; /* Aggiungi questa riga */
     }
-    
+    /* Fix per il layout della navigazione su mobile */
+@media (max-width: 768px) {
+  nav {
+    width: 100%;
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+    margin-top: 8px;
+    position: relative;
+    z-index: 5;
+  }
+  
+  .nav-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 6px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    position: relative;
+    z-index: 2;
+    background: var(--card);
+    margin: 0 1px;
+    transform: translateZ(0); /* Fix per hardware acceleration */
+  }
+  
+  .nav-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(220,38,38,.3);
+    position: relative;
+    z-index: 3;
+    transform: translateY(0) !important;
+  }
+  
+  /* Rimuovi l'hover su mobile */
+  .nav-btn:hover {
+    transform: none !important;
+  }
+  
+  /* Contenitore principale della navigazione */
+  .header-content {
+    gap: 8px !important;
+    padding: 8px 12px !important;
+  }
+}
     .nav-btn:hover{
       background:var(--card);
       border-color:var(--primary);
@@ -2032,19 +2077,80 @@
       position: relative;
     }
     
-    nav::before {
-      content: '';
-      position: absolute;
-      top: -1px;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--border);
-      z-index: 1;
-    }
+
     nav::-webkit-scrollbar {
       display: none;
     }
+    /* FIX PER MOBILE: Prevenire tocchi accidentali e migliorare responsiveness */
+@media (max-width: 768px) {
+  .nav-btn {
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  
+  /* Migliora la risposta al tocco */
+  .nav-btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+  
+  /* Assicura che i bottoni non abbiano margini negativi */
+  .header-content {
+    padding: 8px 12px !important;
+  }
+  
+  nav {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  
+  .nav-btn {
+    margin: 0 2px;
+  }
+  
+  /* Fix per il profilo utente su mobile */
+  #user-profile-display {
+    min-width: 100px;
+  }
+  
+  #user-display-name {
+    font-size: 11px !important;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Fix per dispositivi molto piccoli */
+@media (max-width: 360px) {
+  .brand h1 {
+    font-size: 15px !important;
+  }
+  
+  .brand p {
+    font-size: 9px !important;
+  }
+  
+  .nav-btn {
+    font-size: 11px !important;
+    padding: 6px 4px !important;
+  }
+  
+  #user-display-name {
+    font-size: 10px !important;
+    max-width: 50px;
+  }
+  
+  #user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11px !important;
+  }
+}
   </style>
 </head>
 <body>
@@ -2279,28 +2385,30 @@
   <!-- MAIN APP -->
  <header>
   <div class="header-content">
-    <div class="logo-area">
-      <div class="logo">
-        <img src="https://yt3.ggpht.com/N4WaWTevD_K5buOS7rOYGHmwowNgBRTA0r6fF5vnylvLEUefL8G4ofnlh9LZ8th2TOrnt0gd-A=s176-c-k-c0x00ffffff-no-rj-mo" alt="2Lost2Find">
-      </div>
-      <div class="brand">
-        <h1>SpotSwap</h1>
-        <p>Scambia spot</p>
-        <div class="gang-name">2Lost2Find Gang</div>
-      </div>
-    </div>
-
-    <!-- Aggiunto profilo utente -->
-    <div id="user-profile-display" style="display: none; margin-left: auto; margin-right: 10px;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <div id="user-avatar" style="width: 28px; height: 28px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; border: 2px solid var(--border);">
-          U
+    <div class="logo-area" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="logo">
+          <img src="https://yt3.ggpht.com/N4WaWTevD_K5buOS7rOYGHmwowNgBRTA0r6fF5vnylvLEUefL8G4ofnlh9LZ8th2TOrnt0gd-A=s176-c-k-c0x00ffffff-no-rj-mo" alt="2Lost2Find">
         </div>
-        <div style="text-align: right;">
-          <div id="user-display-name" style="font-size: 11px; font-weight: 600; color: var(--text);">User</div>
-          <div style="font-size: 9px; color: var(--success); font-weight: 600; display: flex; align-items: center; gap: 2px;">
-            <div style="width: 6px; height: 6px; background: var(--success); border-radius: 50%;"></div>
-            online
+        <div class="brand">
+          <h1 style="font-size: 16px; margin-bottom: 2px;">SpotSwap</h1>
+          <p style="font-size: 10px; margin-bottom: 0;">Scambia spot</p>
+          <div class="gang-name">2Lost2Find Gang</div>
+        </div>
+      </div>
+
+      <!-- Profilo utente sulla destra -->
+      <div id="user-profile-display" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="text-align: right;">
+            <div id="user-display-name" style="font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap;">User</div>
+            <div style="font-size: 9px; color: var(--success); font-weight: 600; display: flex; align-items: center; gap: 2px; justify-content: flex-end;">
+              <div style="width: 5px; height: 5px; background: var(--success); border-radius: 50%;"></div>
+              online
+            </div>
+          </div>
+          <div id="user-avatar" style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; border: 2px solid var(--border);">
+            U
           </div>
         </div>
       </div>
@@ -2715,6 +2823,24 @@
    crossorigin=""></script>
 
   <script>
+    // ========== STATE ==========
+    let state = {
+      user: null,
+      isAdmin: false,
+      spots: [],
+      tradeRequests: [],
+      currentOfferId: null,
+      currentRequestId: null,
+      selectedOfferSpots: [],
+      adminSpots: [],
+      adminTrades: [],
+      adminUsers: []
+    };
+    
+    // ========== ANTI-SPAM CONTROL ==========
+    let isChangingView = false;
+    let lastClickTime = 0;
+    const CLICK_DELAY = 300; // 300ms delay between clicks
     // ========== CONSTANTS ==========
     const API_BASE = '/api';
 
@@ -4218,20 +4344,58 @@
     }
     // ========== NAVIGATION ==========
     function showView(view) {
+      // Anti-spam protection
+      const now = Date.now();
+      if (isChangingView || (now - lastClickTime < CLICK_DELAY)) {
+        return;
+      }
+      
+      lastClickTime = now;
+      isChangingView = true;
+      
+      // Remove active class from all nav buttons
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Add active class to clicked button
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.dataset.route === view) {
+          btn.classList.add('active');
+        }
+      });
+      
+      // Hide all views
       document.querySelectorAll('section[id^="view-"]').forEach(v => {
         v.classList.add('hidden');
       });
       
+      // Show selected view
       document.getElementById(`view-${view}`).classList.remove('hidden');
       
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.route === view);
-      });
+      // Execute view-specific functions
+      if (view === 'market') {
+        setTimeout(() => {
+          renderMarket();
+          isChangingView = false;
+        }, 50);
+      } else if (view === 'requests') {
+        setTimeout(() => {
+          renderRequests();
+          isChangingView = false;
+        }, 50);
+      } else if (view === 'my-spots') {
+        setTimeout(() => {
+          renderMySpots();
+          isChangingView = false;
+        }, 50);
+      } else {
+        setTimeout(() => {
+          isChangingView = false;
+        }, 50);
+      }
       
-      if (view === 'market') renderMarket();
-      if (view === 'requests') renderRequests();
-      if (view === 'my-spots') renderMySpots();
-      
+      // Smooth scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
       
       if (view === 'my-spots') {
