@@ -343,21 +343,38 @@ app.get('/api/spots', requireAuth, async (req, res) => {
                 { currentOwner: req.session.user.username, acquired: true } // Acquired spots
             ];
         } else {
-            // Exclude user's own spots from market
-            query.author = { $ne: req.session.user.username };
-
-            if (excludeRequested === 'true') {
-                const userTradeRequests = await TradeRequest.find({
-                    fromUser: req.session.user.username,
-                    status: { $in: ['pending', 'verifying'] }
-                });
-
-                const requestedSpotIds = userTradeRequests.map(req => req.spotId.toString());
-                query._id = { $nin: requestedSpotIds };
-            }
-            
-            // In market, only show original spots (not copies)
-            query.originalSpotId = { $exists: false };
+          // Exclude user's own spots from market
+          query.author = { $ne: req.session.user.username };
+        
+          if (excludeRequested === 'true') {
+            // Trova gli spot per cui l'utente ha già inviato richieste PENDENTI
+            const userPendingRequests = await TradeRequest.find({
+              fromUser: req.session.user.username,
+              status: { $in: ['pending', 'verifying'] }
+            });
+        
+            // Trova gli spot che l'utente ha già SCAMBIATO (accepted)
+            const userAcceptedRequests = await TradeRequest.find({
+              $or: [
+                { fromUser: req.session.user.username, status: 'accepted' },
+                { toUser: req.session.user.username, status: 'accepted' }
+              ]
+            });
+        
+            // Combina tutti gli spot ID da escludere
+            const excludedSpotIds = [
+              ...userPendingRequests.map(req => req.spotId.toString()),
+              ...userAcceptedRequests.map(req => req.spotId.toString())
+            ];
+        
+            query._id = { $nin: excludedSpotIds };
+          }
+          
+          // In market, only show original spots (not copies)
+          query.originalSpotId = { $exists: false };
+          
+          // Mostra solo spot attivi
+          query.status = 'active';
         }
         
         const spots = await Spot.find(query)
@@ -874,9 +891,8 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
         await Spot.findByIdAndUpdate(
           request.spotId,
           {
-            status: 'completed',
             hasPendingTradeRequest: false,
-            requestedBy: [],
+            $pull: { requestedBy: request.fromUser },
             offeredForTrade: false
           },
           { session: sessionDb }
@@ -885,8 +901,8 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
         await Spot.findByIdAndUpdate(
           selectedSpotId,
           {
-            status: 'completed',
-            offeredForTrade: false
+            offeredForTrade: false,
+            status: 'active'  // Mantieni attivo invece di completed
           },
           { session: sessionDb }
         );
