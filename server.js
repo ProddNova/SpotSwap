@@ -346,29 +346,72 @@ app.get('/api/spots', requireAuth, async (req, res) => {
           // Exclude user's own spots from market
           query.author = { $ne: req.session.user.username };
         
-          if (excludeRequested === 'true') {
-            // Trova gli spot per cui l'utente ha già inviato richieste PENDENTI
-            const userPendingRequests = await TradeRequest.find({
-              fromUser: req.session.user.username,
-              status: { $in: ['pending', 'verifying'] }
-            });
-        
-            // Trova gli spot che l'utente ha già SCAMBIATO (accepted)
-            const userAcceptedRequests = await TradeRequest.find({
-              $or: [
-                { fromUser: req.session.user.username, status: 'accepted' },
-                { toUser: req.session.user.username, status: 'accepted' }
-              ]
-            });
-        
-            // Combina tutti gli spot ID da escludere
-            const excludedSpotIds = [
-              ...userPendingRequests.map(req => req.spotId.toString()),
-              ...userAcceptedRequests.map(req => req.spotId.toString())
-            ];
-        
-            query._id = { $nin: excludedSpotIds };
-          }
+    if (excludeRequested === 'true') {
+      // Trova gli spot per cui l'utente ha già inviato richieste PENDENTI
+      const userPendingRequests = await TradeRequest.find({
+        fromUser: req.session.user.username,
+        status: { $in: ['pending', 'verifying'] }
+      });
+    
+      // Trova gli spot che l'utente ha già SCAMBIATO (accepted) come fromUser
+      const userAcceptedRequestsAsFromUser = await TradeRequest.find({
+        fromUser: req.session.user.username,
+        status: 'accepted'
+      }).populate('spotId');
+    
+      // Trova gli spot che l'utente ha già SCAMBIATO (accepted) come toUser
+      const userAcceptedRequestsAsToUser = await TradeRequest.find({
+        toUser: req.session.user.username,
+        status: 'accepted'
+      }).populate('selectedSpotId');
+    
+      // Combina tutti gli spot ID da escludere
+      const excludedSpotIds = [
+        ...userPendingRequests.map(req => req.spotId.toString()),
+        ...userAcceptedRequestsAsFromUser.map(req => req.spotId?._id?.toString()).filter(Boolean),
+        ...userAcceptedRequestsAsToUser.map(req => req.selectedSpotId?._id?.toString()).filter(Boolean)
+      ];
+    // Helper per verificare se l'utente possiede già uno spot
+    async function userOwnsSpot(userId, spotId) {
+      const spot = await Spot.findById(spotId);
+      if (!spot) return false;
+      
+      // Controlla se l'utente è il proprietario corrente
+      if (spot.currentOwner === userId || spot.author === userId) {
+        return true;
+      }
+      
+      // Controlla se l'utente ha acquisito questo spot tramite scambio
+      const acquiredCopy = await Spot.findOne({
+        originalSpotId: spotId,
+        currentOwner: userId,
+        acquired: true
+      });
+      
+      return !!acquiredCopy;
+    }
+      // Rimuovi duplicati
+      const uniqueExcludedSpotIds = [...new Set(excludedSpotIds.filter(id => id))];
+    
+      // Aggiungi anche gli spot che l'utente ha acquisito
+      const acquiredSpots = await Spot.find({
+        $or: [
+          { currentOwner: req.session.user.username, acquired: true },
+          { author: req.session.user.username, originalSpotId: { $exists: false } }
+        ]
+      });
+    
+      const acquiredOriginalSpotIds = acquiredSpots
+        .map(spot => spot.originalSpotId?.toString() || spot._id.toString())
+        .filter(id => id);
+    
+      // Combina tutte le esclusioni
+      const allExcludedIds = [...uniqueExcludedSpotIds, ...acquiredOriginalSpotIds];
+      
+      if (allExcludedIds.length > 0) {
+        query._id = { $nin: allExcludedIds };
+      }
+    }
           
           // In market, only show original spots (not copies)
           query.originalSpotId = { $exists: false };
