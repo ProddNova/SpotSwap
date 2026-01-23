@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>SpotSwap — Scambia spot</title>
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -71,7 +71,36 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+    /* PREVENZIONE ZOOM SU MOBILE */
+    html {
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
     
+    body {
+      touch-action: pan-x pan-y;
+      -webkit-user-drag: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    input, textarea, select {
+      font-size: 16px !important; /* Previene lo zoom automatico su iOS */
+    }
+    
+    /* Disabilita double-tap per zoom */
+    * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
+    /* Permetti selezione sui campi input */
+    input, textarea {
+      -webkit-user-select: text;
+      user-select: text;
+    }
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -2555,15 +2584,32 @@
     let currentMapFilter = 'all';
 
     // ========== LOADING OVERLAY ==========
+    let loadingCount = 0;
+    
     function showLoading(text = 'Caricamento...') {
+      loadingCount++;
       const overlay = document.getElementById('loading-overlay');
       const loadingText = overlay.querySelector('.loading-text');
+      
       loadingText.textContent = text;
-      overlay.classList.add('show');
+      
+      // Mostra solo se è il primo carico
+      if (loadingCount === 1) {
+        overlay.classList.add('show');
+      }
     }
-
+    
     function hideLoading() {
-      document.getElementById('loading-overlay').classList.remove('show');
+      loadingCount = Math.max(0, loadingCount - 1);
+      
+      // Nascondi solo quando tutti i carichi sono completati
+      if (loadingCount === 0) {
+        setTimeout(() => {
+          if (loadingCount === 0) {
+            document.getElementById('loading-overlay').classList.remove('show');
+          }
+        }, 300); // Piccolo delay per evitare flickering
+      }
     }
 
     // ========== UTILITY FUNCTIONS ==========
@@ -3945,7 +3991,6 @@
     }
 
     async function loadMarketSpots() {
-      showLoading('Caricamento mercato...');
       try {
         const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
         if (response.ok) {
@@ -3960,7 +4005,6 @@
     }
 
     async function loadUserSpots() {
-      showLoading('Caricamento spot...');
       try {
         const response = await fetch(`${API_BASE}/spots?userOnly=true`);
         if (response.ok) {
@@ -3975,7 +4019,6 @@
     }
 
     async function loadTradeRequests() {
-      showLoading('Caricamento richieste...');
       try {
         const response = await fetch(`${API_BASE}/trade-requests`);
         if (response.ok) {
@@ -5263,7 +5306,36 @@
         showToast('Errore nella copia', 'error');
       });
     }
-
+    
+    // Prevenzione zoom su mobile
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    document.addEventListener('gesturestart', function(event) {
+      event.preventDefault();
+    });
+    
+    document.addEventListener('gesturechange', function(event) {
+      event.preventDefault();
+    });
+    
+    document.addEventListener('gestureend', function(event) {
+      event.preventDefault();
+    });
+    
+    // Prevenzione double-tap zoom
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+    
     // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
   </script>
