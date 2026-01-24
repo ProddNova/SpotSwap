@@ -2266,9 +2266,101 @@
   </div>
   
   <!-- CREATE SPOT AS USER -->
-  <div class="admin-section">
-    <h2 style="margin-bottom: 15px; font-size: 18px;">📝 Crea Spot come Utente</h2>
-    <!-- ... mantieni tutto il codice esistente qui ... -->
+<!-- CREATE SPOT AS USER -->
+<div class="admin-section">
+  <h2 style="margin-bottom: 15px; font-size: 18px;">📝 Crea Spot come Utente</h2>
+  
+  <div class="form-group">
+    <label class="form-label">Username dell'utente</label>
+    <input type="text" class="form-input" id="spot-username" placeholder="es. mario_rossi">
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Cosa offri</label>
+    <input type="text" class="form-input" id="spot-give" placeholder="es. Ex fabbrica tessile">
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Cosa cerchi</label>
+    <input type="text" class="form-input" id="spot-want" placeholder="es. Hotel o villa abbandonata">
+  </div>
+  
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Regione</label>
+      <select class="form-select" id="spot-region-admin">
+        <option value="">Seleziona regione...</option>
+        <option value="Abruzzo">Abruzzo</option>
+        <option value="Basilicata">Basilicata</option>
+        <option value="Calabria">Calabria</option>
+        <option value="Campania">Campania</option>
+        <option value="Emilia-Romagna">Emilia-Romagna</option>
+        <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+        <option value="Lazio">Lazio</option>
+        <option value="Liguria">Liguria</option>
+        <option value="Lombardia">Lombardia</option>
+        <option value="Marche">Marche</option>
+        <option value="Molise">Molise</option>
+        <option value="Piemonte">Piemonte</option>
+        <option value="Puglia">Puglia</option>
+        <option value="Sardegna">Sardegna</option>
+        <option value="Sicilia">Sicilia</option>
+        <option value="Toscana">Toscana</option>
+        <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+        <option value="Umbria">Umbria</option>
+        <option value="Valle d'Aosta">Valle d'Aosta</option>
+        <option value="Veneto">Veneto</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Categoria</label>
+      <select class="form-select" id="spot-category-admin">
+        <option value="industriale">Industriale</option>
+        <option value="hotel">Hotel</option>
+        <option value="villa">Villa</option>
+        <option value="sanitario">Sanitario</option>
+        <option value="militare">Militare</option>
+        <option value="altro">Altro</option>
+      </select>
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Coordinate GPS o Link Google Maps</label>
+    <input type="text" class="form-input" id="spot-coordinates-admin" placeholder="es. 45.4642, 9.1900 o link Google Maps">
+    <div class="form-hint">Inserisci coordinate o un link Google Maps. Se lasciato vuoto, verranno generate coordinate casuali nella regione selezionata.</div>
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Descrizione</label>
+    <textarea class="form-textarea" id="spot-description-admin" rows="3" placeholder="Descrivi lo spot..."></textarea>
+  </div>
+  
+  <button class="btn btn-primary btn-lg" onclick="createAdminSpot()" style="width: 100%; margin-bottom: 15px;">
+    Crea Spot per Utente
+  </button>
+  
+  <!-- Import da CSV -->
+  <div style="border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px;">
+    <h3 style="font-size: 16px; margin-bottom: 15px;">📁 Importa Spot da CSV</h3>
+    
+    <div id="file-upload-area" class="file-upload-area" onclick="document.getElementById('file-input').click()">
+      <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+      <div style="font-weight: 600; margin-bottom: 8px;">Trascina qui un file CSV</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">o clicca per selezionare</div>
+      <div style="font-size: 11px; color: var(--text-muted); background: var(--bg); padding: 8px; border-radius: 6px;">
+        Formato: username,give,want,region,category,lat,lng,description
+      </div>
+    </div>
+    
+    <input type="file" id="file-input" accept=".csv" style="display: none;">
+    
+    <div id="import-status" style="display: none; margin-top: 15px;"></div>
+    
+    <button class="btn btn-ghost" onclick="downloadTemplate()" style="width: 100%; margin-top: 10px;">
+      📥 Scarica Template CSV
+    </button>
   </div>
 </div>
 
