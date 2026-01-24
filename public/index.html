@@ -2255,100 +2255,58 @@
       
       <div id="admin-stats" class="admin-stats-grid"></div>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
-        <!-- GENERATE INVITE CODE -->
-        <div class="admin-section">
-          <h2 style="margin-bottom: 15px; font-size: 18px;">🔗 Genera Codice per Fan</h2>
-          <button class="btn btn-primary" onclick="generateInviteCode()" style="width: 100%; margin-bottom: 15px;">
-            Genera Codice di Registrazione
-          </button>
-          <div id="invite-result" style="display: none; margin-top: 10px;"></div>
-        </div>
-        
-        <!-- CREATE SPOT AS USER -->
-        <div class="admin-section">
-          <h2 style="margin-bottom: 15px; font-size: 18px;">📝 Crea Spot come Utente</h2>
-          <div class="form-group">
-            <label class="form-label">Nome Utente</label>
-            <input type="text" id="spot-username" class="form-input" placeholder="es: FanDi2Lost2Find">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Offre</label>
-            <input type="text" id="spot-give" class="form-input" placeholder="es: Ex fabbrica tessile">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Cerca</label>
-            <input type="text" id="spot-want" class="form-input" placeholder="es: Hotel abbandonato">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Regione</label>
-            <select class="form-select" id="spot-region-admin">
-              <option value="">Seleziona regione...</option>
-              <option value="Abruzzo">Abruzzo</option>
-              <option value="Basilicata">Basilicata</option>
-              <option value="Calabria">Calabria</option>
-              <option value="Campania">Campania</option>
-              <option value="Emilia-Romagna">Emilia-Romagna</option>
-              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
-              <option value="Lazio">Lazio</option>
-              <option value="Liguria">Liguria</option>
-              <option value="Lombardia">Lombardia</option>
-              <option value="Marche">Marche</option>
-              <option value="Molise">Molise</option>
-              <option value="Piemonte">Piemonte</option>
-              <option value="Puglia">Puglia</option>
-              <option value="Sardegna">Sardegna</option>
-              <option value="Sicilia">Sicilia</option>
-              <option value="Toscana">Toscana</option>
-              <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
-              <option value="Umbria">Umbria</option>
-              <option value="Valle d'Aosta">Valle d'Aosta</option>
-              <option value="Veneto">Veneto</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Categoria</label>
-            <select class="form-select" id="spot-category-admin">
-              <option value="industriale">Industriale</option>
-              <option value="hotel">Hotel</option>
-              <option value="villa">Villa</option>
-              <option value="sanitario">Sanitario</option>
-              <option value="militare">Militare</option>
-              <option value="altro">Altro</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Coordinate GPS</label>
-            <input type="text" id="spot-coordinates-admin" class="form-input" placeholder="es: 45.4642, 9.1900">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Descrizione</label>
-            <textarea class="form-textarea" id="spot-description-admin" rows="3" placeholder="Descrizione dello spot..."></textarea>
-          </div>
-          <button class="btn btn-success" onclick="createAdminSpot()" style="width: 100%; margin-bottom: 10px;">
-            Crea Spot Singolo
-          </button>
-          
-          <!-- Import spots from file -->
-          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
-            <h3 style="font-size: 14px; margin-bottom: 10px;">Importa Spot da File</h3>
-            <div class="file-upload-area" id="file-upload-area">
-              <div style="font-size: 40px; margin-bottom: 10px;">📁</div>
-              <div style="margin-bottom: 10px;">Trascina qui il file CSV o clicca per selezionare</div>
-              <input type="file" id="file-input" accept=".csv" style="display: none;">
-              <button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">
-                Seleziona File
-              </button>
-            </div>
-            <div style="margin-top: 10px;">
-              <a href="#" onclick="downloadTemplate()" class="btn btn-ghost" style="width: 100%;">
-                📥 Scarica Template CSV
-              </a>
-            </div>
-            <div id="import-status" style="margin-top: 10px; display: none;"></div>
-          </div>
-        </div>
-      </div>
+     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+  <!-- GENERATE INVITE CODE -->
+  <div class="admin-section">
+    <h2 style="margin-bottom: 15px; font-size: 18px;">🔗 Genera Codice per Fan</h2>
+    <button class="btn btn-primary" onclick="generateInviteCode()" style="width: 100%; margin-bottom: 15px;">
+      Genera Codice di Registrazione
+    </button>
+    <div id="invite-result" style="display: none; margin-top: 10px;"></div>
+  </div>
+  
+  <!-- CREATE SPOT AS USER -->
+  <div class="admin-section">
+    <h2 style="margin-bottom: 15px; font-size: 18px;">📝 Crea Spot come Utente</h2>
+    <!-- ... mantieni tutto il codice esistente qui ... -->
+  </div>
+</div>
+
+<!-- AGGIUNGI QUESTA NUOVA SEZIONE DOPO IL BLOCCO SOPRA -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+  <!-- SVUOTA DATABASE -->
+  <div class="admin-section">
+    <h2 style="margin-bottom: 15px; font-size: 18px;">⚠️ Gestione Database</h2>
+    <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid var(--danger); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+      <strong style="color: var(--danger);">⚠️ ZONA PERICOLOSA</strong>
+      <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+        Queste azioni sono irreversibili. Procedi con cautela.
+      </p>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label class="form-label">Conferma digitando "ELIMINA TUTTO"</label>
+      <input type="text" id="delete-confirmation" class="form-input" placeholder="Digita qui per confermare" style="margin-bottom: 10px;">
+      <button class="btn btn-danger" onclick="deleteAllData()" style="width: 100%;" id="delete-all-btn" disabled>
+        🗑️ Svuota Database (tranne admin)
+      </button>
+    </div>
+  </div>
+  
+  <!-- ESPORTA DATI -->
+  <div class="admin-section">
+    <h2 style="margin-bottom: 15px; font-size: 18px;">📥 Backup & Esporta</h2>
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
+      Scarica un backup completo di tutti i dati dell'applicazione.
+    </p>
+    <button class="btn btn-primary" onclick="exportAllData()" style="width: 100%; margin-bottom: 10px;">
+      📊 Esporta Tutti i Dati (JSON)
+    </button>
+    <button class="btn btn-success" onclick="exportSpotsCSV()" style="width: 100%;">
+      📝 Esporta Solo Spot (CSV)
+    </button>
+  </div>
+</div>
       
       <div class="tabs" style="margin-bottom: 20px;">
         <button class="tab active" data-admin-tab="trades">🔄 Scambi in Attesa</button>
@@ -3979,7 +3937,125 @@
       const lng = baseCoords.lng + (Math.random() - 0.5) * 0.5;
       return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     }
+// ========== DATABASE MANAGEMENT ==========
 
+// Abilita/disabilita il bottone di eliminazione in base alla conferma
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteInput = document.getElementById('delete-confirmation');
+  const deleteBtn = document.getElementById('delete-all-btn');
+  
+  if (deleteInput && deleteBtn) {
+    deleteInput.addEventListener('input', function() {
+      deleteBtn.disabled = this.value !== 'ELIMINA TUTTO';
+    });
+  }
+});
+
+async function deleteAllData() {
+  const confirmation = document.getElementById('delete-confirmation').value;
+  
+  if (confirmation !== 'ELIMINA TUTTO') {
+    showToast('Digita "ELIMINA TUTTO" per confermare', 'error');
+    return;
+  }
+  
+  if (!confirm('⚠️ SEI SICURO?\n\nQuesta azione:\n• Eliminerà TUTTI gli utenti (tranne admin)\n• Eliminerà TUTTI gli spot\n• Eliminerà TUTTE le richieste di scambio\n• Eliminerà TUTTI i codici\n\nQuesta azione è IRREVERSIBILE!')) {
+    return;
+  }
+  
+  showLoading('Svuotamento database in corso...');
+  
+  try {
+    const response = await fetch('/api/admin/delete-all-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showToast('✅ Database svuotato con successo!', 'success');
+      document.getElementById('delete-confirmation').value = '';
+      document.getElementById('delete-all-btn').disabled = true;
+      
+      // Ricarica i dati
+      setTimeout(() => {
+        loadAdminData();
+      }, 2000);
+    } else {
+      showToast(data.error || 'Errore nello svuotamento', 'error');
+    }
+  } catch (error) {
+    console.error('Error deleting all data:', error);
+    showToast('Errore di connessione', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function exportAllData() {
+  showLoading('Preparazione esportazione...');
+  
+  try {
+    const response = await fetch('/api/admin/export-all-data');
+    
+    if (!response.ok) {
+      throw new Error('Errore nell\'esportazione');
+    }
+    
+    const data = await response.json();
+    
+    // Crea un file JSON scaricabile
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `spotswap-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ Esportazione completata!', 'success');
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    showToast('Errore nell\'esportazione', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function exportSpotsCSV() {
+  showLoading('Generazione CSV...');
+  
+  try {
+    const response = await fetch('/api/admin/export-spots-csv');
+    
+    if (!response.ok) {
+      throw new Error('Errore nella generazione CSV');
+    }
+    
+    const csv = await response.text();
+    
+    // Crea un file CSV scaricabile
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `spotswap-spots-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ CSV esportato con successo!', 'success');
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    showToast('Errore nell\'esportazione CSV', 'error');
+  } finally {
+    hideLoading();
+  }
+}
     // ========== FILE UPLOAD FOR SPOTS ==========
     function setupFileUpload() {
       const fileInput = document.getElementById('file-input');
