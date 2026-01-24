@@ -1475,7 +1475,125 @@ app.get('/api/admin/template', requireAdmin, (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename=template_spot.csv');
     res.send(csv);
 });
+// ========== ADMIN DATABASE MANAGEMENT ROUTES ==========
 
+// Delete all data except admin accounts
+app.post('/api/admin/delete-all-data', requireAdmin, async (req, res) => {
+  const session = await mongoose.startSession();
+  
+  try {
+    session.startTransaction();
+    
+    console.log(`[ADMIN] ${req.session.user.username} ha richiesto lo svuotamento del database`);
+    
+    // 1. Delete all trade requests
+    await TradeRequest.deleteMany({}, { session });
+    console.log('✅ Eliminate tutte le richieste di scambio');
+    
+    // 2. Delete all spots
+    await Spot.deleteMany({}, { session });
+    console.log('✅ Eliminati tutti gli spot');
+    
+    // 3. Delete all fan invites
+    await FanInvite.deleteMany({}, { session });
+    console.log('✅ Eliminati tutti i codici invito');
+    
+    // 4. Delete all non-admin users
+    const deleteResult = await User.deleteMany({ 
+      role: { $ne: 'admin' },
+      username: { $ne: 'admin' } // Protegge l'admin principale
+    }, { session });
+    
+    console.log(`✅ Eliminati ${deleteResult.deletedCount} utenti non-admin`);
+    
+    await session.commitTransaction();
+    
+    res.json({ 
+      success: true, 
+      message: `Database svuotato con successo. Eliminati: ${deleteResult.deletedCount} utenti, tutti gli spot, richieste e codici.`,
+      deletedCount: deleteResult.deletedCount
+    });
+    
+  } catch (error) {
+    console.error('Error deleting all data:', error);
+    await session.abortTransaction();
+    res.status(500).json({ error: 'Errore interno del server durante lo svuotamento' });
+  } finally {
+    session.endSession();
+  }
+});
+
+// Export all data as JSON
+app.get('/api/admin/export-all-data', requireAdmin, async (req, res) => {
+  try {
+    const [users, spots, tradeRequests, fanInvites] = await Promise.all([
+      User.find().select('-password').lean(),
+      Spot.find().lean(),
+      TradeRequest.find().lean(),
+      FanInvite.find().lean()
+    ]);
+    
+    const exportData = {
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        exportedBy: req.session.user.username,
+        totalUsers: users.length,
+        totalSpots: spots.length,
+        totalTrades: tradeRequests.length,
+        totalInvites: fanInvites.length
+      },
+      users,
+      spots,
+      tradeRequests,
+      fanInvites
+    };
+    
+    res.json(exportData);
+    
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    res.status(500).json({ error: 'Errore nell\'esportazione dei dati' });
+  }
+});
+
+// Export spots as CSV
+app.get('/api/admin/export-spots-csv', requireAdmin, async (req, res) => {
+  try {
+    const spots = await Spot.find().lean();
+    
+    // Intestazione CSV
+    let csv = 'ID,Autore,Proprietario Attuale,Dà (Give),Cerca (Want),Regione,Categoria,Coordinate,Descrizione,Stato,Data Creazione,Data Acquisizione,Autore Originale\n';
+    
+    // Aggiungi ogni spot
+    spots.forEach(spot => {
+      const row = [
+        spot._id,
+        `"${spot.author || ''}"`,
+        `"${spot.currentOwner || ''}"`,
+        `"${spot.give || ''}"`,
+        `"${spot.want || ''}"`,
+        `"${spot.region || ''}"`,
+        spot.category || '',
+        `"${spot.coordinates || ''}"`,
+        `"${(spot.description || '').replace(/"/g, '""')}"`,
+        spot.status || '',
+        new Date(spot.createdAt).toISOString(),
+        spot.acquiredDate ? new Date(spot.acquiredDate).toISOString() : '',
+        `"${spot.originalAuthor || ''}"`
+      ];
+      
+      csv += row.join(',') + '\n';
+    });
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=spots-export-${new Date().toISOString().split('T')[0]}.csv`);
+    res.send(csv);
+    
+  } catch (error) {
+    console.error('Error exporting spots CSV:', error);
+    res.status(500).json({ error: 'Errore nell\'esportazione CSV' });
+  }
+});
 // Serve HTML
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
