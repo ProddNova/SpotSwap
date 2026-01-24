@@ -7,6 +7,7 @@ const path = require('path');
 const crypto = require('crypto');
 const csv = require('csv-parser');
 const multer = require('multer');
+const { Readable } = require('stream');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -504,118 +505,171 @@ app.post('/api/admin/spots', requireAdmin, async (req, res) => {
 });
 
 // Admin import spots from CSV
-app.post('/api/admin/spots/import', requireAdmin, upload.single('file'), async (req, res) => {
+app.post('/api/admin/spots/import', requireAdmin, upload.single('file'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'Nessun file caricato' });
         }
         
         const fileBuffer = req.file.buffer.toString();
-        const lines = fileBuffer.split('\n');
-        const spots = [];
-        let errors = [];
+        const results = [];
         
-        // Skip header
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
-            
-            const parts = line.split(',');
-            if (parts.length < 6) {
-                errors.push(`Riga ${i}: formato non valido`);
-                continue;
-            }
-            
-            const username = parts[0].trim();
-            const give = parts[1].trim();
-            const want = parts[2].trim();
-            const region = parts[3].trim();
-            const category = parts[4].trim();
-            const coordinates = parts[5].trim();
-            const description = parts[6] ? parts[6].trim() : 'Spot importato da file';
-            
-            if (!username || !give || !want || !region || !category) {
-                errors.push(`Riga ${i}: campi mancanti`);
-                continue;
-            }
-            
-            // Check if user exists or create new
-            let user = await User.findOne({ username });
-            if (!user) {
-                const randomPassword = crypto.randomBytes(8).toString('hex');
-                const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        const parser = csv({ headers: false });
+        const stream = Readable.from(fileBuffer);
+        
+        let errorOccurred = false;
+        
+        stream.pipe(parser)
+            .on('data', (data) => {
+                results.push(data);
+            })
+            .on('error', (error) => {
+                console.error('Error parsing CSV:', error);
+                if (!errorOccurred) {
+                    errorOccurred = true;
+                    res.status(500).json({ error: 'Errore nel parsing del CSV' });
+                }
+            })
+            .on('end', async () => {
+                if (errorOccurred) return;
                 
-                user = new User({
-                    username,
-                    password: hashedPassword,
-                    bio: 'Utente creato da import',
-                    role: 'user',
-                    isFan: true
-                });
-                await user.save();
-            }
-            
-            // Generate coordinates if not provided
-            let finalCoordinates = coordinates;
-            if (!finalCoordinates) {
-                const regionCoordinates = {
-                    'Abruzzo': { lat: 42.3506, lng: 13.3995 },
-                    'Basilicata': { lat: 40.6390, lng: 15.8057 },
-                    'Calabria': { lat: 38.9101, lng: 16.5875 },
-                    'Campania': { lat: 40.8359, lng: 14.2488 },
-                    'Emilia-Romagna': { lat: 44.4949, lng: 11.3426 },
-                    'Friuli-Venezia Giulia': { lat: 45.6371, lng: 13.8038 },
-                    'Lazio': { lat: 41.8719, lng: 12.5674 },
-                    'Liguria': { lat: 44.4056, lng: 8.9463 },
-                    'Lombardia': { lat: 45.4642, lng: 9.1900 },
-                    'Marche': { lat: 43.6158, lng: 13.5189 },
-                    'Molise': { lat: 41.5616, lng: 14.6682 },
-                    'Piemonte': { lat: 45.0703, lng: 7.6869 },
-                    'Puglia': { lat: 40.9476, lng: 17.1047 },
-                    'Sardegna': { lat: 39.2238, lng: 9.1217 },
-                    'Sicilia': { lat: 38.1157, lng: 13.3615 },
-                    'Toscana': { lat: 43.7696, lng: 11.2558 },
-                    'Trentino-Alto Adige': { lat: 46.4983, lng: 11.3548 },
-                    'Umbria': { lat: 42.9380, lng: 12.6144 },
-                    "Valle d'Aosta": { lat: 45.7376, lng: 7.3207 },
-                    'Veneto': { lat: 45.4408, lng: 12.3155 }
-                };
-                
-                const baseCoords = regionCoordinates[region] || { lat: 41.8719, lng: 12.5674 };
-                const lat = baseCoords.lat + (Math.random() - 0.5) * 0.5;
-                const lng = baseCoords.lng + (Math.random() - 0.5) * 0.5;
-                finalCoordinates = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-            }
-            
-            spots.push({
-                give,
-                want,
-                region,
-                coordinates: finalCoordinates,
-                category,
-                description,
-                author: username,
-                authorId: user._id,
-                status: 'active',
-                isAdminCreated: true,
-                createdAt: new Date()
+                try {
+                    // Ora results è un array di array
+                    // La prima riga (indice 0) è l'intestazione, la saltiamo
+                    const spots = [];
+                    let errors = [];
+                    
+                    for (let i = 1; i < results.length; i++) {
+                        const row = results[i];
+                        let username, give, want, region, category, coordinates, description;
+                        
+                        if (row.length === 8) {
+                            // Nuovo formato: username, give, want, region, category, lat, lng, description
+                            [username, give, want, region, category, lat, lng, description] = row.map(field => field.trim());
+                            coordinates = `${lat}, ${lng}`;
+                        } else if (row.length === 7) {
+                            // Vecchio formato: username, give, want, region, category, coordinates, description
+                            [username, give, want, region, category, coordinates, description] = row.map(field => field.trim());
+                        } else {
+                            errors.push(`Riga ${i}: numero di campi non valido (${row.length})`);
+                            continue;
+                        }
+                        
+                        // Validazione campi obbligatori
+                        if (!username || !give || !want || !region || !category) {
+                            errors.push(`Riga ${i}: campi obbligatori mancanti`);
+                            continue;
+                        }
+                        
+                        // Controllo o creazione utente
+                        let user = await User.findOne({ username });
+                        if (!user) {
+                            const randomPassword = crypto.randomBytes(8).toString('hex');
+                            const hashedPassword = await bcrypt.hash(randomPassword, 10);
+                            
+                            user = new User({
+                                username,
+                                password: hashedPassword,
+                                bio: 'Utente creato da import CSV',
+                                role: 'user',
+                                isFan: true
+                            });
+                            await user.save();
+                        }
+                        
+                        // Genera coordinate se non fornite
+                        let finalCoordinates = coordinates;
+                        if (!finalCoordinates || finalCoordinates.split(',').length < 2) {
+                            const regionCoordinates = {
+                                'Abruzzo': { lat: 42.3506, lng: 13.3995 },
+                                'Basilicata': { lat: 40.6390, lng: 15.8057 },
+                                'Calabria': { lat: 38.9101, lng: 16.5875 },
+                                'Campania': { lat: 40.8359, lng: 14.2488 },
+                                'Emilia-Romagna': { lat: 44.4949, lng: 11.3426 },
+                                'Friuli-Venezia Giulia': { lat: 45.6371, lng: 13.8038 },
+                                'Lazio': { lat: 41.8719, lng: 12.5674 },
+                                'Liguria': { lat: 44.4056, lng: 8.9463 },
+                                'Lombardia': { lat: 45.4642, lng: 9.1900 },
+                                'Marche': { lat: 43.6158, lng: 13.5189 },
+                                'Molise': { lat: 41.5616, lng: 14.6682 },
+                                'Piemonte': { lat: 45.0703, lng: 7.6869 },
+                                'Puglia': { lat: 40.9476, lng: 17.1047 },
+                                'Sardegna': { lat: 39.2238, lng: 9.1217 },
+                                'Sicilia': { lat: 38.1157, lng: 13.3615 },
+                                'Toscana': { lat: 43.7696, lng: 11.2558 },
+                                'Trentino-Alto Adige': { lat: 46.4983, lng: 11.3548 },
+                                'Umbria': { lat: 42.9380, lng: 12.6144 },
+                                "Valle d'Aosta": { lat: 45.7376, lng: 7.3207 },
+                                'Veneto': { lat: 45.4408, lng: 12.3155 }
+                            };
+                            
+                            const baseCoords = regionCoordinates[region] || { lat: 41.8719, lng: 12.5674 };
+                            const lat = baseCoords.lat + (Math.random() - 0.5) * 0.5;
+                            const lng = baseCoords.lng + (Math.random() - 0.5) * 0.5;
+                            finalCoordinates = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        }
+                        
+                        // Mappatura categoria
+                        let normalizedCategory = category.toLowerCase();
+                        const categoryMapping = {
+                            'residenziale': 'villa',
+                            'industriale': 'industriale',
+                            'alberghiero': 'hotel',
+                            'ospedaliero': 'sanitario',
+                            'militare': 'militare',
+                            'ferroviario': 'altro',
+                            'rurale': 'altro',
+                            'religioso': 'altro',
+                            'commerciale': 'altro',
+                            'aereoportuale': 'altro',
+                            'culturale': 'altro',
+                            'termale': 'altro',
+                            'turistico': 'altro',
+                            'istituzionale': 'altro',
+                            'borgo': 'altro',
+                            'castello': 'altro'
+                        };
+                        
+                        if (categoryMapping[normalizedCategory]) {
+                            normalizedCategory = categoryMapping[normalizedCategory];
+                        } else if (!['industriale', 'hotel', 'villa', 'sanitario', 'militare', 'altro'].includes(normalizedCategory)) {
+                            normalizedCategory = 'altro';
+                        }
+                        
+                        spots.push({
+                            give,
+                            want,
+                            region,
+                            coordinates: finalCoordinates,
+                            category: normalizedCategory,
+                            description: description || `Spot importato per ${username}`,
+                            author: username,
+                            authorId: user._id,
+                            status: 'active',
+                            isAdminCreated: true,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                    }
+                    
+                    if (spots.length === 0) {
+                        return res.status(400).json({ error: 'Nessuno spot valido trovato nel file' });
+                    }
+                    
+                    // Inserisci tutti gli spot
+                    const insertedSpots = await Spot.insertMany(spots);
+                    
+                    res.json({
+                        success: true,
+                        imported: insertedSpots.length,
+                        errors: errors.length > 0 ? errors : null,
+                        message: `Importati ${insertedSpots.length} spot con successo`
+                    });
+                } catch (error) {
+                    console.error('Error in import process:', error);
+                    res.status(500).json({ error: 'Errore interno del server' });
+                }
             });
-        }
-        
-        if (spots.length === 0) {
-            return res.status(400).json({ error: 'Nessuno spot valido trovato nel file' });
-        }
-        
-        // Insert all spots
-        const insertedSpots = await Spot.insertMany(spots);
-        
-        res.json({
-            success: true,
-            imported: insertedSpots.length,
-            errors: errors.length > 0 ? errors : null,
-            message: `Importati ${insertedSpots.length} spot con successo`
-        });
-        
     } catch (error) {
         console.error('Error importing spots:', error);
         res.status(500).json({ error: 'Errore interno del server' });
@@ -1412,9 +1466,10 @@ app.get('/api/check-token/:token', async (req, res) => {
     }
 });
 
-// Download CSV template
+// Download CSV template - nuovo formato con latitudine e longitudine separate
 app.get('/api/admin/template', requireAdmin, (req, res) => {
-    const csv = 'username,give,want,region,category,coordinates,description\ntest,Ex fabbrica tessile,Hotel abbandonato,Lombardia,industriale,45.4642,9.1900,Descrizione spot di esempio';
+    const csv = 'username,give,want,region,category,lat,lng,description\n' +
+                'test,Ex fabbrica tessile,Hotel abbandonato,Lombardia,industriale,45.4642,9.1900,Descrizione spot di esempio';
     
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=template_spot.csv');
