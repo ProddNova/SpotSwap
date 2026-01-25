@@ -2803,16 +2803,16 @@
   </div>
 
   <!-- MODAL: EDIT USER (ADMIN) -->
-  <div class="modal-overlay" id="modal-edit-user">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Modifica Utente</h3>
-        <button class="modal-close" onclick="closeModal('modal-edit-user')">&times;</button>
-      </div>
-
-      <div id="edit-user-content"></div>
+<div class="modal-overlay" id="modal-edit-spot">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Modifica Spot</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-spot')">&times;</button>
     </div>
+
+    <div id="edit-spot-content"></div>
   </div>
+</div>
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
@@ -3472,84 +3472,87 @@
     }
 
     function renderAdminSpotsList() {
-      const container = document.getElementById('admin-spots-list');
-      
-      // Filter out acquired/duplicated spots - show only original spots
-      const originalSpots = state.adminSpots.filter(spot => 
-        !spot.originalSpotId && !spot.acquired
-      );
-      
-      if (originalSpots.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">📝</div>
-            <div>Nessuno spot trovato</div>
-          </div>
-        `;
-        return;
-      }
-      
-      container.innerHTML = originalSpots.map(spot => {
-        let statusBadge = '';
-        switch(spot.status) {
-          case 'active':
-            statusBadge = '<span class="badge badge-success">Attivo</span>';
-            break;
-          case 'in_trade':
-            statusBadge = '<span class="badge badge-warning">In Scambio</span>';
-            break;
-          case 'completed':
-            statusBadge = '<span class="badge badge-info">Completato</span>';
-            break;
-          case 'deleted':
-            statusBadge = '<span class="badge badge-danger">Eliminato</span>';
-            break;
-        }
-        
-        return `
-          <div class="spot-list-item">
-            <div class="spot-list-header">
-              <div style="flex: 1;">
-                <strong>${escapeHtml(spot.give)}</strong>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-                  📍 ${escapeHtml(spot.region)} • ${spot.category} • di ${escapeHtml(spot.author)}
-                </div>
-                ${spot.isAdminCreated ? '<div style="font-size: 11px; color: var(--warning); margin-top: 2px;">Creato da Admin</div>' : ''}
-              </div>
-              <div>
-                ${statusBadge}
-              </div>
-            </div>
-            
-            <div style="font-size: 12px; margin: 8px 0;">
-              <strong>Offre:</strong> ${escapeHtml(spot.give)}<br>
-              <strong>Cerca:</strong> ${escapeHtml(spot.want)}
-            </div>
-            
-            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
-              Creato: ${new Date(spot.createdAt).toLocaleDateString('it-IT')}
-              ${spot.hasPendingTradeRequest ? '<br><span style="color: var(--warning);">⚠️ Ha richieste pendenti</span>' : ''}
-            </div>
-            
-            <div class="spot-list-actions">
-              <button class="btn btn-ghost" onclick="viewAdminSpotDetail('${spot._id}')">
-                👁️ Dettagli
-              </button>
-              ${spot.status !== 'deleted' ? `
-                <button class="btn btn-danger" onclick="deleteAdminSpot('${spot._id}')">
-                  🗑️ Elimina
-                </button>
-              ` : ''}
-              ${spot.coordinates ? `
-                <button class="btn btn-primary" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
-                  🗺️ Mappa
-                </button>
-              ` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
+  const container = document.getElementById('admin-spots-list');
+  
+  const originalSpots = state.adminSpots.filter(spot => 
+    !spot.originalSpotId && !spot.acquired
+  );
+  
+  if (originalSpots.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <div>Nessuno spot trovato</div>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = originalSpots.map(spot => {
+    let statusBadge = '';
+    switch(spot.status) {
+      case 'active':
+        statusBadge = '<span class="badge badge-success">Attivo</span>';
+        break;
+      case 'in_trade':
+        statusBadge = '<span class="badge badge-warning">In Scambio</span>';
+        break;
+      case 'completed':
+        statusBadge = '<span class="badge badge-info">Completato</span>';
+        break;
+      case 'deleted':
+        statusBadge = '<span class="badge badge-danger">Eliminato</span>';
+        break;
     }
+    
+    return `
+      <div class="spot-list-item">
+        <div class="spot-list-header">
+          <div style="flex: 1;">
+            <strong>${escapeHtml(spot.give)}</strong>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              📍 ${escapeHtml(spot.region)} • ${spot.category} • di ${escapeHtml(spot.author)}
+            </div>
+            ${spot.isAdminCreated ? '<div style="font-size: 11px; color: var(--warning); margin-top: 2px;">Creato da Admin</div>' : ''}
+          </div>
+          <div>
+            ${statusBadge}
+          </div>
+        </div>
+        
+        <div style="font-size: 12px; margin: 8px 0;">
+          <strong>Offre:</strong> ${escapeHtml(spot.give)}<br>
+          <strong>Cerca:</strong> ${escapeHtml(spot.want)}
+        </div>
+        
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+          Creato: ${new Date(spot.createdAt).toLocaleDateString('it-IT')}
+          ${spot.hasPendingTradeRequest ? '<br><span style="color: var(--warning);">⚠️ Ha richieste pendenti</span>' : ''}
+        </div>
+        
+        <div class="spot-list-actions">
+          <button class="btn btn-ghost" onclick="viewAdminSpotDetail('${spot._id}')">
+            👁️ Dettagli
+          </button>
+          <!-- AGGIUNGI QUESTO PULSANTE MODIFICA -->
+          <button class="btn btn-warning" onclick="editAdminSpot('${spot._id}')">
+            ✏️ Modifica
+          </button>
+          ${spot.status !== 'deleted' ? `
+            <button class="btn btn-danger" onclick="deleteAdminSpot('${spot._id}')">
+              🗑️ Elimina
+            </button>
+          ` : ''}
+          ${spot.coordinates ? `
+            <button class="btn btn-primary" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
+              🗺️ Mappa
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
     async function searchAdminSpots() {
       const search = document.getElementById('admin-spot-search').value;
@@ -4247,6 +4250,161 @@
     }
   } catch (error) {
     console.error('Error logging in as user:', error);
+    showToast('Errore di connessione', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+    async function editAdminSpot(spotId) {
+  const spot = state.adminSpots.find(s => s._id === spotId);
+  if (!spot) return;
+  
+  const content = `
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin-bottom: 10px;">Modifica Spot: ${escapeHtml(spot.give)}</h4>
+      <div class="tags mb-2">
+        <span class="badge badge-info">${spot.category}</span>
+        <span class="badge ${spot.status === 'active' ? 'badge-success' : spot.status === 'in_trade' ? 'badge-warning' : spot.status === 'completed' ? 'badge-info' : 'badge-danger'}">
+          ${spot.status === 'active' ? 'Attivo' : spot.status === 'in_trade' ? 'In scambio' : spot.status === 'completed' ? 'Completato' : 'Eliminato'}
+        </span>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Cosa offri</label>
+      <input type="text" class="form-input" id="edit-give" value="${escapeHtml(spot.give)}">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Cosa cerchi</label>
+      <input type="text" class="form-input" id="edit-want" value="${escapeHtml(spot.want)}">
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Regione</label>
+        <select class="form-select" id="edit-region">
+          <option value="">Seleziona regione...</option>
+          <option value="Abruzzo" ${spot.region === 'Abruzzo' ? 'selected' : ''}>Abruzzo</option>
+          <option value="Basilicata" ${spot.region === 'Basilicata' ? 'selected' : ''}>Basilicata</option>
+          <option value="Calabria" ${spot.region === 'Calabria' ? 'selected' : ''}>Calabria</option>
+          <option value="Campania" ${spot.region === 'Campania' ? 'selected' : ''}>Campania</option>
+          <option value="Emilia-Romagna" ${spot.region === 'Emilia-Romagna' ? 'selected' : ''}>Emilia-Romagna</option>
+          <option value="Friuli-Venezia Giulia" ${spot.region === 'Friuli-Venezia Giulia' ? 'selected' : ''}>Friuli-Venezia Giulia</option>
+          <option value="Lazio" ${spot.region === 'Lazio' ? 'selected' : ''}>Lazio</option>
+          <option value="Liguria" ${spot.region === 'Liguria' ? 'selected' : ''}>Liguria</option>
+          <option value="Lombardia" ${spot.region === 'Lombardia' ? 'selected' : ''}>Lombardia</option>
+          <option value="Marche" ${spot.region === 'Marche' ? 'selected' : ''}>Marche</option>
+          <option value="Molise" ${spot.region === 'Molise' ? 'selected' : ''}>Molise</option>
+          <option value="Piemonte" ${spot.region === 'Piemonte' ? 'selected' : ''}>Piemonte</option>
+          <option value="Puglia" ${spot.region === 'Puglia' ? 'selected' : ''}>Puglia</option>
+          <option value="Sardegna" ${spot.region === 'Sardegna' ? 'selected' : ''}>Sardegna</option>
+          <option value="Sicilia" ${spot.region === 'Sicilia' ? 'selected' : ''}>Sicilia</option>
+          <option value="Toscana" ${spot.region === 'Toscana' ? 'selected' : ''}>Toscana</option>
+          <option value="Trentino-Alto Adige" ${spot.region === 'Trentino-Alto Adige' ? 'selected' : ''}>Trentino-Alto Adige</option>
+          <option value="Umbria" ${spot.region === 'Umbria' ? 'selected' : ''}>Umbria</option>
+          <option value="Valle d'Aosta" ${spot.region === 'Valle d\'Aosta' ? 'selected' : ''}>Valle d'Aosta</option>
+          <option value="Veneto" ${spot.region === 'Veneto' ? 'selected' : ''}>Veneto</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="edit-category">
+          <option value="industriale" ${spot.category === 'industriale' ? 'selected' : ''}>Industriale</option>
+          <option value="hotel" ${spot.category === 'hotel' ? 'selected' : ''}>Hotel</option>
+          <option value="villa" ${spot.category === 'villa' ? 'selected' : ''}>Villa</option>
+          <option value="sanitario" ${spot.category === 'sanitario' ? 'selected' : ''}>Sanitario</option>
+          <option value="militare" ${spot.category === 'militare' ? 'selected' : ''}>Militare</option>
+          <option value="altro" ${spot.category === 'altro' ? 'selected' : ''}>Altro</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Coordinate GPS</label>
+      <input type="text" class="form-input" id="edit-coordinates" value="${escapeHtml(spot.coordinates || '')}">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Descrizione</label>
+      <textarea class="form-textarea" id="edit-description" rows="3">${escapeHtml(spot.description || '')}</textarea>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Stato</label>
+      <select class="form-select" id="edit-status">
+        <option value="active" ${spot.status === 'active' ? 'selected' : ''}>Attivo</option>
+        <option value="in_trade" ${spot.status === 'in_trade' ? 'selected' : ''}>In Scambio</option>
+        <option value="completed" ${spot.status === 'completed' ? 'selected' : ''}>Completato</option>
+        <option value="deleted" ${spot.status === 'deleted' ? 'selected' : ''}>Eliminato</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Autore</label>
+      <input type="text" class="form-input" id="edit-author" value="${escapeHtml(spot.author)}">
+    </div>
+    
+    <div class="flex gap-2 mt-2">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-spot')">Annulla</button>
+      <button class="btn btn-primary btn-lg" onclick="saveSpotChanges('${spot._id}')">Salva Modifiche</button>
+    </div>
+  `;
+  
+  document.getElementById('edit-spot-content').innerHTML = content;
+  openModal('modal-edit-spot');
+}
+
+async function saveSpotChanges(spotId) {
+  const give = document.getElementById('edit-give').value.trim();
+  const want = document.getElementById('edit-want').value.trim();
+  const region = document.getElementById('edit-region').value;
+  const coordinates = document.getElementById('edit-coordinates').value.trim();
+  const category = document.getElementById('edit-category').value;
+  const description = document.getElementById('edit-description').value.trim();
+  const status = document.getElementById('edit-status').value;
+  const author = document.getElementById('edit-author').value.trim();
+  
+  if (!give || !want || !region || !category || !author) {
+    showToast('Compila tutti i campi obbligatori', 'error');
+    return;
+  }
+  
+  showLoading('Salvataggio modifiche...');
+  
+  try {
+    const response = await fetch(`/api/admin/spots/${spotId}/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        give,
+        want,
+        region,
+        coordinates,
+        category,
+        description,
+        status,
+        author
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showToast('Spot modificato con successo!', 'success');
+      closeModal('modal-edit-spot');
+      
+      // Ricarica la lista degli spot
+      await loadAdminSpots();
+      
+      // Aggiorna anche i dati globali
+      loadAdminData();
+    } else {
+      showToast(data.error || 'Errore nel salvataggio', 'error');
+    }
+  } catch (error) {
+    console.error('Error saving spot changes:', error);
     showToast('Errore di connessione', 'error');
   } finally {
     hideLoading();
