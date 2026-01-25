@@ -1465,7 +1465,67 @@ app.get('/api/check-token/:token', async (req, res) => {
         res.status(500).json({ error: 'Errore interno del server' });
     }
 });
-
+// Admin update spot
+app.put('/api/admin/spots/:id/update', requireAdmin, async (req, res) => {
+  try {
+    const { give, want, region, coordinates, category, description, status, author } = req.body;
+    
+    if (!give || !want || !region || !category || !author) {
+      return res.status(400).json({ error: 'Tutti i campi sono obbligatori' });
+    }
+    
+    const spot = await Spot.findById(req.params.id);
+    
+    if (!spot) {
+      return res.status(404).json({ error: 'Spot non trovato' });
+    }
+    
+    // Verifica se l'autore è cambiato
+    if (author !== spot.author) {
+      // Controlla se il nuovo autore esiste
+      let user = await User.findOne({ username: author });
+      if (!user) {
+        // Crea un nuovo utente se non esiste
+        const randomPassword = crypto.randomBytes(8).toString('hex');
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        
+        user = new User({
+          username: author,
+          password: hashedPassword,
+          bio: 'Utente creato da admin',
+          role: 'user',
+          isFan: true
+        });
+        await user.save();
+      }
+      
+      spot.authorId = user._id;
+    }
+    
+    // Aggiorna i campi dello spot
+    spot.give = give;
+    spot.want = want;
+    spot.region = region;
+    spot.coordinates = coordinates;
+    spot.category = category;
+    spot.description = description;
+    spot.status = status;
+    spot.author = author;
+    spot.updatedAt = new Date();
+    
+    await spot.save();
+    
+    res.json({ 
+      success: true, 
+      spot,
+      message: 'Spot aggiornato con successo'
+    });
+    
+  } catch (error) {
+    console.error('Error updating spot:', error);
+    res.status(500).json({ error: 'Errore interno del server' });
+  }
+});
 // Download CSV template - nuovo formato con latitudine e longitudine separate
 app.get('/api/admin/template', requireAdmin, (req, res) => {
     const csv = 'username,give,want,region,category,lat,lng,description\n' +
