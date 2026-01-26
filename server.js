@@ -313,7 +313,24 @@ app.get('/api/spots', requireAuth, async (req, res) => {
     try {
         const { category, search, status, userOnly, excludeRequested } = req.query;
         let query = { status: { $ne: 'deleted' } };
+        const spots = await Spot.find(query)
+            .sort({ createdAt: -1 })
+            .lean();
         
+        // Aggiungi informazione content creator
+        const spotsWithCreatorInfo = await Promise.all(spots.map(async (spot) => {
+            const author = await User.findOne({ username: spot.author }).lean();
+            return {
+                ...spot,
+                authorIsContentCreator: author?.isContentCreator || false
+            };
+        }));
+        
+        res.json(spotsWithCreatorInfo);
+    } catch (error) {
+        console.error('Error fetching spots:', error);
+        res.status(500).json({ error: 'Errore interno del server' });
+    }
         if (category && category !== 'all') {
             query.category = category;
         }
