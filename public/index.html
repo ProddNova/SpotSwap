@@ -2193,6 +2193,39 @@
   font-weight: 700 !important;
   text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
+    /* USER LEVEL STYLES */
+.level-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+.level-1 { background: #6b7280; color: white; } /* 1 spot - Grigio */
+.level-2 { background: #3b82f6; color: white; } /* 5 spot - Blu */
+.level-3 { background: #8b5cf6; color: white; } /* 10 spot - Viola */
+.level-4 { background: #ec4899; color: white; } /* 15 spot - Rosa */
+.level-5 { background: #f59e0b; color: white; } /* 30 spot - Arancione */
+.level-6 { background: #ef4444; color: white; } /* 50 spot - Rosso */
+.level-7 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; } /* 100+ spot - Oro */
+
+.user-level-1 { color: #9ca3af !important; }
+.user-level-2 { color: #60a5fa !important; }
+.user-level-3 { color: #a78bfa !important; }
+.user-level-4 { color: #f472b6 !important; }
+.user-level-5 { color: #fbbf24 !important; }
+.user-level-6 { color: #f87171 !important; }
+.user-level-7 { 
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800 !important;
+}
   </style>
 </head>
 <body>
@@ -4444,7 +4477,7 @@ async function saveSpotChanges(spotId) {
     });
     
     const data = await response.json();
-    
+    preventHorizontalScroll();
     if (data.success) {
       showToast('Spot modificato con successo!', 'success');
       closeModal('modal-edit-spot');
@@ -6008,9 +6041,18 @@ function preventHorizontalScroll() {
       }
     }, { passive: false });
   }
-  
+  // ========== USER LEVEL SYSTEM ==========
+function getUserLevel(spotCount) {
+  if (spotCount >= 100) return { level: 7, name: 'Leggenda', color: 'level-7' };
+  if (spotCount >= 50) return { level: 6, name: 'Maestro', color: 'level-6' };
+  if (spotCount >= 30) return { level: 5, name: 'Esperto', color: 'level-5' };
+  if (spotCount >= 15) return { level: 4, name: 'Veterano', color: 'level-4' };
+  if (spotCount >= 10) return { level: 3, name: 'Avanzato', color: 'level-3' };
+  if (spotCount >= 5) return { level: 2, name: 'Intermedio', color: 'level-2' };
+  return { level: 1, name: 'Novizio', color: 'level-1' };
+}
   // Chiama la funzione all'inizio
-  preventHorizontalScroll();
+
     
     // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
