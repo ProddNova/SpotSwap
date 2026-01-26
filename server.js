@@ -62,7 +62,37 @@ const userSchema = new mongoose.Schema({
     spotCount: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
-
+// Funzione per aggiornare il conteggio spot e livello utente
+async function updateUserSpotCount(userId) {
+  try {
+    const spotCount = await Spot.countDocuments({ 
+      authorId: userId, 
+      isPrivate: false,
+      status: 'active',
+      originalSpotId: { $exists: false }
+    });
+    
+    const user = await User.findById(userId);
+    if (!user) return;
+    
+    // Calcola il livello in base agli spot
+    let level = 1;
+    if (spotCount >= 100) level = 7;
+    else if (spotCount >= 50) level = 6;
+    else if (spotCount >= 30) level = 5;
+    else if (spotCount >= 15) level = 4;
+    else if (spotCount >= 10) level = 3;
+    else if (spotCount >= 5) level = 2;
+    
+    user.spotCount = spotCount;
+    user.level = level;
+    await user.save();
+    
+    return { spotCount, level };
+  } catch (error) {
+    console.error('Error updating user spot count:', error);
+  }
+}
 const spotSchema = new mongoose.Schema({
     give: { type: String, required: true },
     want: { type: String, required: true },
@@ -448,7 +478,8 @@ app.post('/api/spots', requireAuth, async (req, res) => {
         
         const spot = new Spot(spotData);
         await spot.save();
-        
+        // Aggiorna il conteggio spot dell'utente
+        await updateUserSpotCount(req.session.user.id);
         res.json({ success: true, spot });
     } catch (error) {
         console.error('Error creating spot:', error);
@@ -721,7 +752,8 @@ app.delete('/api/spots/:id', requireAuth, async (req, res) => {
         
         spot.status = 'deleted';
         await spot.save();
-        
+                // Aggiorna il conteggio spot dell'utente
+        await updateUserSpotCount(req.session.user.id);
         // Cancella anche le richieste di scambio associate
         await TradeRequest.deleteMany({
             $or: [
@@ -1573,3 +1605,65 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server avviato su http://localhost:${PORT}`);
 });
+/* STILI PER LIVELLI UTENTE */
+.user-level-1 { color: var(--text-muted) !important; }
+.user-level-2 { color: #22c55e !important; } /* Verde */
+.user-level-3 { color: #3b82f6 !important; } /* Blu */
+.user-level-4 { color: #8b5cf6 !important; } /* Viola */
+.user-level-5 { color: #f59e0b !important; } /* Arancione */
+.user-level-6 { color: #ef4444 !important; } /* Rosso */
+.user-level-7 { color: #000000 !important; background: linear-gradient(45deg, #ffd700, #ff6b00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; } /* Oro */
+
+/* Badge per livelli */
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.level-badge-1 { background: #6b7280; color: white; }
+.level-badge-2 { background: #22c55e; color: white; }
+.level-badge-3 { background: #3b82f6; color: white; }
+.level-badge-4 { background: #8b5cf6; color: white; }
+.level-badge-5 { background: #f59e0b; color: white; }
+.level-badge-6 { background: #ef4444; color: white; }
+.level-badge-7 { background: linear-gradient(45deg, #ffd700, #ff6b00); color: black; }
+
+/* Stile per Content Creator */
+.content-creator-name {
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+  position: relative;
+}
+
+.content-creator-name::after {
+  content: '👑';
+  margin-left: 3px;
+  font-size: 10px;
+}
+
+/* Spot di Content Creator */
+.spot-card.creator-spot {
+  border: 2px solid var(--primary);
+  position: relative;
+}
+
+.spot-card.creator-spot::before {
+  content: '👑 CREATOR';
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background: var(--primary);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  z-index: 2;
+}
