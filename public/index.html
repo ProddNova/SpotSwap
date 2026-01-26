@@ -3277,6 +3277,9 @@
                 <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
                   ${user.role} • ${new Date(user.createdAt).toLocaleDateString('it-IT')}
                   ${user.isFan ? ' • Fan Account' : ''}
+                  ${user.isContentCreator ? ' • <span style="color: var(--primary); font-weight: bold;">👑 Content Creator</span>' : ''}
+                  ${user.level ? ' • Livello ' + user.level : ''}
+                  ${user.spotCount ? ' • ' + user.spotCount + ' spot' : ''}
                 </div>
               </div>
               <div style="display: flex; gap: 6px;">
@@ -3285,6 +3288,9 @@
                 </button>
                 <button class="btn btn-primary" onclick="loginAsUser('${user.username}')" style="padding: 5px 10px; font-size: 11px;">
                   🔑 Accedi come
+                </button>
+                <button class="btn btn-warning" onclick="toggleContentCreator('${user._id}', '${user.username}')" style="padding: 5px 10px; font-size: 11px;">
+                  ${user.isContentCreator ? '👑 Rimuovi Creator' : '👑 Crea Creator'}
                 </button>
                 ${user.role !== 'admin' ? `
                   <button class="btn btn-danger" onclick="deleteUser('${user._id}')" style="padding: 5px 10px; font-size: 11px;">
@@ -5947,7 +5953,29 @@ function preventHorizontalScroll() {
       }
     }, { passive: false });
   }
-  
+  async function toggleContentCreator(userId, username) {
+    if (!confirm(`Sei sicuro di voler ${username.includes('Creator') ? 'rimuovere' : 'impostare'} ${username} come Content Creator?`)) return;
+    
+    showLoading('Aggiornamento in corso...');
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/${userId}/toggle-creator`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        showToast(`✅ ${username} ${username.includes('Creator') ? 'rimosso da' : 'impostato come'} Content Creator`, 'success');
+        loadAdminUsers();
+      } else {
+        showToast('Errore nell\'aggiornamento', 'error');
+      }
+    } catch (error) {
+      console.error('Error toggling content creator:', error);
+      showToast('Errore di connessione', 'error');
+    } finally {
+      hideLoading();
+    }
+  }
   // Chiama la funzione all'inizio
   preventHorizontalScroll();
     
