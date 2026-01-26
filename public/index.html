@@ -4893,7 +4893,12 @@ async function saveSpotChanges(spotId) {
             </div>
 
             <div class="text-muted" style="margin-top:10px;font-size:12px;font-weight:500">
-              di ${escapeHtml(spot.author)}
+              di 
+              <span class="${spot.authorIsContentCreator ? 'content-creator-name' : `user-level-${spot.authorLevel || 1}`}" 
+                    style="${spot.authorIsContentCreator ? '' : `color: ${getLevelColor(spot.authorLevel || 1)}`}">
+                ${escapeHtml(spot.author)}
+              </span>
+              ${spot.authorIsContentCreator ? '' : `<span class="level-badge level-badge-${spot.authorLevel || 1}">${spot.authorLevel || 1}</span>`}
             </div>
           </div>
         `).join('');
@@ -5978,7 +5983,18 @@ function preventHorizontalScroll() {
   }
   // Chiama la funzione all'inizio
   preventHorizontalScroll();
-    
+    function getLevelColor(level) {
+  switch(level) {
+    case 1: return '#9ca3af';
+    case 2: return '#22c55e';
+    case 3: return '#3b82f6';
+    case 4: return '#8b5cf6';
+    case 5: return '#f59e0b';
+    case 6: return '#ef4444';
+    case 7: return '#000000';
+    default: return '#9ca3af';
+  }
+}
     // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
   </script>
