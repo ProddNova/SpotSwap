@@ -2161,6 +2161,38 @@
     font-size: 11px !important;
   }
 }
+    /* CONTENT CREATOR STYLES */
+.creator-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+}
+
+.creator-spot-card {
+  border: 2px solid #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3) !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent) !important;
+}
+
+.creator-spot-card::before {
+  background: linear-gradient(90deg, #f59e0b, #d97706) !important;
+  opacity: 1 !important;
+}
+
+.creator-name {
+  color: #f59e0b !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
   </style>
 </head>
 <body>
@@ -4145,7 +4177,14 @@
             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
           </select>
         </div>
-        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="edit-content-creator" ${user.isContentCreator ? 'checked' : ''}>
+            <span>
+              <strong>Content Creator</strong> — Badge e stile speciale
+            </span>
+          </label>
+        </div>
         <div class="form-group">
           <label class="form-label">Nuova Password (opzionale)</label>
           <input type="password" class="form-input" id="edit-password" placeholder="Lascia vuoto per non cambiare">
@@ -4166,7 +4205,12 @@
       const bio = document.getElementById('edit-bio').value.trim();
       const role = document.getElementById('edit-role').value;
       const password = document.getElementById('edit-password').value;
-      
+      const body = { 
+        username, 
+        bio, 
+        role,
+        isContentCreator: document.getElementById('edit-content-creator').checked // ← AGGIUNGI
+      };
       if (!username) {
         showToast('Username richiesto', 'error');
         return;
@@ -4877,35 +4921,35 @@ async function saveSpotChanges(spotId) {
           return;
         }
 
-        grid.innerHTML = filtered.map(spot => `
-          <div class="spot-card" onclick="viewSpotDetail('${spot._id}')">
-            <div class="spot-header">
-              <div style="flex:1">
-                <div class="spot-title">${escapeHtml(spot.give)}</div>
-                <div class="spot-meta">📍 ${escapeHtml(spot.region)}</div>
-              </div>
-              <span class="badge badge-success">Disponibile</span>
+      grid.innerHTML = filtered.map(spot => `
+        <div class="spot-card ${spot.authorIsContentCreator ? 'creator-spot-card' : ''}" onclick="viewSpotDetail('${spot._id}')">
+          <div class="spot-header">
+            <div style="flex:1">
+              <div class="spot-title">${escapeHtml(spot.give)}</div>
+              <div class="spot-meta">📍 ${escapeHtml(spot.region)}</div>
             </div>
-
-            <div class="spot-exchange">
-              <div class="spot-exchange-row">
-                <strong>Offre:</strong> ${escapeHtml(spot.give)}
-              </div>
-              <div class="spot-exchange-row">
-                <strong>Cerca:</strong> ${escapeHtml(spot.want)}
-              </div>
+            <span class="badge badge-success">Disponibile</span>
+          </div>
+      
+          <div class="spot-exchange">
+            <div class="spot-exchange-row">
+              <strong>Offre:</strong> ${escapeHtml(spot.give)}
             </div>
-
-            <div class="tags">
-              <span class="badge badge-info">${spot.category}</span>
-              <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
-            </div>
-
-            <div class="text-muted" style="margin-top:10px;font-size:12px;font-weight:500">
-              di ${escapeHtml(spot.author)}
+            <div class="spot-exchange-row">
+              <strong>Cerca:</strong> ${escapeHtml(spot.want)}
             </div>
           </div>
-        `).join('');
+      
+          <div class="tags">
+            <span class="badge badge-info">${spot.category}</span>
+            <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
+          </div>
+      
+          <div class="text-muted ${spot.authorIsContentCreator ? 'creator-name' : ''}" style="margin-top:10px;font-size:12px;font-weight:500">
+            di ${escapeHtml(spot.author)}${spot.authorIsContentCreator ? '<span class="creator-badge">⭐ CREATOR</span>' : ''}
+          </div>
+        </div>
+      `).join('');
       } catch (error) {
         console.error('Error rendering market:', error);
         showToast('Errore nel caricamento del mercato', 'error');
