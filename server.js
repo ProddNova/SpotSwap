@@ -78,6 +78,7 @@ const spotSchema = new mongoose.Schema({
         enum: ['active', 'in_trade', 'completed', 'deleted'],
         default: 'active'
     },
+    isPrivate: { type: Boolean, default: false },
     acquired: { type: Boolean, default: false },
     offeredForTrade: { type: Boolean, default: false },
     originalAuthor: String,
@@ -346,7 +347,7 @@ app.get('/api/spots', requireAuth, async (req, res) => {
         } else {
           // Exclude user's own spots from market
           query.author = { $ne: req.session.user.username };
-        
+          query.isPrivate = { $ne: true };
     if (excludeRequested === 'true') {
       // Trova gli spot per cui l'utente ha già inviato richieste PENDENTI
       const userPendingRequests = await TradeRequest.find({
