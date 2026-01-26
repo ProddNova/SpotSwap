@@ -313,37 +313,7 @@ app.get('/api/spots', requireAuth, async (req, res) => {
     try {
         const { category, search, status, userOnly, excludeRequested } = req.query;
         let query = { status: { $ne: 'deleted' } };
-        const spots = await Spot.find(query)
-            .sort({ createdAt: -1 })
-            .lean();
-        const spotsWithUserInfo = await Promise.all(spots.map(async (spot) => {
-            const author = await User.findOne({ username: spot.author }).lean();
-            const authorSpotCount = await Spot.countDocuments({ 
-                author: spot.author, 
-                status: { $ne: 'deleted' },
-                originalSpotId: { $exists: false }
-            });
-            
-            return {
-                ...spot,
-                authorIsContentCreator: author?.isContentCreator || false,
-                authorSpotCount: authorSpotCount
-            };
-        }));
-        // Aggiungi informazione content creator
-        const spotsWithCreatorInfo = await Promise.all(spots.map(async (spot) => {
-            const author = await User.findOne({ username: spot.author }).lean();
-            return {
-                ...spot,
-                authorIsContentCreator: author?.isContentCreator || false
-            };
-        }));
         
-        res.json(spotsWithCreatorInfo);
-    } catch (error) {
-        console.error('Error fetching spots:', error);
-        res.status(500).json({ error: 'Errore interno del server' });
-    }
         if (category && category !== 'all') {
             query.category = category;
         }
@@ -454,10 +424,26 @@ app.get('/api/spots', requireAuth, async (req, res) => {
         }
         
         const spots = await Spot.find(query)
-            .sort({ createdAt: -1 })
-            .lean();
+                    .sort({ createdAt: -1 })
+                    .lean();
         
-        res.json(spots);
+        // Aggiungi informazioni content creator e livello utente
+        const spotsWithUserInfo = await Promise.all(spots.map(async (spot) => {
+            const author = await User.findOne({ username: spot.author }).lean();
+            const authorSpotCount = await Spot.countDocuments({ 
+                author: spot.author, 
+                status: { $ne: 'deleted' },
+                originalSpotId: { $exists: false }
+            });
+            
+            return {
+                ...spot,
+                authorIsContentCreator: author?.isContentCreator || false,
+                authorSpotCount: authorSpotCount
+            };
+        }));
+        
+        res.json(spotsWithUserInfo);
     } catch (error) {
         console.error('Error fetching spots:', error);
         res.status(500).json({ error: 'Errore interno del server' });
