@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema({
         emailConfirm: { type: Boolean, default: true }
     },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    isContentCreator: { type: Boolean, default: false }, // ← AGGIUNGI QUESTA RIGA
     isFan: { type: Boolean, default: false },
     fanToken: { type: String },
     createdAt: { type: Date, default: Date.now }
