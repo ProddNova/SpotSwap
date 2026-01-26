@@ -4238,12 +4238,7 @@
       const bio = document.getElementById('edit-bio').value.trim();
       const role = document.getElementById('edit-role').value;
       const password = document.getElementById('edit-password').value;
-      const body = { 
-        username, 
-        bio, 
-        role,
-        isContentCreator: document.getElementById('edit-content-creator').checked // ← AGGIUNGI
-      };
+      
       if (!username) {
         showToast('Username richiesto', 'error');
         return;
@@ -4252,7 +4247,12 @@
       showLoading('Salvataggio modifiche...');
       
       try {
-        const body = { username, bio, role };
+        const body = { 
+          username, 
+          bio, 
+          role,
+          isContentCreator: document.getElementById('edit-content-creator').checked
+        };
         if (password) {
           body.password = password;
         }
@@ -4477,7 +4477,6 @@ async function saveSpotChanges(spotId) {
     });
     
     const data = await response.json();
-    preventHorizontalScroll();
     if (data.success) {
       showToast('Spot modificato con successo!', 'success');
       closeModal('modal-edit-spot');
@@ -6046,6 +6045,7 @@ function preventHorizontalScroll() {
       }
     }, { passive: false });
   }
+preventHorizontalScroll();
   // ========== USER LEVEL SYSTEM ==========
 function getUserLevel(spotCount) {
   if (spotCount >= 100) return { level: 7, name: 'Leggenda', color: 'level-7' };
