@@ -51,17 +51,17 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.95);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      padding: 20px;
+      z-index: 99999;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       width: 100vw;
       height: 100vh;
       margin: 0;
+      padding: 0;
       overflow: hidden;
       touch-action: none;
     }
@@ -76,37 +76,34 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      max-width: 90%;
+      max-width: 85%;
       position: relative;
-      z-index: 10000;
+      z-index: 100000;
     }
     
     .loading-spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
+      margin: 0 auto 15px;
     }
     
     .loading-text {
-      margin-top: 20px;
       color: var(--text);
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       text-align: center;
       width: 100%;
+      padding: 0 10px;
     }
     
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    /* Fix per iOS Safari */
+    /* Fix specifico per iOS Safari */
     @supports (-webkit-touch-callout: none) {
       .loading-overlay {
+        height: 100vh;
         height: -webkit-fill-available;
       }
     }
@@ -2713,10 +2710,15 @@
         <label class="checkbox-label">
           <input type="checkbox" id="input-legal">
           <span>
-            <strong>Confermo</strong> di avere accordi personali per questo spot e di poterlo scambiare.
+            <strong>Confermo</strong> che questo posto sia effettivamente abbandonato e reale.
           </span>
         </label>
-
+        <label class="checkbox-label" style="margin-top: 10px;">
+          <input type="checkbox" id="input-private">
+          <span>
+            <strong>Spot Privato</strong> — Non sarà visibile nel mercato, non lo vedrà nessuno tranne te.
+          </span>
+        </label>
         <div class="flex gap-2 mt-2">
           <button class="btn btn-ghost" onclick="showView('my-spots')">Annulla</button>
           <button class="btn btn-primary btn-lg" id="btn-publish">Pubblica spot</button>
@@ -5578,24 +5580,25 @@ async function saveSpotChanges(spotId) {
       const category = document.getElementById('input-category').value;
       const description = document.getElementById('input-description').value.trim();
       const legal = document.getElementById('input-legal').checked;
-
+      const isPrivate = document.getElementById('input-private').checked; // <-- Aggiungi questa linea
+    
       if (!give || !want || !region) {
         showToast('Compila tutti i campi obbligatori', 'error');
         return;
       }
-
+    
       if (!coordinatesInput) {
         showToast('Inserisci le coordinate GPS o un link Google Maps', 'error');
         return;
       }
-
+    
       if (!legal) {
         showToast('Devi confermare di avere accordi per questo spot', 'error');
         return;
       }
-
+    
       showLoading('Pubblicazione spot...');
-
+    
       let coordinates = await extractCoordinatesFromLink(coordinatesInput);
       
       if (!coordinates || !coordinates.includes(',')) {
@@ -5603,7 +5606,7 @@ async function saveSpotChanges(spotId) {
         hideLoading();
         return;
       }
-
+    
       try {
         const response = await fetch(`${API_BASE}/spots`, {
           method: 'POST',
@@ -5611,7 +5614,8 @@ async function saveSpotChanges(spotId) {
           body: JSON.stringify({
             give, want, region, coordinates,
             category,
-            description: description || 'Nessuna descrizione'
+            description: description || 'Nessuna descrizione',
+            isPrivate: isPrivate // <-- Aggiungi questa linea
           })
         });
         
@@ -5624,7 +5628,8 @@ async function saveSpotChanges(spotId) {
           document.getElementById('input-coordinates').value = '';
           document.getElementById('input-description').value = '';
           document.getElementById('input-legal').checked = false;
-
+          document.getElementById('input-private').checked = false; // <-- Aggiungi questa linea
+    
           showToast('Spot pubblicato con successo!', 'success');
           showView('my-spots');
           await loadUserSpots();
