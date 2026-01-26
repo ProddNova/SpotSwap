@@ -2721,12 +2721,19 @@
         </div>
 
         <label class="checkbox-label">
+          <input type="checkbox" id="input-private">
+          <span>
+            <strong>Spot Privato</strong> — Questo spot sarà visibile solo a te e non apparirà nel mercato
+          </span>
+        </label>
+        
+        <label class="checkbox-label">
           <input type="checkbox" id="input-legal">
           <span>
             <strong>Confermo</strong> di avere accordi personali per questo spot e di poterlo scambiare.
           </span>
         </label>
-
+        
         <div class="flex gap-2 mt-2">
           <button class="btn btn-ghost" onclick="showView('my-spots')">Annulla</button>
           <button class="btn btn-primary btn-lg" id="btn-publish">Pubblica spot</button>
@@ -5619,9 +5626,13 @@ async function saveSpotChanges(spotId) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            give, want, region, coordinates,
+            give, 
+            want, 
+            region, 
+            coordinates,
             category,
-            description: description || 'Nessuna descrizione'
+            description: description || 'Nessuna descrizione',
+            isPrivate: document.getElementById('input-private').checked // ← AGGIUNGI QUESTA RIGA
           })
         });
         
@@ -5634,7 +5645,7 @@ async function saveSpotChanges(spotId) {
           document.getElementById('input-coordinates').value = '';
           document.getElementById('input-description').value = '';
           document.getElementById('input-legal').checked = false;
-
+          document.getElementById('input-private').checked = false; // ← AGGIUNGI QUESTA RIGA
           showToast('Spot pubblicato con successo!', 'success');
           showView('my-spots');
           await loadUserSpots();
@@ -5692,9 +5703,10 @@ async function saveSpotChanges(spotId) {
         content.innerHTML = `
           <div class="tags mb-2">
             <span class="badge badge-info">${spot.category}</span>
-            <span class="badge badge-${spot.status === 'active' ? 'success' : spot.status === 'in_trade' ? 'warning' : 'danger'}">
-              ${spot.status === 'active' ? 'Disponibile' : spot.status === 'in_trade' ? 'In scambio' : 'Completato'}
+            <span class="badge badge-${spot.status === 'active' ? 'success' : spot.status === 'in_trade' ? 'warning' : spot.status === 'completed' ? 'info' : 'danger'}">
+              ${spot.status === 'active' ? 'Attivo' : spot.status === 'in_trade' ? 'In scambio' : spot.status === 'completed' ? 'Completato' : 'Eliminato'}
             </span>
+            ${spot.isPrivate ? '<span class="badge badge-warning">🔒 Privato</span>' : ''}
             ${spot.acquired ? '<span class="badge badge-warning">Ottenuto</span>' : ''}
             ${spot.offeredForTrade ? '<span class="badge badge-primary">In offerta</span>' : ''}
           </div>
