@@ -2617,6 +2617,7 @@
       <div class="tabs">
         <button class="tab active" data-tab="published">Pubblicati <span id="published-count">(0)</span></button>
         <button class="tab" data-tab="acquired">Ottenuti <span id="acquired-count">(0)</span></button>
+        <button class="tab" data-tab="private">Privati <span id="private-count">(0)</span></button>
         <button class="tab" data-tab="profile">Profilo</button>
         <button class="tab" data-tab="map">Mappa</button>
       </div>
@@ -2628,7 +2629,11 @@
       <div id="tab-acquired" class="hidden">
         <div class="grid" id="acquired-spots-grid"></div>
       </div>
-
+      
+      <div id="tab-private" class="hidden">
+        <div class="grid" id="private-spots-grid"></div>
+      </div>
+      
       <div id="tab-profile" class="hidden">
         <div class="profile-stats">
           <div class="stat-card">
@@ -2670,10 +2675,11 @@
               <div class="setting-title">Nome utente</div>
             </div>
             <div class="setting-description">
-              Il tuo nome pubblico sulla piattaforma
+              Il tuo nome pubblico sulla piattaforma<br>
+              <span style="color: var(--primary); font-weight: 600;">⚠️ Il nome utente non può essere modificato</span>
             </div>
             <div class="setting-control">
-              <input type="text" class="form-input" id="profile-username">
+              <input type="text" class="form-input" id="profile-username" disabled style="background: var(--card); cursor: not-allowed;">
             </div>
           </div>
 
@@ -2784,22 +2790,35 @@
           <textarea class="form-textarea" id="input-description" maxlength="500" placeholder="Descrivi cosa rende speciale questo spot..."></textarea>
           <div class="form-hint">Info generali sullo spot</div>
         </div>
-
-        <label class="checkbox-label">
-          <input type="checkbox" id="input-legal">
-          <span>
-            <strong>Confermo</strong> di avere accordi personali per questo spot e di poterlo scambiare.
-          </span>
-        </label>
-        
-        <br>
-        <label class="checkbox-label">
+        <!-- CHECKBOX PRIVATO - IMPOSTAZIONE -->
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 8px;">
           <input type="checkbox" id="input-private">
-          <span>
-            <strong>Spot Privato</strong> — Questo spot sarà visibile solo a te e non apparirà nel mercato
-          </span>
-        </label>
-        
+          <div>
+            <div style="font-weight: 600; color: var(--text); margin-bottom: 2px; font-size: 14px;">
+              🔒 Spot Privato
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              Questo spot sarà visibile solo a te e non apparirà nel mercato pubblico
+            </div>
+          </div>
+        </div>
+        <br>
+<!-- CHECKBOX LEGALE - IMPORTANTE -->
+        <div style="background: rgba(220, 38, 38, 0.1); border: 2px solid var(--primary); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <input type="checkbox" id="input-legal" style="margin-top: 4px;">
+            <div>
+              <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px; font-size: 14px;">
+                ⚠️ CONFERMA LEGALE OBBLIGATORIA
+              </div>
+              <div style="font-size: 13px; color: var(--text); line-height: 1.4;">
+                Dichiaro sotto la mia responsabilità di avere accordi personali per questo spot e di essere autorizzato a scambiarlo. Accetto le conseguenze legali in caso di dichiarazioni false.
+              </div>
+            </div>
+          </div>
+        </div>
+
+
 
         <div class="flex gap-2 mt-2">
           <button class="btn btn-ghost" onclick="showView('my-spots')">Annulla</button>
@@ -4697,6 +4716,7 @@ async function saveSpotChanges(spotId) {
           // Reset all
           document.getElementById('tab-published').classList.add('hidden');
           document.getElementById('tab-acquired').classList.add('hidden');
+          document.getElementById('tab-private').classList.add('hidden');
           document.getElementById('tab-profile').classList.add('hidden');
           document.getElementById('tab-map').classList.add('hidden');
           
@@ -4709,6 +4729,8 @@ async function saveSpotChanges(spotId) {
             }, 100);
           } else if (tabName === 'profile') {
             loadProfileSettings();
+          } else if (tabName === 'private') {
+            renderPrivateSpots();
           }
         });
       });
@@ -4980,11 +5002,13 @@ async function saveSpotChanges(spotId) {
           <div class="tags">
             <span class="badge badge-info">${spot.category}</span>
             <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
-            ${spot.authorSpotCount >= 1 ? `<span class="badge ${userLevel.color}">${userLevel.name}</span>` : ''}
           </div>
       
-          <div class="text-muted ${spot.authorIsContentCreator ? 'creator-name' : 'user-' + userLevel.color}" style="margin-top:10px;font-size:12px;font-weight:500">
-            di ${escapeHtml(spot.author)}${spot.authorIsContentCreator ? '<span class="creator-badge">⭐ CREATOR</span>' : ''}
+          <div class="${spot.authorIsContentCreator ? 'creator-name' : 'user-' + userLevel.color}" style="margin-top:10px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;">
+            <span style="color: var(--text-muted);">di</span>
+            <span style="font-weight:600;">${escapeHtml(spot.author)}</span>
+            ${spot.authorIsContentCreator ? '<span class="creator-badge">⭐ CREATOR</span>' : ''}
+            <span style="color: var(--text-muted); font-weight:400;">• ${userLevel.name}</span>
           </div>
         </div>
       `;
@@ -5018,11 +5042,21 @@ async function saveSpotChanges(spotId) {
 
       const acquired = state.spots.filter(s => s.acquired && s.currentOwner === state.user.username);
       
+      const private = state.spots.filter(s => 
+        s.author === state.user.username && 
+        !s.acquired && 
+        !s.offeredForTrade &&
+        !s.originalSpotId &&
+        s.isPrivate === true
+      );
+      
       document.getElementById('published-count').textContent = `(${published.length})`;
       document.getElementById('acquired-count').textContent = `(${acquired.length})`;
+      document.getElementById('private-count').textContent = `(${private.length})`;
       
       renderPublishedSpots();
       renderAcquiredSpots();
+      renderPrivateSpots();
     }
 
     function renderPublishedSpots() {
@@ -5145,7 +5179,69 @@ async function saveSpotChanges(spotId) {
         </div>
       `).join('');
     }
-
+    
+    function renderPrivateSpots() {
+      // Show only private spots owned by the user
+      const privateSpots = state.spots.filter(s => 
+        s.author === state.user.username && 
+        !s.acquired && 
+        !s.offeredForTrade &&
+        !s.originalSpotId &&
+        s.isPrivate === true
+      );
+      
+      document.getElementById('private-count').textContent = `(${privateSpots.length})`;
+      
+      const grid = document.getElementById('private-spots-grid');
+    
+      if (privateSpots.length === 0) {
+        grid.innerHTML = `
+          <div class="card empty-state" style="grid-column:1/-1">
+            <div class="empty-state-icon">🔒</div>
+            <div>Nessuno spot privato</div>
+            <p class="text-muted">Crea spot privati nel form "Nuovo spot"</p>
+            <button class="btn btn-primary mt-2" onclick="showView('new')">+ Crea spot privato</button>
+          </div>
+        `;
+        return;
+      }
+    
+      grid.innerHTML = privateSpots.map(spot => `
+        <div class="spot-card">
+          <div class="spot-header">
+            <div style="flex:1">
+              <div class="spot-title">${escapeHtml(spot.give)}</div>
+              <div class="spot-meta">📍 ${escapeHtml(spot.region)}</div>
+            </div>
+            <span class="badge badge-warning">🔒 Privato</span>
+          </div>
+    
+          <div class="spot-exchange">
+            <div class="spot-exchange-row">
+              <strong>Offri:</strong> ${escapeHtml(spot.give)}
+            </div>
+            <div class="spot-exchange-row">
+              <strong>Cerchi:</strong> ${escapeHtml(spot.want)}
+            </div>
+          </div>
+    
+          <div class="tags">
+            <span class="badge badge-info">${spot.category}</span>
+            <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
+          </div>
+          
+          <div class="spot-actions">
+            <button class="btn btn-ghost" onclick="viewSpotDetail('${spot._id}')">Dettagli</button>
+            ${spot.coordinates && spot.coordinates.includes(',') ? `
+              <button class="btn btn-primary" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
+                <span style="display:flex;align-items:center;gap:4px">🗺️ Mappa</span>
+              </button>
+            ` : ''}
+            ${spot.status === 'active' ? `<button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
     async function loadProfileSettings() {
       document.getElementById('profile-username').value = state.user.username;
     }
@@ -5544,9 +5640,9 @@ async function saveSpotChanges(spotId) {
         showToast('Seleziona uno spot', 'error');
         return;
       }
-
+    
       showLoading('Accettazione scambio...');
-
+    
       try {
         const response = await fetch(`${API_BASE}/trade-requests/${state.currentRequestId}/accept`, {
           method: 'PUT',
@@ -5557,8 +5653,22 @@ async function saveSpotChanges(spotId) {
         if (response.ok) {
           closeModal('modal-choose');
           showToast('Scambio completato con successo!', 'success');
-          await loadTradeRequests();
-          await loadUserSpots();
+          
+          // AGGIUNGI QUESTE RIGHE - RICARICA TUTTO
+          await Promise.all([
+            loadTradeRequests(),
+            loadUserSpots(),
+            loadMarketSpots()  // AGGIUNTO: ricarica anche il mercato
+          ]);
+          
+          // FORZA UN AGGIORNAMENTO VISIVO
+          if (document.getElementById('view-market').classList.contains('hidden') === false) {
+            renderMarket();
+          }
+          if (document.getElementById('view-my-spots').classList.contains('hidden') === false) {
+            renderMySpots();
+          }
+          
         } else {
           const data = await response.json();
           showToast(data.error || 'Errore nell\'accettazione', 'error');
