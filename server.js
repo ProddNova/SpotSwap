@@ -57,6 +57,9 @@ const userSchema = new mongoose.Schema({
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     isFan: { type: Boolean, default: false },
     fanToken: { type: String },
+    isContentCreator: { type: Boolean, default: false },
+    level: { type: Number, default: 1 },
+    spotCount: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -87,6 +90,7 @@ const spotSchema = new mongoose.Schema({
     isAdminCreated: { type: Boolean, default: false },
     hasPendingTradeRequest: { type: Boolean, default: false },
     requestedBy: [{ type: String }],
+    isPrivate: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -339,6 +343,7 @@ app.get('/api/spots', requireAuth, async (req, res) => {
 
         if (userOnly === 'true') {
             // Show both published and acquired spots for the user
+            query.isPrivate = false;
             query.$or = [
                 { author: req.session.user.username, originalSpotId: { $exists: false } }, // Original published spots
                 { currentOwner: req.session.user.username, acquired: true } // Acquired spots
@@ -1535,7 +1540,30 @@ app.get('/api/admin/template', requireAdmin, (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename=template_spot.csv');
     res.send(csv);
 });
-
+// Toggle content creator status
+app.put('/api/admin/users/:id/toggle-creator', requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' });
+    }
+    
+    user.isContentCreator = !user.isContentCreator;
+    await user.save();
+    
+    res.json({ 
+      success: true, 
+      user: {
+        username: user.username,
+        isContentCreator: user.isContentCreator,
+        level: user.level
+      }
+    });
+  } catch (error) {
+    console.error('Error toggling content creator:', error);
+    res.status(500).json({ error: 'Errore interno del server' });
+  }
+});
 // Serve HTML
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
