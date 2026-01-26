@@ -316,7 +316,20 @@ app.get('/api/spots', requireAuth, async (req, res) => {
         const spots = await Spot.find(query)
             .sort({ createdAt: -1 })
             .lean();
-        
+        const spotsWithUserInfo = await Promise.all(spots.map(async (spot) => {
+            const author = await User.findOne({ username: spot.author }).lean();
+            const authorSpotCount = await Spot.countDocuments({ 
+                author: spot.author, 
+                status: { $ne: 'deleted' },
+                originalSpotId: { $exists: false }
+            });
+            
+            return {
+                ...spot,
+                authorIsContentCreator: author?.isContentCreator || false,
+                authorSpotCount: authorSpotCount
+            };
+        }));
         // Aggiungi informazione content creator
         const spotsWithCreatorInfo = await Promise.all(spots.map(async (spot) => {
             const author = await User.findOne({ username: spot.author }).lean();
