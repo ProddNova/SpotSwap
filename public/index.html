@@ -4954,7 +4954,10 @@ async function saveSpotChanges(spotId) {
           return;
         }
 
-      grid.innerHTML = filtered.map(spot => `
+      grid.innerHTML = filtered.map(spot => {
+        const userLevel = getUserLevel(spot.authorSpotCount || 0);
+        
+        return `
         <div class="spot-card ${spot.authorIsContentCreator ? 'creator-spot-card' : ''}" onclick="viewSpotDetail('${spot._id}')">
           <div class="spot-header">
             <div style="flex:1">
@@ -4976,13 +4979,15 @@ async function saveSpotChanges(spotId) {
           <div class="tags">
             <span class="badge badge-info">${spot.category}</span>
             <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
+            ${spot.authorSpotCount >= 1 ? `<span class="badge ${userLevel.color}">${userLevel.name}</span>` : ''}
           </div>
       
-          <div class="text-muted ${spot.authorIsContentCreator ? 'creator-name' : ''}" style="margin-top:10px;font-size:12px;font-weight:500">
+          <div class="text-muted ${spot.authorIsContentCreator ? 'creator-name' : 'user-' + userLevel.color}" style="margin-top:10px;font-size:12px;font-weight:500">
             di ${escapeHtml(spot.author)}${spot.authorIsContentCreator ? '<span class="creator-badge">⭐ CREATOR</span>' : ''}
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
       } catch (error) {
         console.error('Error rendering market:', error);
         showToast('Errore nel caricamento del mercato', 'error');
