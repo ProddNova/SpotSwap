@@ -61,9 +61,18 @@
       padding: 20px;
       width: 100vw;
       height: 100vh;
+      height: 100dvh; /* Fix per mobile */
       margin: 0;
       overflow: hidden;
       touch-action: none;
+    }
+    
+    /* Fix specifico per iOS */
+    @supports (-webkit-touch-callout: none) {
+      .loading-overlay {
+        min-height: -webkit-fill-available;
+        height: -webkit-fill-available;
+      }
     }
     
     .loading-overlay.show {
@@ -79,6 +88,7 @@
       max-width: 90%;
       position: relative;
       z-index: 10000;
+      padding: 20px;
     }
     
     .loading-spinner {
