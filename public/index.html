@@ -6050,12 +6050,12 @@ function preventHorizontalScroll() {
 preventHorizontalScroll();
   // ========== USER LEVEL SYSTEM ==========
 function getUserLevel(spotCount) {
-  if (spotCount >= 100) return { level: 7, name: 'Leggenda', color: 'level-7' };
-  if (spotCount >= 50) return { level: 6, name: 'Maestro', color: 'level-6' };
-  if (spotCount >= 30) return { level: 5, name: 'Esperto', color: 'level-5' };
-  if (spotCount >= 15) return { level: 4, name: 'Veterano', color: 'level-4' };
-  if (spotCount >= 10) return { level: 3, name: 'Avanzato', color: 'level-3' };
-  if (spotCount >= 5) return { level: 2, name: 'Intermedio', color: 'level-2' };
+  if (spotCount >= 30) return { level: 7, name: 'Maestro', color: 'level-7' };
+  if (spotCount >= 15) return { level: 6, name: 'Esperto', color: 'level-6' };
+  if (spotCount >= 10) return { level: 5, name: 'Veterano', color: 'level-5' };
+  if (spotCount >= 5) return { level: 4, name: 'Avanzato', color: 'level-4' };
+  if (spotCount >= 3) return { level: 3, name: 'Interme', color: 'level-3' };
+  if (spotCount >= 1) return { level: 2, name: 'Base', color: 'level-2' };
   return { level: 1, name: 'Novizio', color: 'level-1' };
 }
   // Chiama la funzione all'inizio
