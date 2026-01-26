@@ -51,17 +51,17 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0,0,0,0.95);
+      background: rgba(0,0,0,0.9);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 99999;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      z-index: 9999;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 20px;
       width: 100vw;
       height: 100vh;
       margin: 0;
-      padding: 0;
       overflow: hidden;
       touch-action: none;
     }
@@ -76,34 +76,37 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      max-width: 85%;
+      max-width: 90%;
       position: relative;
-      z-index: 100000;
+      z-index: 10000;
     }
     
     .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 15px;
+      margin: 0 auto 20px;
     }
     
     .loading-text {
+      margin-top: 20px;
       color: var(--text);
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 600;
       text-align: center;
       width: 100%;
-      padding: 0 10px;
     }
     
-    /* Fix specifico per iOS Safari */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Fix per iOS Safari */
     @supports (-webkit-touch-callout: none) {
       .loading-overlay {
-        height: 100vh;
         height: -webkit-fill-available;
       }
     }
@@ -2710,15 +2713,10 @@
         <label class="checkbox-label">
           <input type="checkbox" id="input-legal">
           <span>
-            <strong>Confermo</strong> che questo posto sia effettivamente abbandonato e reale.
+            <strong>Confermo</strong> di avere accordi personali per questo spot e di poterlo scambiare.
           </span>
         </label>
-        <label class="checkbox-label" style="margin-top: 10px;">
-          <input type="checkbox" id="input-private">
-          <span>
-            <strong>Spot Privato</strong> — Non sarà visibile nel mercato, non lo vedrà nessuno tranne te.
-          </span>
-        </label>
+
         <div class="flex gap-2 mt-2">
           <button class="btn btn-ghost" onclick="showView('my-spots')">Annulla</button>
           <button class="btn btn-primary btn-lg" id="btn-publish">Pubblica spot</button>
@@ -3277,9 +3275,6 @@
                 <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
                   ${user.role} • ${new Date(user.createdAt).toLocaleDateString('it-IT')}
                   ${user.isFan ? ' • Fan Account' : ''}
-                  ${user.isContentCreator ? ' • <span style="color: var(--primary); font-weight: bold;">👑 Content Creator</span>' : ''}
-                  ${user.level ? ' • Livello ' + user.level : ''}
-                  ${user.spotCount ? ' • ' + user.spotCount + ' spot' : ''}
                 </div>
               </div>
               <div style="display: flex; gap: 6px;">
@@ -3288,9 +3283,6 @@
                 </button>
                 <button class="btn btn-primary" onclick="loginAsUser('${user.username}')" style="padding: 5px 10px; font-size: 11px;">
                   🔑 Accedi come
-                </button>
-                <button class="btn btn-warning" onclick="toggleContentCreator('${user._id}', '${user.username}')" style="padding: 5px 10px; font-size: 11px;">
-                  ${user.isContentCreator ? '👑 Rimuovi Creator' : '👑 Crea Creator'}
                 </button>
                 ${user.role !== 'admin' ? `
                   <button class="btn btn-danger" onclick="deleteUser('${user._id}')" style="padding: 5px 10px; font-size: 11px;">
@@ -4893,12 +4885,7 @@ async function saveSpotChanges(spotId) {
             </div>
 
             <div class="text-muted" style="margin-top:10px;font-size:12px;font-weight:500">
-              di 
-              <span class="${spot.authorIsContentCreator ? 'content-creator-name' : `user-level-${spot.authorLevel || 1}`}" 
-                    style="${spot.authorIsContentCreator ? '' : `color: ${getLevelColor(spot.authorLevel || 1)}`}">
-                ${escapeHtml(spot.author)}
-              </span>
-              ${spot.authorIsContentCreator ? '' : `<span class="level-badge level-badge-${spot.authorLevel || 1}">${spot.authorLevel || 1}</span>`}
+              di ${escapeHtml(spot.author)}
             </div>
           </div>
         `).join('');
@@ -5591,25 +5578,24 @@ async function saveSpotChanges(spotId) {
       const category = document.getElementById('input-category').value;
       const description = document.getElementById('input-description').value.trim();
       const legal = document.getElementById('input-legal').checked;
-      const isPrivate = document.getElementById('input-private').checked; // <-- Aggiungi questa linea
-    
+
       if (!give || !want || !region) {
         showToast('Compila tutti i campi obbligatori', 'error');
         return;
       }
-    
+
       if (!coordinatesInput) {
         showToast('Inserisci le coordinate GPS o un link Google Maps', 'error');
         return;
       }
-    
+
       if (!legal) {
         showToast('Devi confermare di avere accordi per questo spot', 'error');
         return;
       }
-    
+
       showLoading('Pubblicazione spot...');
-    
+
       let coordinates = await extractCoordinatesFromLink(coordinatesInput);
       
       if (!coordinates || !coordinates.includes(',')) {
@@ -5617,7 +5603,7 @@ async function saveSpotChanges(spotId) {
         hideLoading();
         return;
       }
-    
+
       try {
         const response = await fetch(`${API_BASE}/spots`, {
           method: 'POST',
@@ -5625,8 +5611,7 @@ async function saveSpotChanges(spotId) {
           body: JSON.stringify({
             give, want, region, coordinates,
             category,
-            description: description || 'Nessuna descrizione',
-            isPrivate: isPrivate // <-- Aggiungi questa linea
+            description: description || 'Nessuna descrizione'
           })
         });
         
@@ -5639,8 +5624,7 @@ async function saveSpotChanges(spotId) {
           document.getElementById('input-coordinates').value = '';
           document.getElementById('input-description').value = '';
           document.getElementById('input-legal').checked = false;
-          document.getElementById('input-private').checked = false; // <-- Aggiungi questa linea
-    
+
           showToast('Spot pubblicato con successo!', 'success');
           showView('my-spots');
           await loadUserSpots();
@@ -5958,43 +5942,10 @@ function preventHorizontalScroll() {
       }
     }, { passive: false });
   }
-  async function toggleContentCreator(userId, username) {
-    if (!confirm(`Sei sicuro di voler ${username.includes('Creator') ? 'rimuovere' : 'impostare'} ${username} come Content Creator?`)) return;
-    
-    showLoading('Aggiornamento in corso...');
-    try {
-      const response = await fetch(`${API_BASE}/admin/users/${userId}/toggle-creator`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.ok) {
-        showToast(`✅ ${username} ${username.includes('Creator') ? 'rimosso da' : 'impostato come'} Content Creator`, 'success');
-        loadAdminUsers();
-      } else {
-        showToast('Errore nell\'aggiornamento', 'error');
-      }
-    } catch (error) {
-      console.error('Error toggling content creator:', error);
-      showToast('Errore di connessione', 'error');
-    } finally {
-      hideLoading();
-    }
-  }
+  
   // Chiama la funzione all'inizio
   preventHorizontalScroll();
-    function getLevelColor(level) {
-  switch(level) {
-    case 1: return '#9ca3af';
-    case 2: return '#22c55e';
-    case 3: return '#3b82f6';
-    case 4: return '#8b5cf6';
-    case 5: return '#f59e0b';
-    case 6: return '#ef4444';
-    case 7: return '#000000';
-    default: return '#9ca3af';
-  }
-}
+    
     // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
   </script>
