@@ -3570,84 +3570,131 @@
       }
     }
 
-    function renderAdminTradesList() {
-      const pendingTrades = state.adminTrades.filter(t => 
-        !t.adminApproved && !t.adminRejected && t.status === 'pending'
-      );
-      
-      const container = document.getElementById('admin-trades-list');
-      
-      if (pendingTrades.length === 0) {
+function renderAdminTradesList() {
+    // Ora mostra TUTTI gli scambi, non solo quelli in attesa di approvazione
+    const allTrades = state.adminTrades;
+    
+    const container = document.getElementById('admin-trades-list');
+    
+    if (allTrades.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">✅</div>
-            <div>Nessuno scambio in attesa di approvazione</div>
+            <div>Nessuno scambio trovato</div>
           </div>
         `;
         return;
-      }
-      
-      container.innerHTML = pendingTrades.map(trade => {
-        const spot = trade.spotId || {};
-        const offeredSpots = trade.offeredSpots || [];
-        
-        return `
-          <div class="trade-request">
+    }
+    
+    // Separa gli scambi in attesa di admin dagli altri
+    const pendingAdminTrades = allTrades.filter(t => t.needsAdminApproval);
+    const otherTrades = allTrades.filter(t => !t.needsAdminApproval);
+    
+    let html = '';
+    
+    // Se ci sono scambi in attesa di admin, mostrali per primi
+    if (pendingAdminTrades.length > 0) {
+        html += `
+            <div style="margin-bottom: 25px;">
+                <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 5px;">
+                    ⚠️ Scambi in attesa di approvazione admin (${pendingAdminTrades.length})
+                </h3>
+                ${pendingAdminTrades.map(trade => renderAdminTradeItem(trade)).join('')}
+            </div>
+        `;
+    }
+    
+    // Mostra tutti gli altri scambi
+    if (otherTrades.length > 0) {
+        html += `
+            <div>
+                <h3 style="font-size: 16px; color: var(--text); margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 5px;">
+                    📋 Tutti gli scambi (${otherTrades.length})
+                </h3>
+                ${otherTrades.map(trade => renderAdminTradeItem(trade)).join('')}
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+// Funzione helper per renderizzare un singolo item
+function renderAdminTradeItem(trade) {
+    const spot = trade.spotId || {};
+    const offeredSpots = trade.offeredSpots || [];
+    
+    let statusBadge = '';
+    if (trade.needsAdminApproval) {
+        statusBadge = '<span class="trade-status pending" style="background: #dc2626; color: white;">⏳ ATTESA ADMIN</span>';
+    } else if (trade.status === 'pending') {
+        statusBadge = '<span class="trade-status pending">⏳ In attesa di risposta</span>';
+    } else if (trade.status === 'verifying') {
+        statusBadge = '<span class="trade-status verifying">🔄 In elaborazione...</span>';
+    } else if (trade.status === 'accepted') {
+        statusBadge = '<span class="trade-status accepted">✅ Completato</span>';
+    } else if (trade.status === 'rejected') {
+        statusBadge = '<span class="trade-status rejected">❌ Rifiutato</span>';
+    }
+    
+    return `
+        <div class="trade-request" style="${trade.needsAdminApproval ? 'border: 2px solid #dc2626;' : ''}">
             <div class="flex-between mb-2">
-              <div>
-                <strong>${escapeHtml(trade.fromUser)} → ${escapeHtml(trade.toUser)}</strong>
-                <div class="text-muted" style="font-size:12px;margin-top:2px">
-                  ${new Date(trade.createdAt).toLocaleString('it-IT')}
+                <div>
+                    <strong>${escapeHtml(trade.fromUser)} → ${escapeHtml(trade.toUser)}</strong>
+                    <div class="text-muted" style="font-size:12px;margin-top:2px">
+                        ${new Date(trade.createdAt).toLocaleString('it-IT')}
+                    </div>
                 </div>
-              </div>
-              <span class="trade-status pending">⏳ In attesa</span>
+                ${statusBadge}
             </div>
             
             <div class="trade-details-box">
-              <div style="margin-bottom: 10px;">
-                <strong>Spot richiesto:</strong>
-                <div class="trade-spot-info">
-                  <strong>${escapeHtml(spot.give || 'N/A')}</strong>
-                  <div style="font-size: 12px; color: var(--text-muted);">
-                    📍 ${escapeHtml(spot.region || '')} • ${spot.category || ''}
-                  </div>
-                  <div style="font-size: 11px; margin-top: 4px;">
-                    ${escapeHtml(spot.description || '').substring(0, 100)}${spot.description && spot.description.length > 100 ? '...' : ''}
-                  </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Spot richiesto:</strong>
+                    <div class="trade-spot-info">
+                        <strong>${escapeHtml(spot.give || 'N/A')}</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            📍 ${escapeHtml(spot.region || '')} • ${spot.category || ''}
+                        </div>
+                        <div style="font-size: 11px; margin-top: 4px;">
+                            ${escapeHtml(spot.description || '').substring(0, 100)}${spot.description && spot.description.length > 100 ? '...' : ''}
+                        </div>
+                    </div>
                 </div>
-              </div>
-              
-              <div>
-                <strong>Spot offerti in cambio:</strong>
-                ${offeredSpots.map(s => `
-                  <div class="trade-spot-info">
-                    <strong>${escapeHtml(s.give || 'N/A')}</strong>
-                    <div style="font-size: 12px; color: var(--text-muted);">
-                      📍 ${escapeHtml(s.region || '')} • ${s.category || ''}
-                    </div>
-                    <div style="font-size: 11px; margin-top: 4px;">
-                      ${escapeHtml((s.description || '').substring(0, 80))}${s.description && s.description.length > 80 ? '...' : ''}
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
+                
+                <div>
+                    <strong>Spot offerti in cambio:</strong>
+                    ${offeredSpots.map(s => `
+                        <div class="trade-spot-info">
+                            <strong>${escapeHtml(s.give || 'N/A')}</strong>
+                            <div style="font-size: 12px; color: var(--text-muted);">
+                                📍 ${escapeHtml(s.region || '')} • ${s.category || ''}
+                            </div>
+                            <div style="font-size: 11px; margin-top: 4px;">
+                                ${escapeHtml((s.description || '').substring(0, 80))}${s.description && s.description.length > 80 ? '...' : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
             
             <div class="admin-action-buttons">
-              <button class="btn btn-success" onclick="approveTrade('${trade._id}')">
-                ✅ Approva Scambio
-              </button>
-              <button class="btn btn-danger" onclick="rejectTrade('${trade._id}')">
-                ❌ Rifiuta Scambio
-              </button>
-              <button class="btn btn-ghost" onclick="viewAdminTradeDetail('${trade._id}')">
-                📋 Dettagli
-              </button>
+                ${trade.needsAdminApproval ? `
+                    <button class="btn btn-success" onclick="approveTrade('${trade._id}')">
+                        ✅ Approva Scambio
+                    </button>
+                    <button class="btn btn-danger" onclick="rejectTrade('${trade._id}')">
+                        ❌ Rifiuta Scambio
+                    </button>
+                ` : ''}
+                <button class="btn btn-ghost" onclick="viewAdminTradeDetail('${trade._id}')">
+                    📋 Dettagli
+                </button>
             </div>
-          </div>
-        `;
-      }).join('');
-    }
+        </div>
+    `;
+}
 
     function renderAdminSpotsList() {
   const container = document.getElementById('admin-spots-list');
