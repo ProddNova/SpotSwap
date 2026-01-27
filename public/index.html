@@ -2897,15 +2897,15 @@
     </div>
   </div>
 
-  <!-- MODAL: EDIT USER (ADMIN) -->
-<div class="modal-overlay" id="modal-edit-spot">
+<!-- MODAL: EDIT USER (ADMIN) -->
+<div class="modal-overlay" id="modal-edit-user">
   <div class="modal">
     <div class="modal-header">
-      <h3 class="modal-title">Modifica Spot</h3>
-      <button class="modal-close" onclick="closeModal('modal-edit-spot')">&times;</button>
+      <h3 class="modal-title">Modifica Utente</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-user')">&times;</button>
     </div>
 
-    <div id="edit-spot-content"></div>
+    <div id="edit-user-content"></div>
   </div>
 </div>
 
@@ -4792,19 +4792,21 @@ async function saveSpotChanges(spotId) {
       }, 300);
     }
 
-    function addMarkersToMap() {
-      if (!map) return;
+      function addMarkersToMap() {
+        if (!map) return;
+        
+        let userSpots = state.spots.filter(s => 
+          (s.author === state.user.username && !s.acquired && !s.originalSpotId) || 
+          (s.acquired && s.currentOwner === state.user.username)
+        );
       
-      let userSpots = state.spots.filter(s => 
-        (s.author === state.user.username && !s.acquired && !s.offeredForTrade && !s.originalSpotId) || 
-        (s.acquired && s.currentOwner === state.user.username)
-      );
-
-      if (currentMapFilter === 'published') {
-        userSpots = userSpots.filter(s => !s.acquired);
-      } else if (currentMapFilter === 'acquired') {
-        userSpots = userSpots.filter(s => s.acquired);
-      }
+        if (currentMapFilter === 'published') {
+          userSpots = userSpots.filter(s => !s.acquired && !s.isPrivate);
+        } else if (currentMapFilter === 'acquired') {
+          userSpots = userSpots.filter(s => s.acquired);
+        } else if (currentMapFilter === 'private') {
+          userSpots = userSpots.filter(s => s.isPrivate === true && !s.acquired);
+        }
 
       markers.forEach(marker => marker.remove());
       markers = [];
@@ -4928,7 +4930,12 @@ async function saveSpotChanges(spotId) {
     function toggleMarkers(filter) {
       currentMapFilter = filter;
       addMarkersToMap();
-      showToast(`Mostrando: ${filter === 'all' ? 'Tutti gli spot' : filter === 'published' ? 'Spot pubblicati' : 'Spot ottenuti'}`, 'info');
+      let message = '';
+      if (filter === 'all') message = 'Tutti gli spot';
+      else if (filter === 'published') message = 'Spot pubblicati';
+      else if (filter === 'acquired') message = 'Spot ottenuti';
+      else if (filter === 'private') message = 'Spot privati';
+      showToast(`Mostrando: ${message}`, 'info');
     }
 
     // ========== MARKET ==========
@@ -5059,13 +5066,15 @@ async function saveSpotChanges(spotId) {
     }
 
     function renderPublishedSpots() {
-      // Show only original published spots
+      // Show only original published spots (including those offered for trade)
       const mySpots = state.spots.filter(s => 
         s.author === state.user.username && 
-        !s.acquired && 
-        !s.offeredForTrade &&
-        !s.originalSpotId
+        !s.acquired &&
+        !s.originalSpotId &&
+        !s.isPrivate // Exclude private spots from published tab
       );
+      
+      document.getElementById('published-count').textContent = `(${mySpots.length})`;
       
       const grid = document.getElementById('published-spots-grid');
 
@@ -5180,11 +5189,10 @@ async function saveSpotChanges(spotId) {
     }
     
     function renderPrivateSpots() {
-      // Show only private spots owned by the user
+      // Show only private spots owned by the user (including those offered for trade)
       const privateSpots = state.spots.filter(s => 
         s.author === state.user.username && 
-        !s.acquired && 
-        !s.offeredForTrade &&
+        !s.acquired &&
         !s.originalSpotId &&
         s.isPrivate === true
       );
@@ -5877,18 +5885,32 @@ async function saveSpotChanges(spotId) {
     }
 
     // ========== SPOT DETAIL ==========
-    async function viewSpotDetail(spotId) {
+   async function viewSpotDetail(spotId) {
       showLoading('Caricamento dettagli...');
       try {
-        const response = await fetch(`${API_BASE}/spots`);
-        const spots = await response.json();
-        const spot = spots.find(s => s._id === spotId);
+        // Prima cerca lo spot nei dati già caricati
+        let spot = state.spots.find(s => s._id === spotId);
+        
+        // Se non lo trova, cerca nei dati dell'utente
+        if (!spot) {
+          const response = await fetch(`${API_BASE}/spots?userOnly=true`);
+          const userSpots = await response.json();
+          spot = userSpots.find(s => s._id === spotId);
+        }
+        
+        // Se ancora non lo trova, cerca nel mercato
+        if (!spot) {
+          const response = await fetch(`${API_BASE}/spots`);
+          const allSpots = await response.json();
+          spot = allSpots.find(s => s._id === spotId);
+        }
         
         if (!spot) {
           showToast('Spot non trovato', 'error');
+          hideLoading();
           return;
         }
-
+    
         document.getElementById('detail-title').textContent = spot.give;
         
         const content = document.getElementById('detail-content');
@@ -5902,21 +5924,21 @@ async function saveSpotChanges(spotId) {
             ${spot.acquired ? '<span class="badge badge-warning">Ottenuto</span>' : ''}
             ${spot.offeredForTrade ? '<span class="badge badge-primary">In offerta</span>' : ''}
           </div>
-
+    
           <div class="mb-2">
             <strong>Autore:</strong> ${escapeHtml(spot.author)}
             ${spot.originalAuthor ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Originale: ${escapeHtml(spot.originalAuthor)}</div>` : ''}
           </div>
-
+    
           <div class="mb-2">
             <strong>Zona:</strong> 📍 ${escapeHtml(spot.region)}
           </div>
-
+    
           <div class="mb-2">
             <strong>Pubblicato:</strong> ${getTimeAgo(spot.createdAt)}
             ${spot.acquiredDate ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Ottenuto: ${new Date(spot.acquiredDate).toLocaleDateString('it-IT')}</div>` : ''}
           </div>
-
+    
           <div class="spot-exchange mb-2">
             <div class="spot-exchange-row">
               <strong>${spot.acquired ? 'Spot' : 'Offre'}:</strong> ${escapeHtml(spot.give)}
@@ -5927,13 +5949,13 @@ async function saveSpotChanges(spotId) {
               </div>
             ` : ''}
           </div>
-
+    
           <div class="mb-2">
             <strong>Descrizione:</strong>
             <p style="margin-top:6px;font-size:13px">${escapeHtml(spot.description || 'Nessuna descrizione')}</p>
           </div>
-
-          ${spot.coordinates && (spot.status === 'completed' || spot.acquired) ? `
+    
+          ${spot.coordinates && (spot.status === 'completed' || spot.acquired || spot.author === state.user.username) ? `
             <div class="coordinates-box">
               <strong>📍 Coordinate GPS</strong>
               <div style="margin-top:6px">${escapeHtml(spot.coordinates)}</div>
@@ -5941,11 +5963,15 @@ async function saveSpotChanges(spotId) {
                 Apri in Google Maps
               </button>
             </div>
+          ` : spot.coordinates && spot.author !== state.user.username ? `
+            <div class="alert alert-warning">
+              🔒 Le coordinate saranno visibili solo dopo lo scambio completato
+            </div>
           ` : ''}
         `;
-
+    
         const actions = document.getElementById('detail-actions');
-        if (spot.author !== state.user.username && spot.status === 'active' && !spot.hasPendingTradeRequest) {
+        if (spot.author !== state.user.username && spot.status === 'active' && !spot.hasPendingTradeRequest && !spot.isPrivate) {
           actions.innerHTML = `
             <button class="btn btn-primary btn-lg" onclick="openOfferModal('${spot._id}')">
               Proponi scambio
@@ -5955,7 +5981,7 @@ async function saveSpotChanges(spotId) {
           actions.innerHTML = `
             <div class="flex gap-2">
               <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Chiudi</button>
-              <button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina spot</button>
+              ${spot.isPrivate ? '' : `<button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina spot</button>`}
             </div>
           `;
         } else if (spot.hasPendingTradeRequest) {
@@ -5965,9 +5991,9 @@ async function saveSpotChanges(spotId) {
             </div>
           `;
         } else {
-          actions.innerHTML = '';
+          actions.innerHTML = '<button class="btn btn-ghost" onclick="closeModal(\'modal-detail\')">Chiudi</button>';
         }
-
+    
         openModal('modal-detail');
       } catch (error) {
         console.error('Error viewing spot detail:', error);
@@ -6163,7 +6189,7 @@ function getUserLevel(spotCount) {
   if (spotCount >= 15) return { level: 6, name: 'Esperto', color: 'level-6' };
   if (spotCount >= 10) return { level: 5, name: 'Veterano', color: 'level-5' };
   if (spotCount >= 5) return { level: 4, name: 'Avanzato', color: 'level-4' };
-  if (spotCount >= 3) return { level: 3, name: 'Interme', color: 'level-3' };
+  if (spotCount >= 3) return { level: 3, name: 'Intermedio', color: 'level-3' };
   if (spotCount >= 1) return { level: 2, name: 'Base', color: 'level-2' };
   return { level: 1, name: 'Novizio', color: 'level-1' };
 }
