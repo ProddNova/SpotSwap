@@ -5013,7 +5013,12 @@ async function saveSpotChanges(spotId) {
           <div class="${spot.authorIsContentCreator ? 'creator-name' : 'user-' + userLevel.color}" style="margin-top:10px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;">
             <span style="color: var(--text-muted);">di</span>
             <span style="font-weight:600;">${escapeHtml(spot.author)}</span>
-            ${spot.authorIsContentCreator ? '<span class="creator-badge">⭐ CREATOR</span>' : ''}
+            ${spot.authorIsContentCreator 
+            ? `<span class="creator-badge" style="color:${userLevel.color}; border-color:${userLevel.color};">
+                ⭐ CREATOR
+              </span>` 
+            : ''
+          }
             <span style="color: var(--text-muted); font-weight:400;">• ${userLevel.name}</span>
           </div>
         </div>
