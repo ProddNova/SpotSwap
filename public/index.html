@@ -61,9 +61,18 @@
       padding: 20px;
       width: 100vw;
       height: 100vh;
+      height: 100dvh; /* Fix per mobile */
       margin: 0;
       overflow: hidden;
       touch-action: none;
+    }
+    
+    /* Fix specifico per iOS */
+    @supports (-webkit-touch-callout: none) {
+      .loading-overlay {
+        min-height: -webkit-fill-available;
+        height: -webkit-fill-available;
+      }
     }
     
     .loading-overlay.show {
@@ -79,6 +88,7 @@
       max-width: 90%;
       position: relative;
       z-index: 10000;
+      padding: 20px;
     }
     
     .loading-spinner {
@@ -2151,6 +2161,71 @@
     font-size: 11px !important;
   }
 }
+    /* CONTENT CREATOR STYLES */
+.creator-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+}
+
+.creator-spot-card {
+  border: 2px solid #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3) !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent) !important;
+}
+
+.creator-spot-card::before {
+  background: linear-gradient(90deg, #f59e0b, #d97706) !important;
+  opacity: 1 !important;
+}
+
+.creator-name {
+  color: #f59e0b !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+    /* USER LEVEL STYLES */
+.level-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+.level-1 { background: #6b7280; color: white; } /* 1 spot - Grigio */
+.level-2 { background: #3b82f6; color: white; } /* 5 spot - Blu */
+.level-3 { background: #8b5cf6; color: white; } /* 10 spot - Viola */
+.level-4 { background: #ec4899; color: white; } /* 15 spot - Rosa */
+.level-5 { background: #f59e0b; color: white; } /* 30 spot - Arancione */
+.level-6 { background: #ef4444; color: white; } /* 50 spot - Rosso */
+.level-7 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; } /* 100+ spot - Oro */
+
+.user-level-1 { color: #9ca3af !important; }
+.user-level-2 { color: #60a5fa !important; }
+.user-level-3 { color: #a78bfa !important; }
+.user-level-4 { color: #f472b6 !important; }
+.user-level-5 { color: #fbbf24 !important; }
+.user-level-6 { color: #f87171 !important; }
+.user-level-7 { 
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800 !important;
+}
   </style>
 </head>
 <body>
@@ -2487,6 +2562,15 @@
               <option value="Veneto">Veneto</option>
             </select>
           </div>
+          
+          <!-- AGGIUNGI QUESTO NUOVO FILTRO PER PROVINCIA -->
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Provincia</label>
+            <select class="form-select" id="filter-province">
+              <option value="all">Tutte le province</option>
+              <!-- Le province saranno caricate dinamicamente -->
+            </select>
+          </div>
         </div>
 
         <div class="flex gap-2 mt-2" style="align-items:center">
@@ -2542,7 +2626,7 @@
       <div class="tabs">
         <button class="tab active" data-tab="published">Pubblicati <span id="published-count">(0)</span></button>
         <button class="tab" data-tab="acquired">Ottenuti <span id="acquired-count">(0)</span></button>
-        <button class="tab" data-tab="profile">Profilo</button>
+        <button class="tab" data-tab="private">Privati <span id="private-count">(0)</span></button>
         <button class="tab" data-tab="map">Mappa</button>
       </div>
 
@@ -2553,7 +2637,11 @@
       <div id="tab-acquired" class="hidden">
         <div class="grid" id="acquired-spots-grid"></div>
       </div>
-
+      
+      <div id="tab-private" class="hidden">
+        <div class="grid" id="private-spots-grid"></div>
+      </div>
+      
       <div id="tab-profile" class="hidden">
         <div class="profile-stats">
           <div class="stat-card">
@@ -2595,10 +2683,11 @@
               <div class="setting-title">Nome utente</div>
             </div>
             <div class="setting-description">
-              Il tuo nome pubblico sulla piattaforma
+              Il tuo nome pubblico sulla piattaforma<br>
+              <span style="color: var(--primary); font-weight: 600;">⚠️ Il nome utente non può essere modificato</span>
             </div>
             <div class="setting-control">
-              <input type="text" class="form-input" id="profile-username">
+              <input type="text" class="form-input" id="profile-username" disabled style="background: var(--card); cursor: not-allowed;">
             </div>
           </div>
 
@@ -2684,6 +2773,29 @@
             </select>
             <div class="form-hint">Seleziona la regione dello spot</div>
           </div>
+        
+          <!-- AGGIUNGI QUESTO NUOVO SELECT PER LA PROVINCIA -->
+          <div class="form-group">
+            <label class="form-label">Provincia</label>
+            <select class="form-select" id="input-province">
+              <option value="">Seleziona provincia...</option>
+              <!-- Le province saranno caricate dinamicamente in base alla regione -->
+            </select>
+            <div class="form-hint">Seleziona la provincia dello spot</div>
+          </div>
+        
+          <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" id="input-category">
+              <option value="industriale">Industriale</option>
+              <option value="hotel">Hotel</option>
+              <option value="villa">Villa</option>
+              <option value="sanitario">Sanitario</option>
+              <option value="militare">Militare</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+        </div>
 
           <div class="form-group">
             <label class="form-label">Categoria</label>
@@ -2699,8 +2811,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Coordinate GPS o Link Google Maps</label>
-          <input type="text" class="form-input" id="input-coordinates" placeholder="es. 45.4642, 9.1900 o link Google Maps">
+          <label class="form-label">Coordinate GPS</label>
+          <input type="text" class="form-input" id="input-coordinates" placeholder="es. 45.4642, 9.1900">
           <div class="form-hint">⚠️ Saranno visibili SOLO dopo l'accettazione dello scambio. Puoi inserire coordinate o un link Google Maps.</div>
         </div>
 
@@ -2709,13 +2821,34 @@
           <textarea class="form-textarea" id="input-description" maxlength="500" placeholder="Descrivi cosa rende speciale questo spot..."></textarea>
           <div class="form-hint">Info generali sullo spot</div>
         </div>
+        <!-- CHECKBOX PRIVATO - IMPOSTAZIONE -->
+        <div style="display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 8px;">
+          <input type="checkbox" id="input-private">
+          <div>
+            <div style="font-weight: 600; color: var(--text); margin-bottom: 2px; font-size: 14px;">
+              🔒 Spot Privato
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              Questo spot sarà visibile solo a te e non apparirà nel mercato pubblico
+            </div>
+          </div>
+        </div>
+        <br>
+        <div style="background: rgba(220, 38, 38, 0.1); border: 2px solid var(--primary); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <input type="checkbox" id="input-legal" style="margin-top: 4px;">
+            <div>
+              <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px; font-size: 14px;">
+                ⚠️ CONFERMA OBBLIGATORIA
+              </div>
+              <div style="font-size: 13px; color: var(--text); line-height: 1.4;">
+                Dichiaro che questo posto sia completamente abbandonato e che lo abbia già verificato.
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <label class="checkbox-label">
-          <input type="checkbox" id="input-legal">
-          <span>
-            <strong>Confermo</strong> di avere accordi personali per questo spot e di poterlo scambiare.
-          </span>
-        </label>
+
 
         <div class="flex gap-2 mt-2">
           <button class="btn btn-ghost" onclick="showView('my-spots')">Annulla</button>
@@ -2795,21 +2928,50 @@
     </div>
   </div>
 
-  <!-- MODAL: EDIT USER (ADMIN) -->
-<div class="modal-overlay" id="modal-edit-spot">
+<!-- MODAL: EDIT USER (ADMIN) -->
+<div class="modal-overlay" id="modal-edit-user">
   <div class="modal">
     <div class="modal-header">
-      <h3 class="modal-title">Modifica Spot</h3>
-      <button class="modal-close" onclick="closeModal('modal-edit-spot')">&times;</button>
+      <h3 class="modal-title">Modifica Utente</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-user')">&times;</button>
     </div>
 
-    <div id="edit-spot-content"></div>
+    <div id="edit-user-content"></div>
   </div>
 </div>
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
-
+  <!-- POPUP AGGIORNAMENTO -->
+  <div id="update-popup" class="modal-overlay" style="display: none;">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🆕 Novità dell'ultimo aggiornamento</h3>
+        <button class="modal-close" onclick="closeUpdatePopup()">&times;</button>
+      </div>
+      
+      <div style="padding: 20px;">
+        <div style="margin-bottom: 20px; padding: 15px; background: var(--bg-light); border-radius: 8px; border-left: 4px solid var(--primary);">
+          <strong>✨ Cosa c'è di nuovo:</strong>
+          <ul style="margin-top: 10px; padding-left: 20px;">
+            <li style="margin-bottom: 8px;"><strong>📍 Provincia:</strong> Specifica la provincia durante la creazione di uno spot per una migliore geolocalizzazione.</li>
+            <li style="margin-bottom: 8px;"><strong>🔍 Filtri avanzati:</strong> Filtra la ricerca degli spot per provincia per trovare più facilmente i luoghi che ti interessano.</li>
+            <li style="margin-bottom: 8px;"><strong>🏆 Livello Utente:</strong> Nuovo sistema di livelli basato sul numero di spot pubblicati. Più condividi, più sali di grado!</li>
+            <li style="margin-bottom: 8px;"><strong>🕵️‍♂️ Spot Privati:</strong> Ora puoi creare spot visibili solo a te, per costruire una mappa personale dei luoghi abbandonati da esplorare.</li>
+          </ul>
+        </div>
+        
+        <div class="checkbox-label" style="margin-bottom: 15px;">
+          <input type="checkbox" id="dont-show-again">
+          <span style="font-size: 13px;">Non mostrare più per 6 ore</span>
+        </div>
+        
+        <button class="btn btn-primary btn-lg" onclick="closeUpdatePopup()" style="width: 100%;">
+          Ho capito, continua!
+        </button>
+      </div>
+    </div>
+  </div>
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -2837,7 +2999,29 @@
       adminTrades: [],
       adminUsers: []
     };
-
+    // ========== PROVINCE ITALIANE ==========
+    const italianProvinces = {
+      'Abruzzo': ['Chieti', 'L\'Aquila', 'Pescara', 'Teramo'],
+      'Basilicata': ['Matera', 'Potenza'],
+      'Calabria': ['Catanzaro', 'Cosenza', 'Crotone', 'Reggio Calabria', 'Vibo Valentia'],
+      'Campania': ['Avellino', 'Benevento', 'Caserta', 'Napoli', 'Salerno'],
+      'Emilia-Romagna': ['Bologna', 'Ferrara', 'Forlì-Cesena', 'Modena', 'Parma', 'Piacenza', 'Ravenna', 'Reggio Emilia', 'Rimini'],
+      'Friuli-Venezia Giulia': ['Gorizia', 'Pordenone', 'Trieste', 'Udine'],
+      'Lazio': ['Frosinone', 'Latina', 'Rieti', 'Roma', 'Viterbo'],
+      'Liguria': ['Genova', 'Imperia', 'La Spezia', 'Savona'],
+      'Lombardia': ['Bergamo', 'Brescia', 'Como', 'Cremona', 'Lecco', 'Lodi', 'Mantova', 'Milano', 'Monza e Brianza', 'Pavia', 'Sondrio', 'Varese'],
+      'Marche': ['Ancona', 'Ascoli Piceno', 'Fermo', 'Macerata', 'Pesaro e Urbino'],
+      'Molise': ['Campobasso', 'Isernia'],
+      'Piemonte': ['Alessandria', 'Asti', 'Biella', 'Cuneo', 'Novara', 'Torino', 'Verbano-Cusio-Ossola', 'Vercelli'],
+      'Puglia': ['Bari', 'Barletta-Andria-Trani', 'Brindisi', 'Foggia', 'Lecce', 'Taranto'],
+      'Sardegna': ['Cagliari', 'Nuoro', 'Oristano', 'Sassari', 'Sud Sardegna'],
+      'Sicilia': ['Agrigento', 'Caltanissetta', 'Catania', 'Enna', 'Messina', 'Palermo', 'Ragusa', 'Siracusa', 'Trapani'],
+      'Toscana': ['Arezzo', 'Firenze', 'Grosseto', 'Livorno', 'Lucca', 'Massa-Carrara', 'Pisa', 'Pistoia', 'Prato', 'Siena'],
+      'Trentino-Alto Adige': ['Bolzano', 'Trento'],
+      'Umbria': ['Perugia', 'Terni'],
+      'Valle d\'Aosta': ['Aosta'],
+      'Veneto': ['Belluno', 'Padova', 'Rovigo', 'Treviso', 'Venezia', 'Verona', 'Vicenza']
+    };
     // ========== MAP VARIABLES ==========
     let map = null;
     let markers = [];
@@ -3385,84 +3569,131 @@
       }
     }
 
-    function renderAdminTradesList() {
-      const pendingTrades = state.adminTrades.filter(t => 
-        !t.adminApproved && !t.adminRejected && t.status === 'pending'
-      );
-      
-      const container = document.getElementById('admin-trades-list');
-      
-      if (pendingTrades.length === 0) {
+function renderAdminTradesList() {
+    // Ora mostra TUTTI gli scambi, non solo quelli in attesa di approvazione
+    const allTrades = state.adminTrades;
+    
+    const container = document.getElementById('admin-trades-list');
+    
+    if (allTrades.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">✅</div>
-            <div>Nessuno scambio in attesa di approvazione</div>
+            <div>Nessuno scambio trovato</div>
           </div>
         `;
         return;
-      }
-      
-      container.innerHTML = pendingTrades.map(trade => {
-        const spot = trade.spotId || {};
-        const offeredSpots = trade.offeredSpots || [];
-        
-        return `
-          <div class="trade-request">
+    }
+    
+    // Separa gli scambi in attesa di admin dagli altri
+    const pendingAdminTrades = allTrades.filter(t => t.needsAdminApproval);
+    const otherTrades = allTrades.filter(t => !t.needsAdminApproval);
+    
+    let html = '';
+    
+    // Se ci sono scambi in attesa di admin, mostrali per primi
+    if (pendingAdminTrades.length > 0) {
+        html += `
+            <div style="margin-bottom: 25px;">
+                <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 5px;">
+                    ⚠️ Scambi in attesa di approvazione admin (${pendingAdminTrades.length})
+                </h3>
+                ${pendingAdminTrades.map(trade => renderAdminTradeItem(trade)).join('')}
+            </div>
+        `;
+    }
+    
+    // Mostra tutti gli altri scambi
+    if (otherTrades.length > 0) {
+        html += `
+            <div>
+                <h3 style="font-size: 16px; color: var(--text); margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 5px;">
+                    📋 Tutti gli scambi (${otherTrades.length})
+                </h3>
+                ${otherTrades.map(trade => renderAdminTradeItem(trade)).join('')}
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+// Funzione helper per renderizzare un singolo item
+function renderAdminTradeItem(trade) {
+    const spot = trade.spotId || {};
+    const offeredSpots = trade.offeredSpots || [];
+    
+    let statusBadge = '';
+    if (trade.needsAdminApproval) {
+        statusBadge = '<span class="trade-status pending" style="background: #dc2626; color: white;">⏳ ATTESA ADMIN</span>';
+    } else if (trade.status === 'pending') {
+        statusBadge = '<span class="trade-status pending">⏳ In attesa di risposta</span>';
+    } else if (trade.status === 'verifying') {
+        statusBadge = '<span class="trade-status verifying">🔄 In elaborazione...</span>';
+    } else if (trade.status === 'accepted') {
+        statusBadge = '<span class="trade-status accepted">✅ Completato</span>';
+    } else if (trade.status === 'rejected') {
+        statusBadge = '<span class="trade-status rejected">❌ Rifiutato</span>';
+    }
+    
+    return `
+        <div class="trade-request" style="${trade.needsAdminApproval ? 'border: 2px solid #dc2626;' : ''}">
             <div class="flex-between mb-2">
-              <div>
-                <strong>${escapeHtml(trade.fromUser)} → ${escapeHtml(trade.toUser)}</strong>
-                <div class="text-muted" style="font-size:12px;margin-top:2px">
-                  ${new Date(trade.createdAt).toLocaleString('it-IT')}
+                <div>
+                    <strong>${escapeHtml(trade.fromUser)} → ${escapeHtml(trade.toUser)}</strong>
+                    <div class="text-muted" style="font-size:12px;margin-top:2px">
+                        ${new Date(trade.createdAt).toLocaleString('it-IT')}
+                    </div>
                 </div>
-              </div>
-              <span class="trade-status pending">⏳ In attesa</span>
+                ${statusBadge}
             </div>
             
             <div class="trade-details-box">
-              <div style="margin-bottom: 10px;">
-                <strong>Spot richiesto:</strong>
-                <div class="trade-spot-info">
-                  <strong>${escapeHtml(spot.give || 'N/A')}</strong>
-                  <div style="font-size: 12px; color: var(--text-muted);">
-                    📍 ${escapeHtml(spot.region || '')} • ${spot.category || ''}
-                  </div>
-                  <div style="font-size: 11px; margin-top: 4px;">
-                    ${escapeHtml(spot.description || '').substring(0, 100)}${spot.description && spot.description.length > 100 ? '...' : ''}
-                  </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Spot richiesto:</strong>
+                    <div class="trade-spot-info">
+                        <strong>${escapeHtml(spot.give || 'N/A')}</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            📍 ${escapeHtml(spot.region || '')} • ${spot.category || ''}
+                        </div>
+                        <div style="font-size: 11px; margin-top: 4px;">
+                            ${escapeHtml(spot.description || '').substring(0, 100)}${spot.description && spot.description.length > 100 ? '...' : ''}
+                        </div>
+                    </div>
                 </div>
-              </div>
-              
-              <div>
-                <strong>Spot offerti in cambio:</strong>
-                ${offeredSpots.map(s => `
-                  <div class="trade-spot-info">
-                    <strong>${escapeHtml(s.give || 'N/A')}</strong>
-                    <div style="font-size: 12px; color: var(--text-muted);">
-                      📍 ${escapeHtml(s.region || '')} • ${s.category || ''}
-                    </div>
-                    <div style="font-size: 11px; margin-top: 4px;">
-                      ${escapeHtml((s.description || '').substring(0, 80))}${s.description && s.description.length > 80 ? '...' : ''}
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
+                
+                <div>
+                    <strong>Spot offerti in cambio:</strong>
+                    ${offeredSpots.map(s => `
+                        <div class="trade-spot-info">
+                            <strong>${escapeHtml(s.give || 'N/A')}</strong>
+                            <div style="font-size: 12px; color: var(--text-muted);">
+                                📍 ${escapeHtml(s.region || '')} • ${s.category || ''}
+                            </div>
+                            <div style="font-size: 11px; margin-top: 4px;">
+                                ${escapeHtml((s.description || '').substring(0, 80))}${s.description && s.description.length > 80 ? '...' : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
             
             <div class="admin-action-buttons">
-              <button class="btn btn-success" onclick="approveTrade('${trade._id}')">
-                ✅ Approva Scambio
-              </button>
-              <button class="btn btn-danger" onclick="rejectTrade('${trade._id}')">
-                ❌ Rifiuta Scambio
-              </button>
-              <button class="btn btn-ghost" onclick="viewAdminTradeDetail('${trade._id}')">
-                📋 Dettagli
-              </button>
+                ${trade.needsAdminApproval ? `
+                    <button class="btn btn-success" onclick="approveTrade('${trade._id}')">
+                        ✅ Approva Scambio
+                    </button>
+                    <button class="btn btn-danger" onclick="rejectTrade('${trade._id}')">
+                        ❌ Rifiuta Scambio
+                    </button>
+                ` : ''}
+                <button class="btn btn-ghost" onclick="viewAdminTradeDetail('${trade._id}')">
+                    📋 Dettagli
+                </button>
             </div>
-          </div>
-        `;
-      }).join('');
-    }
+        </div>
+    `;
+}
 
     function renderAdminSpotsList() {
   const container = document.getElementById('admin-spots-list');
@@ -4128,7 +4359,14 @@
             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
           </select>
         </div>
-        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="edit-content-creator" ${user.isContentCreator ? 'checked' : ''}>
+            <span>
+              <strong>Content Creator</strong> — Badge e stile speciale
+            </span>
+          </label>
+        </div>
         <div class="form-group">
           <label class="form-label">Nuova Password (opzionale)</label>
           <input type="password" class="form-input" id="edit-password" placeholder="Lascia vuoto per non cambiare">
@@ -4158,7 +4396,12 @@
       showLoading('Salvataggio modifiche...');
       
       try {
-        const body = { username, bio, role };
+        const body = { 
+          username, 
+          bio, 
+          role,
+          isContentCreator: document.getElementById('edit-content-creator').checked
+        };
         if (password) {
           body.password = password;
         }
@@ -4383,7 +4626,6 @@ async function saveSpotChanges(spotId) {
     });
     
     const data = await response.json();
-    
     if (data.success) {
       showToast('Spot modificato con successo!', 'success');
       closeModal('modal-edit-spot');
@@ -4602,6 +4844,7 @@ async function saveSpotChanges(spotId) {
           // Reset all
           document.getElementById('tab-published').classList.add('hidden');
           document.getElementById('tab-acquired').classList.add('hidden');
+          document.getElementById('tab-private').classList.add('hidden');
           document.getElementById('tab-profile').classList.add('hidden');
           document.getElementById('tab-map').classList.add('hidden');
           
@@ -4614,6 +4857,8 @@ async function saveSpotChanges(spotId) {
             }, 100);
           } else if (tabName === 'profile') {
             loadProfileSettings();
+          } else if (tabName === 'private') {
+            renderPrivateSpots();
           }
         });
       });
@@ -4676,19 +4921,21 @@ async function saveSpotChanges(spotId) {
       }, 300);
     }
 
-    function addMarkersToMap() {
-      if (!map) return;
+      function addMarkersToMap() {
+        if (!map) return;
+        
+        let userSpots = state.spots.filter(s => 
+          (s.author === state.user.username && !s.acquired && !s.originalSpotId) || 
+          (s.acquired && s.currentOwner === state.user.username)
+        );
       
-      let userSpots = state.spots.filter(s => 
-        (s.author === state.user.username && !s.acquired && !s.offeredForTrade && !s.originalSpotId) || 
-        (s.acquired && s.currentOwner === state.user.username)
-      );
-
-      if (currentMapFilter === 'published') {
-        userSpots = userSpots.filter(s => !s.acquired);
-      } else if (currentMapFilter === 'acquired') {
-        userSpots = userSpots.filter(s => s.acquired);
-      }
+        if (currentMapFilter === 'published') {
+          userSpots = userSpots.filter(s => !s.acquired && !s.isPrivate);
+        } else if (currentMapFilter === 'acquired') {
+          userSpots = userSpots.filter(s => s.acquired);
+        } else if (currentMapFilter === 'private') {
+          userSpots = userSpots.filter(s => s.isPrivate === true && !s.acquired);
+        }
 
       markers.forEach(marker => marker.remove());
       markers = [];
@@ -4812,7 +5059,12 @@ async function saveSpotChanges(spotId) {
     function toggleMarkers(filter) {
       currentMapFilter = filter;
       addMarkersToMap();
-      showToast(`Mostrando: ${filter === 'all' ? 'Tutti gli spot' : filter === 'published' ? 'Spot pubblicati' : 'Spot ottenuti'}`, 'info');
+      let message = '';
+      if (filter === 'all') message = 'Tutti gli spot';
+      else if (filter === 'published') message = 'Spot pubblicati';
+      else if (filter === 'acquired') message = 'Spot ottenuti';
+      else if (filter === 'private') message = 'Spot privati';
+      showToast(`Mostrando: ${message}`, 'info');
     }
 
     // ========== MARKET ==========
@@ -4820,7 +5072,8 @@ async function saveSpotChanges(spotId) {
       const search = document.getElementById('filter-search').value.toLowerCase();
       const category = document.getElementById('filter-category').value;
       const region = document.getElementById('filter-region').value;
-
+      const province = document.getElementById('filter-province').value; // AGGIUNGI
+    
       try {
         const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
         if (!response.ok) throw new Error('Failed to load spots');
@@ -4831,7 +5084,7 @@ async function saveSpotChanges(spotId) {
           if (spot.status !== 'active') return false;
           if (spot.author === state.user.username) return false;
           if (spot.offeredForTrade) return false;
-
+    
           const matchSearch = !search || 
             spot.give.toLowerCase().includes(search) ||
             spot.want.toLowerCase().includes(search) ||
@@ -4840,8 +5093,9 @@ async function saveSpotChanges(spotId) {
             
           const matchCategory = category === 'all' || spot.category === category;
           const matchRegion = region === 'all' || spot.region === region;
-
-          return matchSearch && matchCategory && matchRegion;
+          const matchProvince = province === 'all' || spot.province === province; // AGGIUNGI
+    
+          return matchSearch && matchCategory && matchRegion && matchProvince; // MODIFICA
         });
 
         const grid = document.getElementById('market-grid');
@@ -4860,35 +5114,47 @@ async function saveSpotChanges(spotId) {
           return;
         }
 
-        grid.innerHTML = filtered.map(spot => `
-          <div class="spot-card" onclick="viewSpotDetail('${spot._id}')">
-            <div class="spot-header">
-              <div style="flex:1">
-                <div class="spot-title">${escapeHtml(spot.give)}</div>
-                <div class="spot-meta">📍 ${escapeHtml(spot.region)}</div>
-              </div>
-              <span class="badge badge-success">Disponibile</span>
+      grid.innerHTML = filtered.map(spot => {
+        const userLevel = getUserLevel(spot.authorSpotCount || 0);
+        
+        return `
+        <div class="spot-card ${spot.authorIsContentCreator ? 'creator-spot-card' : ''}" onclick="viewSpotDetail('${spot._id}')">
+          <div class="spot-header">
+            <div style="flex:1">
+              <div class="spot-title">${escapeHtml(spot.give)}</div>
+              <div class="spot-meta">📍 ${escapeHtml(spot.region)}</div>
             </div>
-
-            <div class="spot-exchange">
-              <div class="spot-exchange-row">
-                <strong>Offre:</strong> ${escapeHtml(spot.give)}
-              </div>
-              <div class="spot-exchange-row">
-                <strong>Cerca:</strong> ${escapeHtml(spot.want)}
-              </div>
+            <span class="badge badge-success">Disponibile</span>
+          </div>
+      
+          <div class="spot-exchange">
+            <div class="spot-exchange-row">
+              <strong>Offre:</strong> ${escapeHtml(spot.give)}
             </div>
-
-            <div class="tags">
-              <span class="badge badge-info">${spot.category}</span>
-              <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
-            </div>
-
-            <div class="text-muted" style="margin-top:10px;font-size:12px;font-weight:500">
-              di ${escapeHtml(spot.author)}
+            <div class="spot-exchange-row">
+              <strong>Cerca:</strong> ${escapeHtml(spot.want)}
             </div>
           </div>
-        `).join('');
+      
+          <div class="tags">
+            <span class="badge badge-info">${spot.category}</span>
+            ${spot.province ? `<span class="badge badge-primary">${escapeHtml(spot.province)}</span>` : ''}
+          </div>
+      
+          <div class="${spot.authorIsContentCreator ? 'creator-name' : 'user-' + userLevel.color}" style="margin-top:10px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;">
+            <span style="color: var(--text-muted);">di</span>
+            <span style="font-weight:600;">${escapeHtml(spot.author)}</span>
+            ${spot.authorIsContentCreator 
+            ? `<span class="creator-badge" style="color:${userLevel.color}; border-color:${userLevel.color};">
+                ⭐ CREATOR
+              </span>` 
+            : ''
+          }
+            <span style="color: var(--text-muted); font-weight:400;">• ${userLevel.name}</span>
+          </div>
+        </div>
+      `;
+      }).join('');
       } catch (error) {
         console.error('Error rendering market:', error);
         showToast('Errore nel caricamento del mercato', 'error');
@@ -4918,21 +5184,33 @@ async function saveSpotChanges(spotId) {
 
       const acquired = state.spots.filter(s => s.acquired && s.currentOwner === state.user.username);
       
-      document.getElementById('published-count').textContent = `(${published.length})`;
-      document.getElementById('acquired-count').textContent = `(${acquired.length})`;
-      
-      renderPublishedSpots();
-      renderAcquiredSpots();
-    }
-
-    function renderPublishedSpots() {
-      // Show only original published spots
-      const mySpots = state.spots.filter(s => 
+      const private = state.spots.filter(s => 
         s.author === state.user.username && 
         !s.acquired && 
         !s.offeredForTrade &&
-        !s.originalSpotId
+        !s.originalSpotId &&
+        s.isPrivate === true
       );
+      
+      document.getElementById('published-count').textContent = `(${published.length})`;
+      document.getElementById('acquired-count').textContent = `(${acquired.length})`;
+      document.getElementById('private-count').textContent = `(${private.length})`;
+      
+      renderPublishedSpots();
+      renderAcquiredSpots();
+      renderPrivateSpots();
+    }
+
+    function renderPublishedSpots() {
+      // Show only original published spots (including those offered for trade)
+      const mySpots = state.spots.filter(s => 
+        s.author === state.user.username && 
+        !s.acquired &&
+        !s.originalSpotId &&
+        !s.isPrivate // Exclude private spots from published tab
+      );
+      
+      document.getElementById('published-count').textContent = `(${mySpots.length})`;
       
       const grid = document.getElementById('published-spots-grid');
 
@@ -5045,7 +5323,68 @@ async function saveSpotChanges(spotId) {
         </div>
       `).join('');
     }
-
+    
+    function renderPrivateSpots() {
+      // Show only private spots owned by the user (including those offered for trade)
+      const privateSpots = state.spots.filter(s => 
+        s.author === state.user.username && 
+        !s.acquired &&
+        !s.originalSpotId &&
+        s.isPrivate === true
+      );
+      
+      document.getElementById('private-count').textContent = `(${privateSpots.length})`;
+      
+      const grid = document.getElementById('private-spots-grid');
+    
+      if (privateSpots.length === 0) {
+        grid.innerHTML = `
+          <div class="card empty-state" style="grid-column:1/-1">
+            <div class="empty-state-icon">🔒</div>
+            <div>Nessuno spot privato</div>
+            <p class="text-muted">Crea spot privati nel form "Nuovo spot"</p>
+            <button class="btn btn-primary mt-2" onclick="showView('new')">+ Crea spot privato</button>
+          </div>
+        `;
+        return;
+      }
+    
+      grid.innerHTML = privateSpots.map(spot => `
+        <div class="spot-card">
+          <div class="spot-header">
+            <div style="flex:1">
+              <div class="spot-title">${escapeHtml(spot.give)}</div>
+              <div class="spot-meta">📍 ${escapeHtml(spot.region)}</div>
+            </div>
+            <span class="badge badge-warning">🔒 Privato</span>
+          </div>
+    
+          <div class="spot-exchange">
+            <div class="spot-exchange-row">
+              <strong>Offri:</strong> ${escapeHtml(spot.give)}
+            </div>
+            <div class="spot-exchange-row">
+              <strong>Cerchi:</strong> ${escapeHtml(spot.want)}
+            </div>
+          </div>
+    
+          <div class="tags">
+            <span class="badge badge-info">${spot.category}</span>
+            <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
+          </div>
+          
+          <div class="spot-actions">
+            <button class="btn btn-ghost" onclick="viewSpotDetail('${spot._id}')">Dettagli</button>
+            ${spot.coordinates && spot.coordinates.includes(',') ? `
+              <button class="btn btn-primary" onclick="openInGoogleMaps('${escapeHtml(spot.coordinates)}', '${escapeHtml(spot.give)}')">
+                <span style="display:flex;align-items:center;gap:4px">🗺️ Mappa</span>
+              </button>
+            ` : ''}
+            ${spot.status === 'active' ? `<button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
     async function loadProfileSettings() {
       document.getElementById('profile-username').value = state.user.username;
     }
@@ -5444,9 +5783,9 @@ async function saveSpotChanges(spotId) {
         showToast('Seleziona uno spot', 'error');
         return;
       }
-
+    
       showLoading('Accettazione scambio...');
-
+    
       try {
         const response = await fetch(`${API_BASE}/trade-requests/${state.currentRequestId}/accept`, {
           method: 'PUT',
@@ -5457,8 +5796,22 @@ async function saveSpotChanges(spotId) {
         if (response.ok) {
           closeModal('modal-choose');
           showToast('Scambio completato con successo!', 'success');
-          await loadTradeRequests();
-          await loadUserSpots();
+          
+          // AGGIUNGI QUESTE RIGHE - RICARICA TUTTO
+          await Promise.all([
+            loadTradeRequests(),
+            loadUserSpots(),
+            loadMarketSpots()  // AGGIUNTO: ricarica anche il mercato
+          ]);
+          
+          // FORZA UN AGGIORNAMENTO VISIVO
+          if (document.getElementById('view-market').classList.contains('hidden') === false) {
+            renderMarket();
+          }
+          if (document.getElementById('view-my-spots').classList.contains('hidden') === false) {
+            renderMySpots();
+          }
+          
         } else {
           const data = await response.json();
           showToast(data.error || 'Errore nell\'accettazione', 'error');
@@ -5574,28 +5927,29 @@ async function saveSpotChanges(spotId) {
       const give = document.getElementById('input-give').value.trim();
       const want = document.getElementById('input-want').value.trim();
       const region = document.getElementById('input-region').value;
+      const province = document.getElementById('input-province').value; // AGGIUNGI
       const coordinatesInput = document.getElementById('input-coordinates').value.trim();
       const category = document.getElementById('input-category').value;
       const description = document.getElementById('input-description').value.trim();
       const legal = document.getElementById('input-legal').checked;
-
-      if (!give || !want || !region) {
+    
+      if (!give || !want || !region || !province) { // MODIFICA: aggiungi !province
         showToast('Compila tutti i campi obbligatori', 'error');
         return;
       }
-
+    
       if (!coordinatesInput) {
         showToast('Inserisci le coordinate GPS o un link Google Maps', 'error');
         return;
       }
-
+    
       if (!legal) {
         showToast('Devi confermare di avere accordi per questo spot', 'error');
         return;
       }
-
+    
       showLoading('Pubblicazione spot...');
-
+    
       let coordinates = await extractCoordinatesFromLink(coordinatesInput);
       
       if (!coordinates || !coordinates.includes(',')) {
@@ -5603,15 +5957,20 @@ async function saveSpotChanges(spotId) {
         hideLoading();
         return;
       }
-
+    
       try {
         const response = await fetch(`${API_BASE}/spots`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            give, want, region, coordinates,
+            give, 
+            want, 
+            region, 
+            province, // AGGIUNGI
+            coordinates,
             category,
-            description: description || 'Nessuna descrizione'
+            description: description || 'Nessuna descrizione',
+            isPrivate: document.getElementById('input-private').checked
           })
         });
         
@@ -5621,10 +5980,11 @@ async function saveSpotChanges(spotId) {
           document.getElementById('input-give').value = '';
           document.getElementById('input-want').value = '';
           document.getElementById('input-region').value = '';
+          document.getElementById('input-province').value = ''; // AGGIUNGI
           document.getElementById('input-coordinates').value = '';
           document.getElementById('input-description').value = '';
           document.getElementById('input-legal').checked = false;
-
+          document.getElementById('input-private').checked = false;
           showToast('Spot pubblicato con successo!', 'success');
           showView('my-spots');
           await loadUserSpots();
@@ -5664,45 +6024,60 @@ async function saveSpotChanges(spotId) {
     }
 
     // ========== SPOT DETAIL ==========
-    async function viewSpotDetail(spotId) {
+   async function viewSpotDetail(spotId) {
       showLoading('Caricamento dettagli...');
       try {
-        const response = await fetch(`${API_BASE}/spots`);
-        const spots = await response.json();
-        const spot = spots.find(s => s._id === spotId);
+        // Prima cerca lo spot nei dati già caricati
+        let spot = state.spots.find(s => s._id === spotId);
+        
+        // Se non lo trova, cerca nei dati dell'utente
+        if (!spot) {
+          const response = await fetch(`${API_BASE}/spots?userOnly=true`);
+          const userSpots = await response.json();
+          spot = userSpots.find(s => s._id === spotId);
+        }
+        
+        // Se ancora non lo trova, cerca nel mercato
+        if (!spot) {
+          const response = await fetch(`${API_BASE}/spots`);
+          const allSpots = await response.json();
+          spot = allSpots.find(s => s._id === spotId);
+        }
         
         if (!spot) {
           showToast('Spot non trovato', 'error');
+          hideLoading();
           return;
         }
-
+    
         document.getElementById('detail-title').textContent = spot.give;
         
         const content = document.getElementById('detail-content');
         content.innerHTML = `
           <div class="tags mb-2">
             <span class="badge badge-info">${spot.category}</span>
-            <span class="badge badge-${spot.status === 'active' ? 'success' : spot.status === 'in_trade' ? 'warning' : 'danger'}">
-              ${spot.status === 'active' ? 'Disponibile' : spot.status === 'in_trade' ? 'In scambio' : 'Completato'}
+            <span class="badge badge-${spot.status === 'active' ? 'success' : spot.status === 'in_trade' ? 'warning' : spot.status === 'completed' ? 'info' : 'danger'}">
+              ${spot.status === 'active' ? 'Attivo' : spot.status === 'in_trade' ? 'In scambio' : spot.status === 'completed' ? 'Completato' : 'Eliminato'}
             </span>
+            ${spot.isPrivate ? '<span class="badge badge-warning">🔒 Privato</span>' : ''}
             ${spot.acquired ? '<span class="badge badge-warning">Ottenuto</span>' : ''}
             ${spot.offeredForTrade ? '<span class="badge badge-primary">In offerta</span>' : ''}
           </div>
-
+    
           <div class="mb-2">
             <strong>Autore:</strong> ${escapeHtml(spot.author)}
             ${spot.originalAuthor ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Originale: ${escapeHtml(spot.originalAuthor)}</div>` : ''}
           </div>
-
+    
           <div class="mb-2">
             <strong>Zona:</strong> 📍 ${escapeHtml(spot.region)}
           </div>
-
+    
           <div class="mb-2">
             <strong>Pubblicato:</strong> ${getTimeAgo(spot.createdAt)}
             ${spot.acquiredDate ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Ottenuto: ${new Date(spot.acquiredDate).toLocaleDateString('it-IT')}</div>` : ''}
           </div>
-
+    
           <div class="spot-exchange mb-2">
             <div class="spot-exchange-row">
               <strong>${spot.acquired ? 'Spot' : 'Offre'}:</strong> ${escapeHtml(spot.give)}
@@ -5713,13 +6088,13 @@ async function saveSpotChanges(spotId) {
               </div>
             ` : ''}
           </div>
-
+    
           <div class="mb-2">
             <strong>Descrizione:</strong>
             <p style="margin-top:6px;font-size:13px">${escapeHtml(spot.description || 'Nessuna descrizione')}</p>
           </div>
-
-          ${spot.coordinates && (spot.status === 'completed' || spot.acquired) ? `
+    
+          ${spot.coordinates && (spot.status === 'completed' || spot.acquired || spot.author === state.user.username) ? `
             <div class="coordinates-box">
               <strong>📍 Coordinate GPS</strong>
               <div style="margin-top:6px">${escapeHtml(spot.coordinates)}</div>
@@ -5727,11 +6102,15 @@ async function saveSpotChanges(spotId) {
                 Apri in Google Maps
               </button>
             </div>
+          ` : spot.coordinates && spot.author !== state.user.username ? `
+            <div class="alert alert-warning">
+              🔒 Le coordinate saranno visibili solo dopo lo scambio completato
+            </div>
           ` : ''}
         `;
-
+    
         const actions = document.getElementById('detail-actions');
-        if (spot.author !== state.user.username && spot.status === 'active' && !spot.hasPendingTradeRequest) {
+        if (spot.author !== state.user.username && spot.status === 'active' && !spot.hasPendingTradeRequest && !spot.isPrivate) {
           actions.innerHTML = `
             <button class="btn btn-primary btn-lg" onclick="openOfferModal('${spot._id}')">
               Proponi scambio
@@ -5741,7 +6120,7 @@ async function saveSpotChanges(spotId) {
           actions.innerHTML = `
             <div class="flex gap-2">
               <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Chiudi</button>
-              <button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina spot</button>
+              ${spot.isPrivate ? '' : `<button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina spot</button>`}
             </div>
           `;
         } else if (spot.hasPendingTradeRequest) {
@@ -5751,9 +6130,9 @@ async function saveSpotChanges(spotId) {
             </div>
           `;
         } else {
-          actions.innerHTML = '';
+          actions.innerHTML = '<button class="btn btn-ghost" onclick="closeModal(\'modal-detail\')">Chiudi</button>';
         }
-
+    
         openModal('modal-detail');
       } catch (error) {
         console.error('Error viewing spot detail:', error);
@@ -5895,59 +6274,161 @@ async function saveSpotChanges(spotId) {
       lastTouchEnd = now;
     }, { passive: false });
 
-// Prevenzione scroll orizzontale su mobile
-function preventHorizontalScroll() {
-  document.addEventListener('touchmove', function(e) {
-    if (e.touches.length > 1) {
-      e.preventDefault();
-      return;
-    }
-    
-    const touch = e.touches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
-    
-    // Se il movimento è principalmente orizzontale, previenilo
-    if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // Previeni lo scroll orizzontale con la rotellina del mouse
-  document.addEventListener('wheel', function(e) {
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // Fix per iOS
-  document.addEventListener('touchstart', function(e) {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      this.startX = touch.pageX;
-      this.startY = touch.pageY;
-    }
-  }, { passive: true });
-  
-  document.addEventListener('touchmove', function(e) {
-    if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const diffX = touch.pageX - this.startX;
-        const diffY = touch.pageY - this.startY;
+    // Prevenzione scroll orizzontale su mobile
+    function preventHorizontalScroll() {
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) {
+          e.preventDefault();
+          return;
+        }
         
-        // Se il movimento è più orizzontale che verticale, previenilo
-        if (Math.abs(diffX) > Math.abs(diffY)) {
+        const touch = e.touches[0];
+        const x = touch.clientX;
+        const y = touch.clientY;
+        
+        // Se il movimento è principalmente orizzontale, previenilo
+        if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
           e.preventDefault();
         }
+      }, { passive: false });
+      
+      // Previeni lo scroll orizzontale con la rotellina del mouse
+      document.addEventListener('wheel', function(e) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Fix per iOS
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          this.startX = touch.pageX;
+          this.startY = touch.pageY;
+        }
+      }, { passive: true });
+      
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const diffX = touch.pageX - this.startX;
+            const diffY = touch.pageY - this.startY;
+            
+            // Se il movimento è più orizzontale che verticale, previenilo
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+              e.preventDefault();
+            }
+          }
+        }, { passive: false });
       }
-    }, { passive: false });
-  }
-  
-  // Chiama la funzione all'inizio
-  preventHorizontalScroll();
+    preventHorizontalScroll();
+      // ========== USER LEVEL SYSTEM ==========
+    function getUserLevel(spotCount) {
+      if (spotCount >= 30) return { level: 7, name: 'Maestro', color: 'level-7' };
+      if (spotCount >= 15) return { level: 6, name: 'Esperto', color: 'level-6' };
+      if (spotCount >= 10) return { level: 5, name: 'Veterano', color: 'level-5' };
+      if (spotCount >= 5) return { level: 4, name: 'Avanzato', color: 'level-4' };
+      if (spotCount >= 3) return { level: 3, name: 'Intermedio', color: 'level-3' };
+      if (spotCount >= 1) return { level: 2, name: 'Base', color: 'level-2' };
+      return { level: 1, name: 'Novizio', color: 'level-1' };
+    }
+      // Chiama la funzione all'inizio
+    // ========== FUNZIONI PROVINCE ==========
+    function populateProvinces(region, targetElementId) {
+      const select = document.getElementById(targetElementId);
+      select.innerHTML = '<option value="">Seleziona provincia...</option>';
+      
+      if (region && italianProvinces[region]) {
+        italianProvinces[region].forEach(province => {
+          const option = document.createElement('option');
+          option.value = province;
+          option.textContent = province;
+          select.appendChild(option);
+        });
+      }
+    }
     
-    // ========== START APP ==========
+    // Setup event listeners per province
+    document.addEventListener('DOMContentLoaded', function() {
+      // Quando cambia la regione nel form nuovo spot
+      const regionSelect = document.getElementById('input-region');
+      if (regionSelect) {
+        regionSelect.addEventListener('change', function() {
+          populateProvinces(this.value, 'input-province');
+        });
+      }
+      
+      // Quando cambia la regione nei filtri
+      const filterRegion = document.getElementById('filter-region');
+      if (filterRegion) {
+        filterRegion.addEventListener('change', function() {
+          const provinceSelect = document.getElementById('filter-province');
+          provinceSelect.innerHTML = '<option value="all">Tutte le province</option>';
+          
+          if (this.value !== 'all' && italianProvinces[this.value]) {
+            italianProvinces[this.value].forEach(province => {
+              const option = document.createElement('option');
+              option.value = province;
+              option.textContent = province;
+              provinceSelect.appendChild(option);
+            });
+          }
+        });
+      }
+    });
+        // ========== POPUP AGGIORNAMENTO ==========
+    function showUpdatePopup() {
+      // Controlla se l'utente ha già chiuso il popup nelle ultime 6 ore
+      const lastPopupClose = localStorage.getItem('lastUpdatePopupClose');
+      if (lastPopupClose) {
+        const sixHours = 6 * 60 * 60 * 1000; // 6 ore in millisecondi
+        if (Date.now() - parseInt(lastPopupClose) < sixHours) {
+          return; // Non mostrare, sono passate meno di 6 ore
+        }
+      }
+      
+      // Mostra il popup
+      document.getElementById('update-popup').style.display = 'flex';
+    }
+    
+    function closeUpdatePopup() {
+      const popup = document.getElementById('update-popup');
+      popup.style.display = 'none';
+      
+      // Se l'utente ha selezionato "Non mostrare più per 6 ore"
+      const dontShowAgain = document.getElementById('dont-show-again').checked;
+      if (dontShowAgain) {
+        localStorage.setItem('lastUpdatePopupClose', Date.now().toString());
+      }
+    }
+    
+    // Chiama questa funzione quando l'app è pronta
+    // Aggiungi questa chiamata alla funzione init():
+    async function init() {
+      await checkSession();
+      if (!state.user) {
+        showLogin();
+      } else if (state.isAdmin) {
+        showAdminPanel();
+        loadAdminData();
+      } else {
+        setupEventListeners();
+        await loadInitialData();
+        showView('market');
+        updateUI();
+        startVerificationChecker();
+        
+        // MOSTRA IL POPUP DI AGGIORNAMENTO
+        setTimeout(() => {
+          showUpdatePopup();
+        }, 1000);
+      }
+      if (state.user && state.user.isTemporaryLogin) {
+        document.getElementById('return-to-admin-btn').style.display = 'block';
+      }
+    }
+        // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  
 </body>
-</html>
