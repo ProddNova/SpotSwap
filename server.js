@@ -20,7 +20,29 @@ app.use(express.static('public'));
 // Configure multer for file upload
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
+// Aggiungi dopo le altre costanti
+const italianProvinces = {
+  'Abruzzo': ['Chieti', 'L\'Aquila', 'Pescara', 'Teramo'],
+  'Basilicata': ['Matera', 'Potenza'],
+  'Calabria': ['Catanzaro', 'Cosenza', 'Crotone', 'Reggio Calabria', 'Vibo Valentia'],
+  'Campania': ['Avellino', 'Benevento', 'Caserta', 'Napoli', 'Salerno'],
+  'Emilia-Romagna': ['Bologna', 'Ferrara', 'Forlì-Cesena', 'Modena', 'Parma', 'Piacenza', 'Ravenna', 'Reggio Emilia', 'Rimini'],
+  'Friuli-Venezia Giulia': ['Gorizia', 'Pordenone', 'Trieste', 'Udine'],
+  'Lazio': ['Frosinone', 'Latina', 'Rieti', 'Roma', 'Viterbo'],
+  'Liguria': ['Genova', 'Imperia', 'La Spezia', 'Savona'],
+  'Lombardia': ['Bergamo', 'Brescia', 'Como', 'Cremona', 'Lecco', 'Lodi', 'Mantova', 'Milano', 'Monza e Brianza', 'Pavia', 'Sondrio', 'Varese'],
+  'Marche': ['Ancona', 'Ascoli Piceno', 'Fermo', 'Macerata', 'Pesaro e Urbino'],
+  'Molise': ['Campobasso', 'Isernia'],
+  'Piemonte': ['Alessandria', 'Asti', 'Biella', 'Cuneo', 'Novara', 'Torino', 'Verbano-Cusio-Ossola', 'Vercelli'],
+  'Puglia': ['Bari', 'Barletta-Andria-Trani', 'Brindisi', 'Foggia', 'Lecce', 'Taranto'],
+  'Sardegna': ['Cagliari', 'Nuoro', 'Oristano', 'Sassari', 'Sud Sardegna'],
+  'Sicilia': ['Agrigento', 'Caltanissetta', 'Catania', 'Enna', 'Messina', 'Palermo', 'Ragusa', 'Siracusa', 'Trapani'],
+  'Toscana': ['Arezzo', 'Firenze', 'Grosseto', 'Livorno', 'Lucca', 'Massa-Carrara', 'Pisa', 'Pistoia', 'Prato', 'Siena'],
+  'Trentino-Alto Adige': ['Bolzano', 'Trento'],
+  'Umbria': ['Perugia', 'Terni'],
+  'Valle d\'Aosta': ['Aosta'],
+  'Veneto': ['Belluno', 'Padova', 'Rovigo', 'Treviso', 'Venezia', 'Verona', 'Vicenza']
+};
 // Session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'spotswap-secret-key-2024',
@@ -65,6 +87,7 @@ const spotSchema = new mongoose.Schema({
     give: { type: String, required: true },
     want: { type: String, required: true },
     region: { type: String, required: true },
+    province: { type: String, required: true },
     coordinates: { type: String, required: true },
     category: { 
         type: String, 
@@ -454,10 +477,19 @@ app.post('/api/spots', requireAuth, async (req, res) => {
     try {
         const spotData = {
             ...req.body,
+            province: req.body.province, // AGGIUNGI
             author: req.session.user.username,
             authorId: req.session.user.id,
             status: 'active'
         };
+        
+        // Validazione: controlla che la provincia sia valida per la regione
+        if (spotData.province) {
+            const validProvinces = italianProvinces[spotData.region] || [];
+            if (!validProvinces.includes(spotData.province)) {
+                return res.status(400).json({ error: 'Provincia non valida per la regione selezionata' });
+            }
+        }
         
         const spot = new Spot(spotData);
         await spot.save();
@@ -1360,6 +1392,7 @@ app.post('/api/admin/return-to-admin', async (req, res) => {
 
 app.get('/api/admin/trades', requireAdmin, async (req, res) => {
     try {
+        // Ora mostra TUTTI gli scambi, non solo quelli in attesa di admin
         const trades = await TradeRequest.find()
             .populate('spotId')
             .populate('offeredSpots')
@@ -1367,7 +1400,16 @@ app.get('/api/admin/trades', requireAdmin, async (req, res) => {
             .sort({ createdAt: -1 })
             .lean();
         
-        res.json(trades);
+        // Aggiungi un campo per distinguere gli scambi in attesa di admin
+        const tradesWithStatus = trades.map(trade => {
+            const needsAdminApproval = !trade.adminApproved && !trade.adminRejected && trade.status === 'pending';
+            return {
+                ...trade,
+                needsAdminApproval
+            };
+        });
+        
+        res.json(tradesWithStatus);
     } catch (error) {
         console.error('Error fetching trades:', error);
         res.status(500).json({ error: 'Errore interno del server' });
