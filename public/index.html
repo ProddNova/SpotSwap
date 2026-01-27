@@ -2562,6 +2562,15 @@
               <option value="Veneto">Veneto</option>
             </select>
           </div>
+          
+          <!-- AGGIUNGI QUESTO NUOVO FILTRO PER PROVINCIA -->
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Provincia</label>
+            <select class="form-select" id="filter-province">
+              <option value="all">Tutte le province</option>
+              <!-- Le province saranno caricate dinamicamente -->
+            </select>
+          </div>
         </div>
 
         <div class="flex gap-2 mt-2" style="align-items:center">
@@ -2764,6 +2773,29 @@
             </select>
             <div class="form-hint">Seleziona la regione dello spot</div>
           </div>
+        
+          <!-- AGGIUNGI QUESTO NUOVO SELECT PER LA PROVINCIA -->
+          <div class="form-group">
+            <label class="form-label">Provincia</label>
+            <select class="form-select" id="input-province">
+              <option value="">Seleziona provincia...</option>
+              <!-- Le province saranno caricate dinamicamente in base alla regione -->
+            </select>
+            <div class="form-hint">Seleziona la provincia dello spot</div>
+          </div>
+        
+          <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" id="input-category">
+              <option value="industriale">Industriale</option>
+              <option value="hotel">Hotel</option>
+              <option value="villa">Villa</option>
+              <option value="sanitario">Sanitario</option>
+              <option value="militare">Militare</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+        </div>
 
           <div class="form-group">
             <label class="form-label">Categoria</label>
@@ -2911,7 +2943,36 @@
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
-
+  <!-- POPUP AGGIORNAMENTO -->
+  <div id="update-popup" class="modal-overlay" style="display: none;">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🆕 Novità dell'ultimo aggiornamento</h3>
+        <button class="modal-close" onclick="closeUpdatePopup()">&times;</button>
+      </div>
+      
+      <div style="padding: 20px;">
+        <div style="margin-bottom: 20px; padding: 15px; background: var(--bg-light); border-radius: 8px; border-left: 4px solid var(--primary);">
+          <strong>✨ Cosa c'è di nuovo:</strong>
+          <ul style="margin-top: 10px; padding-left: 20px;">
+            <li style="margin-bottom: 8px;"><strong>📍 Provincia:</strong> Ora puoi specificare la provincia quando crei uno spot</li>
+            <li style="margin-bottom: 8px;"><strong>🔍 Filtri avanzati:</strong> Nuovo filtro per provincia nella ricerca</li>
+            <li style="margin-bottom: 8px;"><strong>📋 Admin migliorato:</strong> Gli admin ora vedono TUTTI gli scambi in attesa</li>
+            <li style="margin-bottom: 8px;"><strong>⏱️ Interfaccia pulita:</strong> Rimosso il contatore "tempo fa" dagli spot</li>
+          </ul>
+        </div>
+        
+        <div class="checkbox-label" style="margin-bottom: 15px;">
+          <input type="checkbox" id="dont-show-again">
+          <span style="font-size: 13px;">Non mostrare più per 6 ore</span>
+        </div>
+        
+        <button class="btn btn-primary btn-lg" onclick="closeUpdatePopup()" style="width: 100%;">
+          Ho capito, continua!
+        </button>
+      </div>
+    </div>
+  </div>
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -2939,7 +3000,29 @@
       adminTrades: [],
       adminUsers: []
     };
-
+    // ========== PROVINCE ITALIANE ==========
+    const italianProvinces = {
+      'Abruzzo': ['Chieti', 'L\'Aquila', 'Pescara', 'Teramo'],
+      'Basilicata': ['Matera', 'Potenza'],
+      'Calabria': ['Catanzaro', 'Cosenza', 'Crotone', 'Reggio Calabria', 'Vibo Valentia'],
+      'Campania': ['Avellino', 'Benevento', 'Caserta', 'Napoli', 'Salerno'],
+      'Emilia-Romagna': ['Bologna', 'Ferrara', 'Forlì-Cesena', 'Modena', 'Parma', 'Piacenza', 'Ravenna', 'Reggio Emilia', 'Rimini'],
+      'Friuli-Venezia Giulia': ['Gorizia', 'Pordenone', 'Trieste', 'Udine'],
+      'Lazio': ['Frosinone', 'Latina', 'Rieti', 'Roma', 'Viterbo'],
+      'Liguria': ['Genova', 'Imperia', 'La Spezia', 'Savona'],
+      'Lombardia': ['Bergamo', 'Brescia', 'Como', 'Cremona', 'Lecco', 'Lodi', 'Mantova', 'Milano', 'Monza e Brianza', 'Pavia', 'Sondrio', 'Varese'],
+      'Marche': ['Ancona', 'Ascoli Piceno', 'Fermo', 'Macerata', 'Pesaro e Urbino'],
+      'Molise': ['Campobasso', 'Isernia'],
+      'Piemonte': ['Alessandria', 'Asti', 'Biella', 'Cuneo', 'Novara', 'Torino', 'Verbano-Cusio-Ossola', 'Vercelli'],
+      'Puglia': ['Bari', 'Barletta-Andria-Trani', 'Brindisi', 'Foggia', 'Lecce', 'Taranto'],
+      'Sardegna': ['Cagliari', 'Nuoro', 'Oristano', 'Sassari', 'Sud Sardegna'],
+      'Sicilia': ['Agrigento', 'Caltanissetta', 'Catania', 'Enna', 'Messina', 'Palermo', 'Ragusa', 'Siracusa', 'Trapani'],
+      'Toscana': ['Arezzo', 'Firenze', 'Grosseto', 'Livorno', 'Lucca', 'Massa-Carrara', 'Pisa', 'Pistoia', 'Prato', 'Siena'],
+      'Trentino-Alto Adige': ['Bolzano', 'Trento'],
+      'Umbria': ['Perugia', 'Terni'],
+      'Valle d\'Aosta': ['Aosta'],
+      'Veneto': ['Belluno', 'Padova', 'Rovigo', 'Treviso', 'Venezia', 'Verona', 'Vicenza']
+    };
     // ========== MAP VARIABLES ==========
     let map = null;
     let markers = [];
@@ -4943,7 +5026,8 @@ async function saveSpotChanges(spotId) {
       const search = document.getElementById('filter-search').value.toLowerCase();
       const category = document.getElementById('filter-category').value;
       const region = document.getElementById('filter-region').value;
-
+      const province = document.getElementById('filter-province').value; // AGGIUNGI
+    
       try {
         const response = await fetch(`${API_BASE}/spots?excludeRequested=true`);
         if (!response.ok) throw new Error('Failed to load spots');
@@ -4954,7 +5038,7 @@ async function saveSpotChanges(spotId) {
           if (spot.status !== 'active') return false;
           if (spot.author === state.user.username) return false;
           if (spot.offeredForTrade) return false;
-
+    
           const matchSearch = !search || 
             spot.give.toLowerCase().includes(search) ||
             spot.want.toLowerCase().includes(search) ||
@@ -4963,8 +5047,9 @@ async function saveSpotChanges(spotId) {
             
           const matchCategory = category === 'all' || spot.category === category;
           const matchRegion = region === 'all' || spot.region === region;
-
-          return matchSearch && matchCategory && matchRegion;
+          const matchProvince = province === 'all' || spot.province === province; // AGGIUNGI
+    
+          return matchSearch && matchCategory && matchRegion && matchProvince; // MODIFICA
         });
 
         const grid = document.getElementById('market-grid');
@@ -5007,7 +5092,7 @@ async function saveSpotChanges(spotId) {
       
           <div class="tags">
             <span class="badge badge-info">${spot.category}</span>
-            <span class="badge badge-primary">${getTimeAgo(spot.createdAt)}</span>
+            ${spot.province ? `<span class="badge badge-primary">${escapeHtml(spot.province)}</span>` : ''}
           </div>
       
           <div class="${spot.authorIsContentCreator ? 'creator-name' : 'user-' + userLevel.color}" style="margin-top:10px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;">
@@ -5796,28 +5881,29 @@ async function saveSpotChanges(spotId) {
       const give = document.getElementById('input-give').value.trim();
       const want = document.getElementById('input-want').value.trim();
       const region = document.getElementById('input-region').value;
+      const province = document.getElementById('input-province').value; // AGGIUNGI
       const coordinatesInput = document.getElementById('input-coordinates').value.trim();
       const category = document.getElementById('input-category').value;
       const description = document.getElementById('input-description').value.trim();
       const legal = document.getElementById('input-legal').checked;
-
-      if (!give || !want || !region) {
+    
+      if (!give || !want || !region || !province) { // MODIFICA: aggiungi !province
         showToast('Compila tutti i campi obbligatori', 'error');
         return;
       }
-
+    
       if (!coordinatesInput) {
         showToast('Inserisci le coordinate GPS o un link Google Maps', 'error');
         return;
       }
-
+    
       if (!legal) {
         showToast('Devi confermare di avere accordi per questo spot', 'error');
         return;
       }
-
+    
       showLoading('Pubblicazione spot...');
-
+    
       let coordinates = await extractCoordinatesFromLink(coordinatesInput);
       
       if (!coordinates || !coordinates.includes(',')) {
@@ -5825,7 +5911,7 @@ async function saveSpotChanges(spotId) {
         hideLoading();
         return;
       }
-
+    
       try {
         const response = await fetch(`${API_BASE}/spots`, {
           method: 'POST',
@@ -5834,10 +5920,11 @@ async function saveSpotChanges(spotId) {
             give, 
             want, 
             region, 
+            province, // AGGIUNGI
             coordinates,
             category,
             description: description || 'Nessuna descrizione',
-            isPrivate: document.getElementById('input-private').checked // ← AGGIUNGI QUESTA RIGA
+            isPrivate: document.getElementById('input-private').checked
           })
         });
         
@@ -5847,10 +5934,11 @@ async function saveSpotChanges(spotId) {
           document.getElementById('input-give').value = '';
           document.getElementById('input-want').value = '';
           document.getElementById('input-region').value = '';
+          document.getElementById('input-province').value = ''; // AGGIUNGI
           document.getElementById('input-coordinates').value = '';
           document.getElementById('input-description').value = '';
           document.getElementById('input-legal').checked = false;
-          document.getElementById('input-private').checked = false; // ← AGGIUNGI QUESTA RIGA
+          document.getElementById('input-private').checked = false;
           showToast('Spot pubblicato con successo!', 'success');
           showView('my-spots');
           await loadUserSpots();
@@ -6140,68 +6228,161 @@ async function saveSpotChanges(spotId) {
       lastTouchEnd = now;
     }, { passive: false });
 
-// Prevenzione scroll orizzontale su mobile
-function preventHorizontalScroll() {
-  document.addEventListener('touchmove', function(e) {
-    if (e.touches.length > 1) {
-      e.preventDefault();
-      return;
-    }
-    
-    const touch = e.touches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
-    
-    // Se il movimento è principalmente orizzontale, previenilo
-    if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // Previeni lo scroll orizzontale con la rotellina del mouse
-  document.addEventListener('wheel', function(e) {
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // Fix per iOS
-  document.addEventListener('touchstart', function(e) {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      this.startX = touch.pageX;
-      this.startY = touch.pageY;
-    }
-  }, { passive: true });
-  
-  document.addEventListener('touchmove', function(e) {
-    if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const diffX = touch.pageX - this.startX;
-        const diffY = touch.pageY - this.startY;
+    // Prevenzione scroll orizzontale su mobile
+    function preventHorizontalScroll() {
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) {
+          e.preventDefault();
+          return;
+        }
         
-        // Se il movimento è più orizzontale che verticale, previenilo
-        if (Math.abs(diffX) > Math.abs(diffY)) {
+        const touch = e.touches[0];
+        const x = touch.clientX;
+        const y = touch.clientY;
+        
+        // Se il movimento è principalmente orizzontale, previenilo
+        if (Math.abs(e.movementX) > Math.abs(e.movementY)) {
           e.preventDefault();
         }
+      }, { passive: false });
+      
+      // Previeni lo scroll orizzontale con la rotellina del mouse
+      document.addEventListener('wheel', function(e) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Fix per iOS
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) {
+          const touch = e.touches[0];
+          this.startX = touch.pageX;
+          this.startY = touch.pageY;
+        }
+      }, { passive: true });
+      
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const diffX = touch.pageX - this.startX;
+            const diffY = touch.pageY - this.startY;
+            
+            // Se il movimento è più orizzontale che verticale, previenilo
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+              e.preventDefault();
+            }
+          }
+        }, { passive: false });
       }
-    }, { passive: false });
-  }
-preventHorizontalScroll();
-  // ========== USER LEVEL SYSTEM ==========
-function getUserLevel(spotCount) {
-  if (spotCount >= 30) return { level: 7, name: 'Maestro', color: 'level-7' };
-  if (spotCount >= 15) return { level: 6, name: 'Esperto', color: 'level-6' };
-  if (spotCount >= 10) return { level: 5, name: 'Veterano', color: 'level-5' };
-  if (spotCount >= 5) return { level: 4, name: 'Avanzato', color: 'level-4' };
-  if (spotCount >= 3) return { level: 3, name: 'Intermedio', color: 'level-3' };
-  if (spotCount >= 1) return { level: 2, name: 'Base', color: 'level-2' };
-  return { level: 1, name: 'Novizio', color: 'level-1' };
-}
-  // Chiama la funzione all'inizio
-
+    preventHorizontalScroll();
+      // ========== USER LEVEL SYSTEM ==========
+    function getUserLevel(spotCount) {
+      if (spotCount >= 30) return { level: 7, name: 'Maestro', color: 'level-7' };
+      if (spotCount >= 15) return { level: 6, name: 'Esperto', color: 'level-6' };
+      if (spotCount >= 10) return { level: 5, name: 'Veterano', color: 'level-5' };
+      if (spotCount >= 5) return { level: 4, name: 'Avanzato', color: 'level-4' };
+      if (spotCount >= 3) return { level: 3, name: 'Intermedio', color: 'level-3' };
+      if (spotCount >= 1) return { level: 2, name: 'Base', color: 'level-2' };
+      return { level: 1, name: 'Novizio', color: 'level-1' };
+    }
+      // Chiama la funzione all'inizio
+    // ========== FUNZIONI PROVINCE ==========
+    function populateProvinces(region, targetElementId) {
+      const select = document.getElementById(targetElementId);
+      select.innerHTML = '<option value="">Seleziona provincia...</option>';
+      
+      if (region && italianProvinces[region]) {
+        italianProvinces[region].forEach(province => {
+          const option = document.createElement('option');
+          option.value = province;
+          option.textContent = province;
+          select.appendChild(option);
+        });
+      }
+    }
     
-    // ========== START APP ==========
+    // Setup event listeners per province
+    document.addEventListener('DOMContentLoaded', function() {
+      // Quando cambia la regione nel form nuovo spot
+      const regionSelect = document.getElementById('input-region');
+      if (regionSelect) {
+        regionSelect.addEventListener('change', function() {
+          populateProvinces(this.value, 'input-province');
+        });
+      }
+      
+      // Quando cambia la regione nei filtri
+      const filterRegion = document.getElementById('filter-region');
+      if (filterRegion) {
+        filterRegion.addEventListener('change', function() {
+          const provinceSelect = document.getElementById('filter-province');
+          provinceSelect.innerHTML = '<option value="all">Tutte le province</option>';
+          
+          if (this.value !== 'all' && italianProvinces[this.value]) {
+            italianProvinces[this.value].forEach(province => {
+              const option = document.createElement('option');
+              option.value = province;
+              option.textContent = province;
+              provinceSelect.appendChild(option);
+            });
+          }
+        });
+      }
+    });
+        // ========== POPUP AGGIORNAMENTO ==========
+    function showUpdatePopup() {
+      // Controlla se l'utente ha già chiuso il popup nelle ultime 6 ore
+      const lastPopupClose = localStorage.getItem('lastUpdatePopupClose');
+      if (lastPopupClose) {
+        const sixHours = 6 * 60 * 60 * 1000; // 6 ore in millisecondi
+        if (Date.now() - parseInt(lastPopupClose) < sixHours) {
+          return; // Non mostrare, sono passate meno di 6 ore
+        }
+      }
+      
+      // Mostra il popup
+      document.getElementById('update-popup').style.display = 'flex';
+    }
+    
+    function closeUpdatePopup() {
+      const popup = document.getElementById('update-popup');
+      popup.style.display = 'none';
+      
+      // Se l'utente ha selezionato "Non mostrare più per 6 ore"
+      const dontShowAgain = document.getElementById('dont-show-again').checked;
+      if (dontShowAgain) {
+        localStorage.setItem('lastUpdatePopupClose', Date.now().toString());
+      }
+    }
+    
+    // Chiama questa funzione quando l'app è pronta
+    // Aggiungi questa chiamata alla funzione init():
+    async function init() {
+      await checkSession();
+      if (!state.user) {
+        showLogin();
+      } else if (state.isAdmin) {
+        showAdminPanel();
+        loadAdminData();
+      } else {
+        setupEventListeners();
+        await loadInitialData();
+        showView('market');
+        updateUI();
+        startVerificationChecker();
+        
+        // MOSTRA IL POPUP DI AGGIORNAMENTO
+        setTimeout(() => {
+          showUpdatePopup();
+        }, 1000);
+      }
+      if (state.user && state.user.isTemporaryLogin) {
+        document.getElementById('return-to-admin-btn').style.display = 'block';
+      }
+    }
+        // ========== START APP ==========
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  
 </body>
