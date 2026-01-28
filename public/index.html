@@ -2942,36 +2942,7 @@
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
-  <!-- POPUP AGGIORNAMENTO -->
-  <div id="update-popup" class="modal-overlay" style="display: none;">
-    <div class="modal" style="max-width: 500px;">
-      <div class="modal-header">
-        <h3 class="modal-title">🆕 Novità dell'ultimo aggiornamento</h3>
-        <button class="modal-close" onclick="closeUpdatePopup()">&times;</button>
-      </div>
-      
-      <div style="padding: 20px;">
-        <div style="margin-bottom: 20px; padding: 15px; background: var(--bg-light); border-radius: 8px; border-left: 4px solid var(--primary);">
-          <strong>✨ Cosa c'è di nuovo:</strong>
-          <ul style="margin-top: 10px; padding-left: 20px;">
-            <li style="margin-bottom: 8px;"><strong>📍 Provincia:</strong> Specifica la provincia durante la creazione di uno spot per una migliore geolocalizzazione.</li>
-            <li style="margin-bottom: 8px;"><strong>🔍 Filtri avanzati:</strong> Filtra la ricerca degli spot per provincia per trovare più facilmente i luoghi che ti interessano.</li>
-            <li style="margin-bottom: 8px;"><strong>🏆 Livello Utente:</strong> Nuovo sistema di livelli basato sul numero di spot pubblicati. Più condividi, più sali di grado!</li>
-            <li style="margin-bottom: 8px;"><strong>🕵️‍♂️ Spot Privati:</strong> Ora puoi creare spot visibili solo a te, per costruire una mappa personale dei luoghi abbandonati da esplorare.</li>
-          </ul>
-        </div>
-        
-        <div class="checkbox-label" style="margin-bottom: 15px;">
-          <input type="checkbox" id="dont-show-again">
-          <span style="font-size: 13px;">Non mostrare più per 6 ore</span>
-        </div>
-        
-        <button class="btn btn-primary btn-lg" onclick="closeUpdatePopup()" style="width: 100%;">
-          Ho capito, continua!
-        </button>
-      </div>
-    </div>
-  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
