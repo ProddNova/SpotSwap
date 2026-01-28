@@ -2942,36 +2942,7 @@
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
-  <!-- POPUP AGGIORNAMENTO -->
-  <div id="update-popup" class="modal-overlay" style="display: none;">
-    <div class="modal" style="max-width: 500px;">
-      <div class="modal-header">
-        <h3 class="modal-title">🆕 Novità dell'ultimo aggiornamento</h3>
-        <button class="modal-close" onclick="closeUpdatePopup()">&times;</button>
-      </div>
-      
-      <div style="padding: 20px;">
-        <div style="margin-bottom: 20px; padding: 15px; background: var(--bg-light); border-radius: 8px; border-left: 4px solid var(--primary);">
-          <strong>✨ Cosa c'è di nuovo:</strong>
-          <ul style="margin-top: 10px; padding-left: 20px;">
-            <li style="margin-bottom: 8px;"><strong>📍 Provincia:</strong> Specifica la provincia durante la creazione di uno spot per una migliore geolocalizzazione.</li>
-            <li style="margin-bottom: 8px;"><strong>🔍 Filtri avanzati:</strong> Filtra la ricerca degli spot per provincia per trovare più facilmente i luoghi che ti interessano.</li>
-            <li style="margin-bottom: 8px;"><strong>🏆 Livello Utente:</strong> Nuovo sistema di livelli basato sul numero di spot pubblicati. Più condividi, più sali di grado!</li>
-            <li style="margin-bottom: 8px;"><strong>🕵️‍♂️ Spot Privati:</strong> Ora puoi creare spot visibili solo a te, per costruire una mappa personale dei luoghi abbandonati da esplorare.</li>
-          </ul>
-        </div>
-        
-        <div class="checkbox-label" style="margin-bottom: 15px;">
-          <input type="checkbox" id="dont-show-again">
-          <span style="font-size: 13px;">Non mostrare più per 6 ore</span>
-        </div>
-        
-        <button class="btn btn-primary btn-lg" onclick="closeUpdatePopup()" style="width: 100%;">
-          Ho capito, continua!
-        </button>
-      </div>
-    </div>
-  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -4921,25 +4892,29 @@ async function saveSpotChanges(spotId) {
       }, 300);
     }
 
-      function addMarkersToMap() {
-        if (!map) return;
-        
-        let userSpots = state.spots.filter(s => 
-          (s.author === state.user.username && !s.acquired && !s.originalSpotId) || 
-          (s.acquired && s.currentOwner === state.user.username)
-        );
+    function addMarkersToMap() {
+      if (!map) return;
       
-        if (currentMapFilter === 'published') {
-          userSpots = userSpots.filter(s => !s.acquired && !s.isPrivate);
-        } else if (currentMapFilter === 'acquired') {
-          userSpots = userSpots.filter(s => s.acquired);
-        } else if (currentMapFilter === 'private') {
-          userSpots = userSpots.filter(s => s.isPrivate === true && !s.acquired);
-        }
-
+      let userSpots = state.spots.filter(s => 
+        (s.author === state.user.username && !s.acquired && !s.originalSpotId) || 
+        (s.acquired && s.currentOwner === state.user.username)
+      );
+    
+      if (currentMapFilter === 'published') {
+        // Solo spot pubblici pubblicati dall'utente
+        userSpots = userSpots.filter(s => !s.acquired && s.isPrivate !== true);
+      } else if (currentMapFilter === 'acquired') {
+        // Solo spot ottenuti tramite scambio
+        userSpots = userSpots.filter(s => s.acquired);
+      } else if (currentMapFilter === 'private') {
+        // Solo spot privati (non pubblici)
+        userSpots = userSpots.filter(s => s.isPrivate === true && !s.acquired);
+      }
+      // Per 'all' mostra tutti gli spot
+    
       markers.forEach(marker => marker.remove());
       markers = [];
-
+    
       if (userSpots.length === 0) {
         const bounds = L.latLngBounds([[47.09, 6.63], [36.65, 18.48]]);
         map.fitBounds(bounds);
@@ -5056,6 +5031,7 @@ async function saveSpotChanges(spotId) {
       }
     }
 
+    // Cerca nel tuo codice questa funzione e sostituiscila:
     function toggleMarkers(filter) {
       currentMapFilter = filter;
       addMarkersToMap();
@@ -5066,7 +5042,6 @@ async function saveSpotChanges(spotId) {
       else if (filter === 'private') message = 'Spot privati';
       showToast(`Mostrando: ${message}`, 'info');
     }
-
     // ========== MARKET ==========
     async function renderMarket() {
       const search = document.getElementById('filter-search').value.toLowerCase();
@@ -5325,12 +5300,12 @@ async function saveSpotChanges(spotId) {
     }
     
     function renderPrivateSpots() {
-      // Show only private spots owned by the user (including those offered for trade)
+      // Mostra SOLO spot privati (isPrivate === true)
       const privateSpots = state.spots.filter(s => 
         s.author === state.user.username && 
         !s.acquired &&
         !s.originalSpotId &&
-        s.isPrivate === true
+        s.isPrivate === true // USARE === true per essere sicuri
       );
       
       document.getElementById('private-count').textContent = `(${privateSpots.length})`;
@@ -5380,7 +5355,7 @@ async function saveSpotChanges(spotId) {
                 <span style="display:flex;align-items:center;gap:4px">🗺️ Mappa</span>
               </button>
             ` : ''}
-            ${spot.status === 'active' ? `<button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina</button>` : ''}
+            <button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina</button>
           </div>
         </div>
       `).join('');
