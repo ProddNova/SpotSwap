@@ -4921,25 +4921,29 @@ async function saveSpotChanges(spotId) {
       }, 300);
     }
 
-      function addMarkersToMap() {
-        if (!map) return;
-        
-        let userSpots = state.spots.filter(s => 
-          (s.author === state.user.username && !s.acquired && !s.originalSpotId) || 
-          (s.acquired && s.currentOwner === state.user.username)
-        );
+    function addMarkersToMap() {
+      if (!map) return;
       
-        if (currentMapFilter === 'published') {
-          userSpots = userSpots.filter(s => !s.acquired && !s.isPrivate);
-        } else if (currentMapFilter === 'acquired') {
-          userSpots = userSpots.filter(s => s.acquired);
-        } else if (currentMapFilter === 'private') {
-          userSpots = userSpots.filter(s => s.isPrivate === true && !s.acquired);
-        }
-
+      let userSpots = state.spots.filter(s => 
+        (s.author === state.user.username && !s.acquired && !s.originalSpotId) || 
+        (s.acquired && s.currentOwner === state.user.username)
+      );
+    
+      if (currentMapFilter === 'published') {
+        // Solo spot pubblici pubblicati dall'utente
+        userSpots = userSpots.filter(s => !s.acquired && s.isPrivate !== true);
+      } else if (currentMapFilter === 'acquired') {
+        // Solo spot ottenuti tramite scambio
+        userSpots = userSpots.filter(s => s.acquired);
+      } else if (currentMapFilter === 'private') {
+        // Solo spot privati (non pubblici)
+        userSpots = userSpots.filter(s => s.isPrivate === true && !s.acquired);
+      }
+      // Per 'all' mostra tutti gli spot
+    
       markers.forEach(marker => marker.remove());
       markers = [];
-
+    
       if (userSpots.length === 0) {
         const bounds = L.latLngBounds([[47.09, 6.63], [36.65, 18.48]]);
         map.fitBounds(bounds);
@@ -5056,6 +5060,7 @@ async function saveSpotChanges(spotId) {
       }
     }
 
+    // Cerca nel tuo codice questa funzione e sostituiscila:
     function toggleMarkers(filter) {
       currentMapFilter = filter;
       addMarkersToMap();
@@ -5066,7 +5071,6 @@ async function saveSpotChanges(spotId) {
       else if (filter === 'private') message = 'Spot privati';
       showToast(`Mostrando: ${message}`, 'info');
     }
-
     // ========== MARKET ==========
     async function renderMarket() {
       const search = document.getElementById('filter-search').value.toLowerCase();
@@ -5325,12 +5329,12 @@ async function saveSpotChanges(spotId) {
     }
     
     function renderPrivateSpots() {
-      // Show only private spots owned by the user (including those offered for trade)
+      // Mostra SOLO spot privati (isPrivate === true)
       const privateSpots = state.spots.filter(s => 
         s.author === state.user.username && 
         !s.acquired &&
         !s.originalSpotId &&
-        s.isPrivate === true
+        s.isPrivate === true // USARE === true per essere sicuri
       );
       
       document.getElementById('private-count').textContent = `(${privateSpots.length})`;
@@ -5380,7 +5384,7 @@ async function saveSpotChanges(spotId) {
                 <span style="display:flex;align-items:center;gap:4px">🗺️ Mappa</span>
               </button>
             ` : ''}
-            ${spot.status === 'active' ? `<button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina</button>` : ''}
+            <button class="btn btn-danger" onclick="deleteSpot('${spot._id}')">Elimina</button>
           </div>
         </div>
       `).join('');
