@@ -1068,6 +1068,7 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
           give: requestedSpot.give,
           want: requestedSpot.want,
           region: requestedSpot.region,
+          province: chosenSpot.province || 'Non specificata', // AGGIUNGI QUESTO
           coordinates: requestedSpot.coordinates,
           category: requestedSpot.category,
           description: requestedSpot.description,
@@ -1085,10 +1086,11 @@ app.put('/api/trade-requests/:id/accept', requireAuth, async (req, res) => {
 
         // 4) CREO COPIA per A (toUser) => ottiene lo spot scelto di B
         await Spot.create([{
-          give: chosenSpot.give,
-          want: chosenSpot.want,
-          region: chosenSpot.region,
-          coordinates: chosenSpot.coordinates,
+          give: requestedSpot.give,
+          want: requestedSpot.want,
+          region: requestedSpot.region,
+          province: requestedSpot.province || 'Non specificata', // AGGIUNGI QUESTO
+          coordinates: requestedSpot.coordinates,
           category: chosenSpot.category,
           description: chosenSpot.description,
           author: request.toUser,
