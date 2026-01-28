@@ -115,7 +115,15 @@ const spotSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
-
+// Dopo aver definito lo schema, aggiungi questo middleware
+spotSchema.pre('save', function(next) {
+    if (!this.province) {
+        // Se la provincia non è specificata, usa un valore di default
+        // o calcolala dalla regione
+        this.province = 'Non specificata';
+    }
+    next();
+});
 const tradeRequestSchema = new mongoose.Schema({
     spotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', required: true },
     fromUser: { type: String, required: true },
