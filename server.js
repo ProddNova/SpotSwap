@@ -477,10 +477,11 @@ app.post('/api/spots', requireAuth, async (req, res) => {
     try {
         const spotData = {
             ...req.body,
-            province: req.body.province, // AGGIUNGI
+            province: req.body.province,
             author: req.session.user.username,
             authorId: req.session.user.id,
-            status: 'active'
+            status: 'active',
+            isPrivate: req.body.isPrivate === true || req.body.isPrivate === 'true' // Converti in booleano
         };
         
         // Validazione: controlla che la provincia sia valida per la regione
